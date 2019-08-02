@@ -1,0 +1,4 @@
+INFO      : 12/07/2019 06:42:27 PM: __init__                       Line: 356 in DQclient.py                         HTTP Client initialised with keyfile: /workspace/PRISE/src/engine/connect/.assimila_dq
+INFO      : 12/07/2019 06:42:27 PM: __init__                       Line: 356 in DQclient.py                         HTTP Client initialised with keyfile: /workspace/PRISE/src/engine/connect/.assimila_dq
+DEBUG     : 12/07/2019 06:42:27 PM: close                          Line: 132 in dq_db_connect.py                    Close connection to DQ database.
+DEBUG     : 12/07/2019 06:42:27 PM: close                          Line: 132 in dq_db_connect.py                    Close connection to DQ database.
