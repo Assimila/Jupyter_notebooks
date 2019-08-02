@@ -1,0 +1,23 @@
+kenya:
+    south: -4.8
+    north: 5.5
+    west: 33.8
+    east: 42.0
+
+zambia:
+    south: -19.0
+    north: -8.0
+    west: 21.0
+    east: 34.0
+
+ghana:
+    south: 4.6
+    north: 11.4
+    west: -3.5
+    east: 2.0
+
+rwanda:
+  south: -3.0
+  north: -0.5
+  west: 29.0
+  east: 31.0
