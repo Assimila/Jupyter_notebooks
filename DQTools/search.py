@@ -1,4 +1,4 @@
-from src.engine.connect.connect import Connect
+from .connect.connect import Connect
 
 class Search:
     """
@@ -23,7 +23,7 @@ class Search:
     @staticmethod
     def products():
         """
-        Return all the tiles available.
+        Return all the products available.
         :return:
         """
         # Instatiate the datacube connector
@@ -37,7 +37,7 @@ class Search:
     @staticmethod
     def subproducts():
         """
-        Return all the tiles available.
+        Return all the products available.
         :return:
         """
         # Instatiate the datacube connector

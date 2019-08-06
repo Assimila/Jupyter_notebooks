@@ -1,6 +1,6 @@
 import yaml
 
-from src.engine.connect.connect import Connect
+from .connect.connect import Connect
 
 class Register:
 

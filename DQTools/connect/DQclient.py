@@ -17,7 +17,7 @@ Version 2.0 which can be obtained at
 http://www.apache.org/licenses/LICENSE-2.0.
 
 """
-from src.setup_logger import SetUpLogger
+from .connect_log.setup_logger import SetUpLogger
 
 import logging
 import os.path as op
