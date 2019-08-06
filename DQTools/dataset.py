@@ -3,8 +3,8 @@ import re
 import textwrap
 import pandas as pd
 
-from src.engine.connect.connect import Connect
-from src.engine.regions import get_bounds
+from .connect.connect import Connect
+from .regions import get_bounds
 
 class Dataset:
     """

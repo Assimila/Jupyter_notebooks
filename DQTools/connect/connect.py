@@ -1,7 +1,7 @@
 import os.path as op
 import numpy as np
 
-from src.engine.connect.DQclient import AssimilaData
+from .DQclient import AssimilaData
 
 
 class Connect:
@@ -120,16 +120,15 @@ class Connect:
         :param table:
         :return:
         """
-        from src.datacube.dq_database.dq_db_connect import DqDbConnection
 
-        db_conn = DqDbConnection()
-        db_conn.connect()
+        request = {
+            'command': 'GET_META',
+            'bespoke_search': {'get_tables': tablename}
+        }
 
-        db_command = f"select * from {tablename}"
+        result = self.http_client.get(request)
 
-        df = db_conn.get_df(db_command)
-
-        return df
+        return result
 
     def register(self, config_dict):
         """
