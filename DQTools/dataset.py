@@ -6,9 +6,10 @@ import pandas as pd
 from .connect.connect import Connect
 from .regions import get_bounds
 
+
 class Dataset:
     """
-    The engine dataset class.
+    This is the representation of a DataCube Dataset in the DQTools library.
     """
 
     def __init__(self, product, subproduct, region=None, tile=None):
@@ -16,12 +17,28 @@ class Dataset:
         Connect to the datacube and extract metadata for this particular
         product/subproduct.
 
-        Metadata attributes created:
-        - last_gold
-        - last_timestep
+        Attributes passed from the caller are recorded in self:
+        self.product: name of the product
+        self.subproduct: name of subproduct
+        self.region [optional]: name of region required
+        self.tile [optional]: name of tile required
 
-        :param product:
-        :param subproduct:
+        NOTE: If a region/tile is defined, then metadata pertains only to
+        that region or tile. If no region/tile is defined then metadata is
+        returned for the entire subproduct extent.
+
+        Empty attributes created for
+        - self.data: The xarray DataSet
+        - self.timesteps: The timesteps of data available
+
+        :param product: product name (str)
+        :param subproduct: sub product name (str)
+        :param region [optional]: the name of a region for data/metadata,
+        as defined in the regions directory (NOTE: writing data for regions
+        is not possible, unless the bounds exactly match a tile... in which
+        case just use tile to define our spatial extent!)
+        :param tile [optional]: the tile to extract data/metadata for (must
+        match datacube record)
         """
 
         # write product & subproduct as attributes
@@ -37,6 +54,15 @@ class Dataset:
         else:
             bounds = None
 
+        # Create empty attributes for later data
+        self.last_timestep = None
+        self.first_timestep = None
+        self.last_gold = None
+        self.fill_value = None
+        self.all_subproduct_tiles = None
+        self.description = None
+        self.frequency = None
+
         # Write tile as an attribute
         self.tile = tile
 
@@ -45,9 +71,9 @@ class Dataset:
 
         # Download metadata for this product+subproduct+tile
         result = conn.get_subproduct_meta(product=self.product,
-                                            subproduct=self.subproduct,
-                                            bounds=bounds,
-                                            tile=tile)
+                                          subproduct=self.subproduct,
+                                          bounds=bounds,
+                                          tile=tile)
 
         # Extract relevant metadata as attributes.
         self.extract_metadata(result)
@@ -58,7 +84,8 @@ class Dataset:
 
     def __repr__(self):
         """
-        The representation of the dataset object
+        User-friendly representation of the dataset object
+
         :return:
         """
         return f"""<DQ Dataset: {self.product}-{self.subproduct}>
@@ -86,9 +113,22 @@ Data:
 
     def extract_metadata(self, all_meta):
         """
-        Extract the metadata specifically required by the engine from the
-        bundle that's sent back from the datacube
-        :param all_meta:
+        Extract the metadata required to populate the attributes on
+        initialisation. This parses the metadata sent from the datacube to
+        extract and records key parameters:
+
+        Metadata parameters created:
+        - self.last_gold: The last 'good' timestep of data. Defined by
+        developer.
+        - self.last_timestep: The last timestep of data recorded in the DataCube
+        - self.first_timestep: The first timestep of data recorded in the
+        DataCube
+        - self.fill_value: The fill value for this data
+        - self.all_subproduct_tiles: All tiles available for this subproduct
+        in the datacube
+        - self.tiles: The tile currently selected in this instance
+
+        :param all_meta: metadata dump from the datacube 'get meta' request
         :return:
         """
 
@@ -102,24 +142,24 @@ Data:
             all_meta.sort_values(['datetime'], inplace=True)
 
             # Extract last gold
-            if (all_meta['gold'] == False).all():
+            if (all_meta['gold'] is False).all():
 
                 # Nothing is 'gold' so there is no concept of last gold here
                 self.last_gold = None
 
-            elif (all_meta['gold'] == True).all():
+            elif (all_meta['gold'] is True).all():
 
                 # Last gold is the same as the last timestep
                 self.last_gold = self.last_timestep
 
-            elif (all_meta['gold'] == False).any():
+            elif (all_meta['gold'] is False).any():
 
                 # Last gold is an update point. So if we have gappy gold date (
-                # i.e. a fe gold, few not gold, few gold again, all not gold)
-                # then the update point is the end of the batch of continuous gold.
-                last_gold_idx = np.where(all_meta['gold'] == False)[0][0] - 1
+                # i.e. a few gold, few not gold, few gold again, all not gold)
+                # then the update point is the end of the batch of continuous
+                # gold.
+                last_gold_idx = np.where(all_meta['gold'] is False)[0][0] - 1
                 self.last_gold = all_meta['datetime'][last_gold_idx]
-
 
             else:
                 raise Exception("Unable to ascertain last gold")
@@ -145,7 +185,7 @@ Data:
         # Extract aquisition frequency / timestep from database. Store as an
         # np.timedelta64
         frequency_string = all_meta['frequency'].unique()[0]
-        fs_split =  re.split('(\D+)', frequency_string)
+        fs_split = re.split('(\D+)', frequency_string)
         self.frequency = np.timedelta64(int(fs_split[0]), fs_split[1])
 
     def get_data(self, start, stop, region=None, tile=None, res=None):
@@ -183,7 +223,8 @@ Data:
 
     def put(self):
         """
-        Put this data and metadata into the datacube
+        Prepare self.data and metadata for putting into the datacube.
+
         :return:
         """
 
@@ -217,7 +258,12 @@ Data:
 
     def update(self, script, params=None):
         """
-        Update this dataset by recalculating from script.
+        Update this dataset using the update method in the script supplied.
+        Following the calculation, re-initialise from the DataCube to update
+        the metadata.
+        :param script: The python script for updating this dataset
+        :param params: A dictionary of keyword arguments to be passed to the
+        update method
         :return:
         """
 
@@ -233,8 +279,14 @@ Data:
 
     def calculate_timesteps(self):
         """
-        Calculate the timesteps available, given the registered frequency of
-        the data and the start and last timesteps
+        Calculate the timesteps available, given the frequency of the
+        dataset (as recorded in the subproduct table) and the first and last
+        timesteps.
+
+        NOTE: This method calculates ideal timesteps, rather than retrieving
+        the actual timesteps of the data. This method cannot know about any
+        data gaps.
+
         :return:
         """
 
@@ -242,7 +294,7 @@ Data:
         bf_fq_vals = self.frequency.__str__().split(' ')
 
         # Create a pandas DataOffset object which represents this frequency
-        frequency = pd.DateOffset(**{bf_fq_vals[1]:int(bf_fq_vals[0])})
+        frequency = pd.DateOffset(**{bf_fq_vals[1]: int(bf_fq_vals[0])})
 
         # Generate an array, using this as the step
         if self.first_timestep:
@@ -253,12 +305,3 @@ Data:
 
         else:
             self.timesteps = None
-
-
-
-
-if __name__=='__main__':
-
-    # For testing (only for now)
-    tamsat = Dataset(product='tamsat', subproduct='rfe')
-    tamsat.get_data(start='2019-06-01', stop='2019-06-30')
