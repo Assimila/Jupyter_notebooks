@@ -39,8 +39,8 @@ def get_bounds(region):
     return region_bounds
 
 
-# Todo: This part of the code could be extended to do some or all of the
-#       following:
+# Todo: This part of the DQTools codebase could be extended to do some or
+#       all of the following:
 #
 #       1. Allow a user to pass a latitude/longitude point
 #       2. Allow an interface to graphical area-select tools
