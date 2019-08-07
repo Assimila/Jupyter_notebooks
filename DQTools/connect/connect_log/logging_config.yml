@@ -18,7 +18,7 @@ handlers:
        #       'a' : append to existing log file.
        class: logging.FileHandler
        formatter: complex
-       filename: /workspace/PRISE/src/engine/connect/connect_log/connections.log
+       filename: DQTools/connect/connect_log/connections.log
        mode: 'w'
        level: DEBUG
 
