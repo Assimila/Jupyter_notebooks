@@ -12,7 +12,7 @@ class Dataset:
     This is the representation of a DataCube Dataset in the DQTools library.
     """
 
-    def __init__(self, product, subproduct, region=None, tile=None):
+    def __init__(self, product, subproduct, region=None, tile=None, res=None):
         """
         Connect to the datacube and extract metadata for this particular
         product/subproduct.
@@ -22,6 +22,7 @@ class Dataset:
         self.subproduct: name of subproduct
         self.region [optional]: name of region required
         self.tile [optional]: name of tile required
+
 
         NOTE: If a region/tile is defined, then metadata pertains only to
         that region or tile. If no region/tile is defined then metadata is
@@ -39,6 +40,10 @@ class Dataset:
         case just use tile to define our spatial extent!)
         :param tile [optional]: the tile to extract data/metadata for (must
         match datacube record)
+        :param res [optional]: the resolution of the output data required.
+        This will ultimately enact a GDAL Warp inside the datacube to give
+        you the required resolution within the bounds defined in either tile or
+        region
         """
 
         # write product & subproduct as attributes
@@ -47,6 +52,9 @@ class Dataset:
 
         # Write region as an attribute
         self.region = region
+
+        # Write resolution as an attribute
+        self.res = res
 
         # Extract the bounds for this region, if provided
         if self.region:
@@ -142,23 +150,23 @@ Data:
             all_meta.sort_values(['datetime'], inplace=True)
 
             # Extract last gold
-            if (all_meta['gold'] is False).all():
+            if (all_meta['gold'] == False).all():
 
                 # Nothing is 'gold' so there is no concept of last gold here
                 self.last_gold = None
 
-            elif (all_meta['gold'] is True).all():
+            elif (all_meta['gold'] == True).all():
 
                 # Last gold is the same as the last timestep
                 self.last_gold = self.last_timestep
 
-            elif (all_meta['gold'] is False).any():
+            elif (all_meta['gold'] == False).any():
 
                 # Last gold is an update point. So if we have gappy gold date (
                 # i.e. a few gold, few not gold, few gold again, all not gold)
                 # then the update point is the end of the batch of continuous
                 # gold.
-                last_gold_idx = np.where(all_meta['gold'] is False)[0][0] - 1
+                last_gold_idx = np.where(all_meta['gold'] == False)[0][0] - 1
                 self.last_gold = all_meta['datetime'][last_gold_idx]
 
             else:
@@ -205,8 +213,13 @@ Data:
         else:
             bounds = None
 
+        # Extract tile info
         if not tile and self.tile:
             tile = self.tile
+
+        # Extract res info
+        if not res and self.res:
+            res = self.res
 
         # Fetch the data from the datacube
         data = conn.get_subproduct_data(product=self.product,
