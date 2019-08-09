@@ -4,12 +4,16 @@ from .connect.connect import Connect
 
 class Register:
 
+    """
+    Class for registering data to the DataCube
+    """
+
     def __init__(self, config_file_path):
         """
-        Register a new tile. Pass in either a dictionary or a yaml file with
-        the appropriate components.
+        Register a new product/subproduct or tile from a config.yaml file
+        file.
 
-        :param config_file_path:
+        :param config_file_path: The full path to the config file
         :return:
         """
 

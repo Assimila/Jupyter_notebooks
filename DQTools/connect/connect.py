@@ -1,27 +1,31 @@
 import os.path as op
-import numpy as np
 
 from .DQclient import AssimilaData
 
 
 class Connect:
     """
-    Establish a connection with the datacube
+    Establish handshake and data transfer with the DataCube.
+
     """
 
     def __init__(self):
         """
-        Make the connection when the engine libraries are imported.
+        Make connection to the DataCube.
+
         """
         self.http_client = AssimilaData(keyfile=op.join(op.dirname(__file__),
                                                         ".assimila_dq"))
 
     def get_subproduct_meta(self, product, subproduct, bounds=None, tile=None):
         """
-        Extract all available metadata for this product+subproduct
+        Extract all available metadata for this product+subproduct and
+        specific region or tile if requested.
+
         :param product:
         :param subproduct:
         :param bounds: dictionary of n-s-e-w bounds
+        :param tile: tilename (must match tile registered in DataCube)
         :return:
         """
         try:
@@ -37,20 +41,23 @@ class Connect:
             return result[0][1]
 
         except Exception as e:
-            # TODO add engine exceptions and logging
             raise e
-
 
     def get_subproduct_data(self, product, subproduct, start, stop, bounds,
                             res, tile):
         """
         Extract and return an xarray of data from the datacube
 
-        :param product:
-        :param subproduct:
-        :param start:
-        :param stop:
-        :param bounds:
+        :param product: The name of the product
+        :param subproduct: The name of the subproduct
+        :param start: The starting time for extracting data
+        :param stop: The ending time for extracting data
+        :param bounds: The bounds for the data (dictionary of n-s-e-w bounds)
+        :param res: The required resolution of the data. If this is provided
+        then the DataCube will enact a gdal Warp to return an array of the
+        provided latitude, fitting the given bounds.
+        :param tile: A tile name to defines the bounds of the data once in
+        the DataCube
         :return:
         """
 
@@ -65,7 +72,7 @@ class Connect:
 
         # if a resolution has been provided then we warp for this resolution
         if res:
-            get_request_metadata['warp'] = {'xRes':res, 'yRes':res}
+            get_request_metadata['warp'] = {'xRes': res, 'yRes': res}
             get_request_metadata['warptobounds'] = True
 
         # Add in bounds information if required
@@ -91,16 +98,11 @@ class Connect:
 
     def put_subproduct_data(self, data):
         """
-        Write data to the datacube
+        Write subproduct data to the datacube
 
-        :param product: name of product
-        :param subproduct: name of sub-product
-        :param data: an xarray DataSet object
+        :param data: an xarray DataSet object to be sent to the DataCube
         :return:
         """
-        # 'name' is only an attribute of DataArray, not DataSet
-        # # Add the subproduct as the xarray name
-        # data.name = subproduct
 
         # Prepare put request
         put_request = {
@@ -114,10 +116,7 @@ class Connect:
         Method to return everything in a single table. Used for Search class
         methods.
 
-        #Todo: make this work over HTTP. If not possible, then update this and
-        # the Search class methods.
-
-        :param table:
+        :param tablename: The name of the DataCube database table to be searched
         :return:
         """
 
