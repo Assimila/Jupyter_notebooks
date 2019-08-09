@@ -248,7 +248,9 @@ Data:
         # attributes. The user could set them here, in the the DataSet
         # attributes or in self.data.attrs. Easiest if we just catch and
         # process all possibilities.
-        if 'last_gold' not in self.data[self.subproduct].attrs:
+        if 'last_gold' not in self.data[self.subproduct].attrs or \
+                self.data[self.subproduct].attrs['last_gold'] == None:
+
             if 'last_gold' not in self.data.attrs:
                 self.data[self.subproduct].attrs['last_gold'] = self.last_gold
             else:
