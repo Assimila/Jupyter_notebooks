@@ -1,9 +1,13 @@
 from .connect.connect import Connect
 
+
 class Search:
     """
     Tools to allow a user to check the contents of the datacube from the
-    commandline
+    commandline.
+
+    New search requests can be serviced by adding to the BespokeSearch
+    class in the DataCube at: src/datacube/dq_database/db_view.py
     """
 
     @staticmethod
@@ -15,7 +19,7 @@ class Search:
         # Instatiate the datacube connector
         conn = Connect()
 
-        # extract a dataframe of the tiles table
+        # extract a dataframe of the tile table
         df = conn.get_all_table_data("tile")
 
         return df
@@ -29,7 +33,7 @@ class Search:
         # Instatiate the datacube connector
         conn = Connect()
 
-        # extract a dataframe of the tiles table
+        # extract a dataframe of the product table
         df = conn.get_all_table_data("product")
 
         return df
@@ -37,14 +41,13 @@ class Search:
     @staticmethod
     def subproducts():
         """
-        Return all the products available.
+        Return all the subproducts available.
         :return:
         """
         # Instatiate the datacube connector
         conn = Connect()
 
-        # extract a dataframe of the tiles table
+        # extract a dataframe of the subproduct table
         df = conn.get_all_table_data("subproduct")
 
         return df
-
