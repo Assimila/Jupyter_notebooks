@@ -18,7 +18,7 @@ handlers:
        #       'a' : append to existing log file.
        class: logging.FileHandler
        formatter: complex
-       filename: DQTools/connect/connect_log/connections.log
+       filename: C:/Users/Bethan/Sandpit/DQTools/DQTools/connect/connect_log/connections.log
        mode: 'w'
        level: DEBUG
 
