@@ -18,7 +18,7 @@ handlers:
        #       'a' : append to existing log file.
        class: logging.FileHandler
        formatter: complex
-       filename: C:/Users/Bethan/Sandpit/DQTools/DQTools/connect/connect_log/connections.log
+       filename:
        mode: 'w'
        level: DEBUG
 
@@ -36,9 +36,9 @@ handlers:
        class: logging.handlers.SMTPHandler
        formatter: complex
        mailhost: localhost
-       fromaddr: "engine_connection@assimila.eu"
+       fromaddr: "DQTools@assimila.eu"
        toaddrs: ["prise@assimila.eu"]
-       subject: "Error on ENGINE CONNECTION TO DQ"
+       subject: "Error in DQTools access to datacube"
        level: ERROR
 
 # What is used when logging.getLogger() is run
