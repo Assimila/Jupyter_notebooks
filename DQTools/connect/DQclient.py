@@ -26,7 +26,7 @@ import json
 import requests
 import pickle
 import gzip
-
+import datetime
 # ======================================================================
 # Methods and class to support login credentials.
 
@@ -280,7 +280,7 @@ class APIRequest(object):
                 # or a dictionary registration definition
                 if 'reg_file' in req:
                     # convert contents of file to bytes and compress
-                    with open(req.get('source'), 'rb') as f_in:
+                    with open(req.get('reg_file'), 'rb') as f_in:
                         payload = gzip.compress(f_in.read())
 
                 elif 'reg_items' in req:
@@ -344,7 +344,17 @@ class AssimilaData(object):
         :param login: User's unique login string with date, access and email
         :param keyfile: optional location of connection file
         """
+        # set up the logging output filename here so that no changes are
+        # needed in its configuration file.
+        base, extension = os.path.splitext('./connect_log/DQClient.log')
+        today = datetime.datetime.today()
+        log_filename = "{}{}{}".format(base,
+                                       today.strftime("_%Y_%m_%d"),
+                                       extension)
+
         SetUpLogger.setup_logger(
+            log_filename=op.abspath(op.join(op.dirname(__file__),
+                                            log_filename)),
             default_config=op.abspath(op.join(op.dirname(__file__),
                                       "./connect_log/logging_config.yml")))
         self.logger = logging.getLogger("__main__")
