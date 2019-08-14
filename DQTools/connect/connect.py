@@ -9,13 +9,18 @@ class Connect:
 
     """
 
-    def __init__(self):
+    def __init__(self, key_file=None):
         """
         Make connection to the DataCube.
 
+        :param key_file: location of data cube keyfile
+
         """
-        self.http_client = AssimilaData(keyfile=op.join(op.dirname(__file__),
-                                                        ".assimila_dq"))
+
+        if not key_file:
+            key_file = op.join(op.dirname(__file__), ".assimila_dq")
+
+        self.http_client = AssimilaData(keyfile=key_file)
 
     def get_subproduct_meta(self, product, subproduct, bounds=None, tile=None):
         """
