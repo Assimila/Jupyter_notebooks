@@ -75,7 +75,7 @@ class Connect:
             'gap_filled': True,
         }
 
-        # if a resolution has been provided then we warp for this resolution
+        # If a resolution has been provided then warp
         if res:
             get_request_metadata['warp'] = {'xRes': res, 'yRes': res}
             get_request_metadata['warptobounds'] = True
@@ -91,8 +91,8 @@ class Connect:
         else:
             get_request_metadata['north'] = 90
             get_request_metadata['south'] = -90
-            get_request_metadata['east'] = 360
-            get_request_metadata['west'] = 0
+            get_request_metadata['east'] = 180
+            get_request_metadata['west'] = -180
 
         # Request data
         data = self.http_client.get({
