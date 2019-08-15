@@ -13,7 +13,7 @@ class Connect:
         """
         Make connection to the DataCube.
 
-        :param key_file: location of data cube keyfile
+        :param key_file: location of data cube key file
 
         """
 
@@ -24,7 +24,7 @@ class Connect:
 
     def get_subproduct_meta(self, product, subproduct, bounds=None, tile=None):
         """
-        Extract all available metadata for this product+subproduct and
+        Extract all available metadata for this product + subproduct and
         specific region or tile if requested.
 
         :param product:
@@ -121,7 +121,8 @@ class Connect:
         Method to return everything in a single table. Used for Search class
         methods.
 
-        :param tablename: The name of the DataCube database table to be searched
+        :param tablename: The name of the DataCube database table to be
+                          searched
         :return:
         """
 
@@ -136,10 +137,11 @@ class Connect:
 
     def register(self, config_dict):
         """
-        Register tiles and/or products-subproduct groups intot he datacube.
+        Register tiles and/or products-subproduct groups into the datacube.
 
         :param config_dict:
-        :return:
+
+        :return: N/A
         """
         # Prepare put request
         put_request = {
