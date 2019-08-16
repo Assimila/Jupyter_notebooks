@@ -201,7 +201,7 @@ class APIRequest(object):
                 # fix the log, also removes brackets at start and end of
                 # error message
 
-                #Another possible solution when the only thing that doesnt
+                # Another possible solution when the only thing that doesnt
                 # need to be fixed is the error heading:
                 # keys = resp.headers.keys()
                 # for i in resp.headers:
@@ -212,12 +212,11 @@ class APIRequest(object):
                 #   except TypeError:
                 #       pass
 
+                formatted_str = resp.headers['error'].replace(
+                    "\\n", "\n").replace("\\", " ").replace("(", "")\
+                    .replace(")", "")
 
-                formated_str=resp.headers['error'].replace("\\n",
-                                                           "\n").replace(
-                    "\\", " ").replace("(","").replace(")","")
-
-                resp.headers.update({'error': formated_str})
+                resp.headers.update({'error': formatted_str})
 
                 raise Exception(resp.headers['error'])
 
