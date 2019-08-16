@@ -194,7 +194,32 @@ class APIRequest(object):
             resp = requests.post(self.url, data=payload)
 
             if resp.status_code != 200:
-                raise Exception(resp.headers)
+
+                # this code replaces the line breaks(\n) mix with the \\ to
+                # normal line breaks which fixes the issue of the exception
+                # not displaying properly when raised, altough it does not
+                # fix the log, also removes brackets at start and end of
+                # error message
+
+                #Another possible solution when the only thing that doesnt
+                # need to be fixed is the error heading:
+                # keys = resp.headers.keys()
+                # for i in resp.headers:
+                #   try:
+                #       resp.headers[keys[i]] = resp.headers[keys[i]].replace(
+                #       "\\n",\n").replace("\\", " ").replace("("
+                #       ,"").replace(")","")
+                #   except TypeError:
+                #       pass
+
+
+                formated_str=resp.headers['error'].replace("\\n",
+                                                           "\n").replace(
+                    "\\", " ").replace("(","").replace(")","")
+
+                resp.headers.update({'error': formated_str})
+
+                raise Exception(resp.headers['error'])
 
             if self.service == "GET_FILE":
                 target = req.get("target")
