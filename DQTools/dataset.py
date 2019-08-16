@@ -122,21 +122,24 @@ Data:
     def extract_metadata(self, all_meta):
         """
         Extract the metadata required to populate the attributes on
-        initialisation. This parses the metadata sent from the datacube to
-        extract and records key parameters:
+        initialisation. This parses the metadata sent from the data cube
+        to extract and records key parameters:
 
         Metadata parameters created:
-        - self.last_gold: The last 'good' timestep of data. Defined by
+        - self.last_gold: The last 'good' time step of data. Defined by
         developer.
-        - self.last_timestep: The last timestep of data recorded in the DataCube
-        - self.first_timestep: The first timestep of data recorded in the
-        DataCube
+        - self.last_timestep: The last time step of data recorded in the
+          DataCube
+        - self.first_timestep: The first time step of data recorded in
+          the DataCube
         - self.fill_value: The fill value for this data
-        - self.all_subproduct_tiles: All tiles available for this subproduct
-        in the datacube
+        - self.all_subproduct_tiles: All tiles available for this
+          subproduct in the data cube
         - self.tiles: The tile currently selected in this instance
 
-        :param all_meta: metadata dump from the datacube 'get meta' request
+        :param all_meta: metadata dump from the data cube 'get meta'
+                         request
+
         :return:
         """
 
@@ -152,7 +155,7 @@ Data:
             # Extract last gold
             if (all_meta['gold'] == False).all():
 
-                # Nothing is 'gold' so there is no concept of last gold here
+                # Nothing is 'gold' so there is no concept of last gold
                 self.last_gold = None
 
             elif (all_meta['gold'] == True).all():
@@ -162,12 +165,12 @@ Data:
 
             elif (all_meta['gold'] == False).any():
 
-                # Last gold is an update point. So if we have gappy gold date (
-                # i.e. a few gold, few not gold, few gold again, all not gold)
-                # then the update point is the end of the batch of continuous
-                # gold.
+                # Last gold is an update point. So if we have gappy
+                # gold date (i.e. a few gold, few not gold, few gold
+                # again, all not gold) then the update point is the end
+                # of the batch of continuous gold.
                 last_gold_idx = np.where(all_meta['gold'] == False)[0][0] - 1
-                self.last_gold = all_meta['datetime'][last_gold_idx]
+                self.last_gold = list(all_meta['datetime'])[last_gold_idx]
 
             else:
                 raise Exception("Unable to ascertain last gold")
@@ -190,8 +193,8 @@ Data:
         # General Meta
         self.description = all_meta['description'].unique()[0]
 
-        # Extract aquisition frequency / timestep from database. Store as an
-        # np.timedelta64
+        # Extract acquisition frequency / time step from database. Store
+        # as an np.timedelta64
         frequency_string = all_meta['frequency'].unique()[0]
         fs_split = re.split('(\D+)', frequency_string)
         self.frequency = np.timedelta64(int(fs_split[0]), fs_split[1])
@@ -230,8 +233,8 @@ Data:
                                         res=res,
                                         tile=tile)
 
-        # Datacube returns a list of xarrays. We only have one subprduct by
-        # definition
+        # Datacube returns a list of xarrays. We only have one subprduct
+        # by definition
         self.data = data[0]
 
     def put(self):
@@ -265,6 +268,10 @@ Data:
             raise NameError("data.name must be equal to subproduct for "
                             "ingesting into the datacube")
 
+        # Assign parent attributes to data variable
+        for x in self.data.attrs:
+            self.data[self.subproduct].attrs[x] = self.data.attrs[x]
+
         # Instatiate the datacube connector
         conn = Connect()
 
@@ -273,12 +280,15 @@ Data:
 
     def update(self, script, params=None):
         """
-        Update this dataset using the update method in the script supplied.
-        Following the calculation, re-initialise from the DataCube to update
+        Update this dataset using the update method in the script
+        supplied. Following the calculation, re-initialise from the
+        DataCube to update
         the metadata.
+
         :param script: The python script for updating this dataset
-        :param params: A dictionary of keyword arguments to be passed to the
-        update method
+        :param params: A dictionary of keyword arguments to be passed
+                       to the update method
+
         :return:
         """
 
@@ -294,26 +304,29 @@ Data:
 
     def calculate_timesteps(self):
         """
-        Calculate the timesteps available, given the frequency of the
-        dataset (as recorded in the subproduct table) and the first and last
-        timesteps.
+        Calculate the time steps available, given the frequency of the
+        dataset (as recorded in the subproduct table) and the first and
+        last time steps.
 
-        NOTE: This method calculates ideal timesteps, rather than retrieving
-        the actual timesteps of the data. This method cannot know about any
-        data gaps.
+        NOTE: This method calculates ideal timesteps, rather than
+        retrieving the actual timesteps of the data. This method cannot
+        know about any data gaps.
 
         :return:
         """
 
-        # split the numpy timedelta into it's component parts (e.g. ['year', 1])
+        # split the numpy timedelta into it's component parts (e.g.
+        # ['year', 1])
         bf_fq_vals = self.frequency.__str__().split(' ')
 
-        # Create a pandas DataOffset object which represents this frequency
+        # Create a pandas DataOffset object which represents this
+        # frequency
         frequency = pd.DateOffset(**{bf_fq_vals[1]: int(bf_fq_vals[0])})
 
         # Generate an array, using this as the step
         if self.first_timestep:
-            timesteps = pd.date_range(self.first_timestep, self.last_timestep,
+            timesteps = pd.date_range(self.first_timestep,
+                                      self.last_timestep,
                                       freq=frequency)
 
             self.timesteps = timesteps.values
