@@ -12,7 +12,8 @@ class Dataset:
     This is the representation of a DataCube Dataset in the DQTools library.
     """
 
-    def __init__(self, product, subproduct, region=None, tile=None, res=None):
+    def __init__(self, product, subproduct, region=None, tile=None, res=None,
+                 key_file=None):
         """
         Connect to the datacube and extract metadata for this particular
         product/subproduct.
@@ -33,17 +34,30 @@ class Dataset:
         - self.timesteps: The timesteps of data available
 
         :param product: product name (str)
+
         :param subproduct: sub product name (str)
+
         :param region [optional]: the name of a region for data/metadata,
-        as defined in the regions directory (NOTE: writing data for regions
-        is not possible, unless the bounds exactly match a tile... in which
-        case just use tile to define our spatial extent!)
-        :param tile [optional]: the tile to extract data/metadata for (must
-        match datacube record)
-        :param res [optional]: the resolution of the output data required.
-        This will ultimately enact a GDAL Warp inside the datacube to give
-        you the required resolution within the bounds defined in either tile or
-        region
+                                  as defined in the regions directory
+                                  (NOTE: writing data for regions
+                                  is not possible, unless the bounds
+                                  exactly match a tile... in which case
+                                  just use tile to define our spatial
+                                  extent!)
+
+        :param tile [optional]: the tile to extract data/metadata for
+                                (must match datacube record)
+
+        :param res [optional]: the resolution of the output data
+                               required. This will ultimately enact a
+                               GDAL Warp inside the datacube to give
+                               you the required resolution within the
+                               bounds defined in either tile or region.
+
+        :param key_file: Assimila DQ key file required to access the
+                         HTTP server. Allows keyfile to be in a different
+                         location as used by the QGIS Plugin.
+
         """
 
         # write product & subproduct as attributes
@@ -75,13 +89,13 @@ class Dataset:
         self.tile = tile
 
         # Instatiate the datacube connector
-        conn = Connect()
+        self.conn = Connect(key_file=key_file)
 
         # Download metadata for this product+subproduct+tile
-        result = conn.get_subproduct_meta(product=self.product,
-                                          subproduct=self.subproduct,
-                                          bounds=bounds,
-                                          tile=tile)
+        result = self.conn.get_subproduct_meta(product=self.product,
+                                               subproduct=self.subproduct,
+                                               bounds=bounds,
+                                               tile=tile)
 
         # Extract relevant metadata as attributes.
         self.extract_metadata(result)
@@ -205,8 +219,6 @@ Data:
 
         :return:
         """
-        # Instatiate the datacube connector
-        conn = Connect()
 
         # Extract the bounds information
         if region:
@@ -225,13 +237,13 @@ Data:
             res = self.res
 
         # Fetch the data from the datacube
-        data = conn.get_subproduct_data(product=self.product,
-                                        subproduct=self.subproduct,
-                                        start=start,
-                                        stop=stop,
-                                        bounds=bounds,
-                                        res=res,
-                                        tile=tile)
+        data = self.conn.get_subproduct_data(product=self.product,
+                                             subproduct=self.subproduct,
+                                             start=start,
+                                             stop=stop,
+                                             bounds=bounds,
+                                             res=res,
+                                             tile=tile)
 
         # Datacube returns a list of xarrays. We only have one subprduct
         # by definition
