@@ -22,6 +22,31 @@ class Connect:
 
         self.http_client = AssimilaData(keyfile=key_file)
 
+    def get_product_subproducts(self, product):
+        """
+        Get the sub-products of this product.
+        See DQManager:search_database() for details of returned data; also
+        TestDQDataBaseView.test_search_specific_recurse_product_only().
+
+        :param product: The name of the product
+
+        :return: list of sub-products
+        """
+        try:
+
+            result = self.http_client.get({'command': 'GET_META',
+                                           'product_query': {'name': product},
+                                           'children': 'True'})
+
+            retval = list()
+            for item in result['sub-products']:
+                retval.append(item['name'])
+
+            return retval
+
+        except Exception as e:
+            raise e
+
     def get_product_meta(self, product):
         """
         Extract all available metadata for this product
@@ -39,7 +64,6 @@ class Connect:
 
         except Exception as e:
             raise e
-
 
     def get_subproduct_meta(self, product, subproduct, bounds=None, tile=None):
         """
