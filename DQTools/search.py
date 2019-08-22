@@ -61,22 +61,24 @@ class Search:
         # Instantiate the datacube connector
         conn = Connect()
 
-        # Get product's dataframe
-        result = conn.get_product_meta(product)
+        return conn.get_product_subproducts(product)
 
-        # Initialise list
-        list = []
-
-        # Gets subproduct of the product
-        # result[index][1].name -- gets indexth subproduct
-        for r in result:
-            # Identifies unique subproduct names
-            sub = (r[1].name.unique().tolist())
-            # Adds to list
-            list.append(sub)
-        
-        # Use monoids to extract the list
-        subproduct_list = sum(list, [])
-
-        return subproduct_list
+        # # Get product's dataframe
+        # result = conn.get_product_meta(product)
+        #
+        # # Initialise list
+        # list = []
+        #
+        # # Gets subproduct of the product
+        # # result[index][1].name -- gets indexth subproduct
+        # for r in result:
+        #     # Identifies unique subproduct names
+        #     sub = (r[1].name.unique().tolist())
+        #     # Adds to list
+        #     list.append(sub)
+        #
+        # # Use monoids to extract the list
+        # subproduct_list = sum(list, [])
+        #
+        # return subproduct_list
 
