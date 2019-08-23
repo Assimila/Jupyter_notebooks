@@ -22,13 +22,32 @@ class Connect:
 
         self.http_client = AssimilaData(keyfile=key_file)
 
+    def get_product_meta(self, product):
+        """
+        Extract all available metadata for this product
+
+        :param product: The name of the product
+
+        :return:
+        """
+        try:
+
+            result = self.http_client.get({'command': 'GET_META',
+                                           'product': product})
+
+            return result
+
+        except Exception as e:
+            raise e
+
+
     def get_subproduct_meta(self, product, subproduct, bounds=None, tile=None):
         """
         Extract all available metadata for this product + subproduct and
         specific region or tile if requested.
 
-        :param product:
-        :param subproduct:
+        :param product: The name of the product
+        :param subproduct: The name of the subproduct
         :param bounds: dictionary of n-s-e-w bounds
         :param tile: tilename (must match tile registered in DataCube)
         :return:
