@@ -278,7 +278,7 @@ czechia:
   north: 51.0557036
   south: 48.5518083
   west: 12.0905901
-"c\xF4te d'ivoire":
+cote d'ivoire:
   east: -2.493031
   north: 10.740197
   south: 4.1621205
@@ -903,12 +903,12 @@ rwanda:
   north: -1.0474083
   south: -2.8389804
   west: 28.8617546
-"r\xE9union":
+reunion:
   east: 55.8366924
   north: -20.8717136
   south: -21.3897308
   west: 55.2164268
-"saint barth\xE9lemy":
+saint barthelemy:
   east: -62.5844019
   north: 18.1375569
   south: 17.670931
@@ -1218,7 +1218,7 @@ zimbabwe:
   north: -15.6097033
   south: -22.4241096
   west: 25.2373
-"\xE5land islands":
+aland islands:
   east: 21.3456556
   north: 60.87665
   south: 59.4541578
