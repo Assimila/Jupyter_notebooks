@@ -4,7 +4,7 @@ from collections import namedtuple
 
 def get_country_names():
     """
-    Parse tje regions.yaml file and extract the 
+    Parse the regions.yaml file and extract the 
     country names as list.
     """
     # Define the directory that this file is sitting in
