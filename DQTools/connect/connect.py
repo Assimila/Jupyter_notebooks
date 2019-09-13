@@ -13,7 +13,7 @@ class Connect:
         """
         Make connection to the DataCube.
 
-        :param key_file: location of data cube key file
+        :param key_file: location of DataCube key file
 
         """
 
@@ -98,8 +98,8 @@ class Connect:
         except Exception as e:
             raise e
 
-    def get_subproduct_data(self, product, subproduct, start, stop, bounds,
-                            res, tile):
+    def get_subproduct_data(self, product, subproduct, start, stop,
+                            bounds, res, tile, country):
         """
         Extract and return an xarray of data from the datacube
 
@@ -143,6 +143,9 @@ class Connect:
             get_request_metadata['south'] = -90
             get_request_metadata['east'] = 180
             get_request_metadata['west'] = -180
+
+        if country:
+            get_request_metadata["zonal_stats"] = country
 
         # Request data
         data = self.http_client.get({

@@ -9,7 +9,7 @@ from .regions import get_bounds
 
 class Dataset:
     """
-    This is the representation of a DataCube Dataset in the DQTools library.
+    The class to interact with Assimila DataCube data.
     """
 
     def __init__(self, product, subproduct, region=None, tile=None, res=None,
@@ -33,30 +33,29 @@ class Dataset:
         - self.data: The xarray DataSet
         - self.timesteps: The timesteps of data available
 
-        :param product: product name (str)
+        :param product:     product name (str)
 
-        :param subproduct: sub product name (str)
+        :param subproduct:  sub product name (str)
 
-        :param region [optional]: the name of a region for data/metadata,
-                                  as defined in the regions directory
-                                  (NOTE: writing data for regions
-                                  is not possible, unless the bounds
-                                  exactly match a tile... in which case
-                                  just use tile to define our spatial
-                                  extent!)
+        :param region:      optional - the name of a region for
+                            data/metadata, as defined in the regions
+                            directory (NOTE: writing data for regions is not
+                            possible, unless the bounds exactly match a tile...
+                            in which case just use tile to define our spatial
+                            extent!)
 
-        :param tile [optional]: the tile to extract data/metadata for
-                                (must match datacube record)
+        :param tile:        optional - the tile to extract data/metadata for
+                            (must match datacube record)
 
-        :param res [optional]: the resolution of the output data
-                               required. This will ultimately enact a
-                               GDAL Warp inside the datacube to give
-                               you the required resolution within the
-                               bounds defined in either tile or region.
+        :param res:         optional - the resolution of the output data
+                            required. This will ultimately execute a GDAL Warp
+                            inside the datacube to give you the required
+                            resolution within the bounds defined in either tile
+                            or region.
 
-        :param key_file: Assimila DQ key file required to access the
-                         HTTP server. Allows keyfile to be in a different
-                         location as used by the QGIS Plugin.
+        :param key_file:    optional - Assimila DQ key file required to access
+                            theHTTP server. Allows keyfile to be in a different
+                            location as used by the QGIS Plugin.
 
         """
 
@@ -213,11 +212,35 @@ Data:
         fs_split = re.split('(\D+)', frequency_string)
         self.frequency = np.timedelta64(int(fs_split[0]), fs_split[1])
 
-    def get_data(self, start, stop, region=None, tile=None, res=None):
+    def get_data(self, start, stop,
+                 region=None, tile=None, res=None,
+                 country=None):
         """
-        Extract data from the datacube for the passed parameters
+        Extract data from the datacube to the specification supplied.
 
-        :return:
+        :param start:   Start datetime for dataset
+
+        :param stop:    Stop datetime for dataset
+
+        :param region:  optional - geographic region, do not use tile too
+
+        :param tile:    optional - specific tile, do not use region too
+                        Tile or region are only needed here if not already
+                        given when creating the Dataset object.
+
+        :param res:     optional - resolution required
+                        If providing a country and therefore expecting zonal
+                        averaging, it is recommended to set this value to 0.01
+                        to super-sample the data and ensure each county has
+                        at least one pixel.
+
+        :param country: optional - if country name is supplied, the returned
+                        dataset will have been zonally averaged according to
+                        county definitions within that country. The country
+                        name is case insensitive but must be one for which
+                        the system has a shapefile defining its counties.
+
+        :return: xarray of data
         """
 
         # Extract the bounds information
@@ -243,15 +266,20 @@ Data:
                                              stop=stop,
                                              bounds=bounds,
                                              res=res,
-                                             tile=tile)
+                                             tile=tile,
+                                             country=country)
 
-        # Datacube returns a list of xarrays. We only have one subprduct
-        # by definition
-        self.data = data[0]
+        # TODO Fix DQ to ALWAYS return list of xarrays
+        if not country:
+            # Datacube returns a list of xarrays. We only have one subproduct
+            # by definition
+            self.data = data[0]
+        else:
+            self.data = data
 
     def put(self):
         """
-        Prepare self.data and metadata for putting into the datacube.
+        Prepare self.data and metadata and send to the datacube.
 
         :return:
         """
