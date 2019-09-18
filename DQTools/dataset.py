@@ -9,11 +9,7 @@ from .regions import get_bounds
 
 class Dataset:
     """
-<<<<<<< HEAD
     This is the representation of a DataCube Dataset in the DQTools library.
-=======
-    The class to interact with Assimila DataCube data.
->>>>>>> 44e427e99733328e8da9ca8378bcb2ef7a567b8e
     """
 
     def __init__(self, product, subproduct, region=None, tile=None, res=None,
@@ -37,7 +33,6 @@ class Dataset:
         - self.data: The xarray DataSet
         - self.timesteps: The timesteps of data available
 
-<<<<<<< HEAD
         :param product: product name (str)
 
         :param subproduct: sub product name (str)
@@ -62,32 +57,6 @@ class Dataset:
         :param key_file: Assimila DQ key file required to access the
                          HTTP server. Allows keyfile to be in a different
                          location as used by the QGIS Plugin.
-=======
-        :param product:     product name (str)
-
-        :param subproduct:  sub product name (str)
-
-        :param region:      optional - the name of a region for
-                            data/metadata, as defined in the regions
-                            directory (NOTE: writing data for regions is not
-                            possible, unless the bounds exactly match a tile...
-                            in which case just use tile to define our spatial
-                            extent!)
-
-        :param tile:        optional - the tile to extract data/metadata for
-                            (must match datacube record)
-
-        :param res:         optional - the resolution of the output data
-                            required. This will ultimately execute a GDAL Warp
-                            inside the datacube to give you the required
-                            resolution within the bounds defined in either tile
-                            or region.
-
-        :param key_file:    optional - Assimila DQ key file required to access
-                            theHTTP server. Allows keyfile to be in a different
-                            location as used by the QGIS Plugin.
->>>>>>> 44e427e99733328e8da9ca8378bcb2ef7a567b8e
-
         """
 
         # write product & subproduct as attributes
@@ -187,7 +156,6 @@ Data:
         :return:
         """
 
-<<<<<<< HEAD
         # Silencing SettingWithCopyError caused by subset line below
         pd.options.mode.chained_assignment = None
 
@@ -196,8 +164,6 @@ Data:
         if len(list(set(all_meta.tilename))) > 1:
             all_meta = all_meta.loc[all_meta['tilename'] == self.tile]
 
-=======
->>>>>>> 44e427e99733328e8da9ca8378bcb2ef7a567b8e
         # Extract the last timestep
         if 'datetime' in all_meta.columns:
 
@@ -205,11 +171,7 @@ Data:
             self.last_timestep = max(all_meta['datetime'])
 
             # Sort this dataframe by datetime
-<<<<<<< HEAD
             all_meta.sort_values(by=['datetime'], inplace=True)
-=======
-            all_meta.sort_values(['datetime'], inplace=True)
->>>>>>> 44e427e99733328e8da9ca8378bcb2ef7a567b8e
 
             # Extract last gold
             if (all_meta['gold'] == False).all():
@@ -241,11 +203,8 @@ Data:
 
         # Check there is only one fill value:
         if len(all_meta['datafillvalue'].unique()) == 1:
-<<<<<<< HEAD
             self.fill_value = all_meta['datafillvalue'].iloc[0]
-=======
-            self.fill_value = all_meta['datafillvalue'][0]
->>>>>>> 44e427e99733328e8da9ca8378bcb2ef7a567b8e
+
         else:
             raise Exception("Multiple fill values for single datacube "
                             "subproduct. This shouldn't be possible.")
@@ -262,13 +221,6 @@ Data:
         fs_split = re.split('(\D+)', frequency_string)
         self.frequency = np.timedelta64(int(fs_split[0]), fs_split[1])
 
-<<<<<<< HEAD
-    def get_data(self, start, stop, region=None, tile=None, res=None):
-        """
-        Extract data from the datacube for the passed parameters
-
-        :return:
-=======
     def get_data(self, start, stop,
                  region=None, tile=None, res=None,
                  country=None):
@@ -298,7 +250,6 @@ Data:
                         the system has a shapefile defining its counties.
 
         :return: xarray of data
->>>>>>> 44e427e99733328e8da9ca8378bcb2ef7a567b8e
         """
 
         # Extract the bounds information
@@ -324,8 +275,8 @@ Data:
                                              stop=stop,
                                              bounds=bounds,
                                              res=res,
-<<<<<<< HEAD
-                                             tile=tile)
+                                             tile=tile,
+                                             country=country)
 
         # Datacube returns a list of xarrays. We only have one subprduct
         # by definition
@@ -333,24 +284,7 @@ Data:
 
     def put(self):
         """
-        Prepare self.data and metadata for putting into the datacube.
-=======
-                                             tile=tile,
-                                             country=country)
-
-        # TODO Fix DQ to ALWAYS return list of xarrays
-        if not country:
-            # Datacube returns a list of xarrays. We only have one subproduct
-            # by definition
-            self.data = data[0]
-        else:
-            self.data = data
-
-    def put(self):
-        """
         Prepare self.data and metadata and send to the datacube.
->>>>>>> 44e427e99733328e8da9ca8378bcb2ef7a567b8e
-
         :return:
         """
 
