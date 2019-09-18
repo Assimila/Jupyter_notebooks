@@ -2,6 +2,26 @@ import os.path as op
 import yaml
 from collections import namedtuple
 
+<<<<<<< HEAD
+=======
+def get_country_names():
+    """
+    Parse the regions.yaml file and extract the 
+    country names as list.
+    """
+    # Define the directory that this file is sitting in
+    path = op.abspath(op.dirname(__file__))
+
+    # Open the config file in the same directory and extract all
+    # the bounds data
+    with open(op.join(path, "regions.yaml")) as f:
+        data = yaml.load(f)
+    
+    # Converts the dictionary to list of country names
+    country_names = list(data)
+    
+    return country_names
+>>>>>>> 44e427e99733328e8da9ca8378bcb2ef7a567b8e
 
 def get_bounds(region):
     """
