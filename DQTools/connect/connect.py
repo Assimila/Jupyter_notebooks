@@ -86,13 +86,20 @@ class Connect:
 
             # Dereference to get 2nd (sub-prod) element of the first (and
             # only) sub-list
+            # * result[0][0] is the meta-data of the product: idproduct, name,
+            # longname, description, keywords, link, srid
+            # * result[0][1] is of the sub-product where, if it has data,
+            # there is a row for each datetime. Other columns are identical
+            # for each row: idsubproduct, name, longname, description, units,
+            # minvalue, maxvalue, keywords, link, datascalefactor,
+            # dataoffset, datafillvalue, idproduct, frequency, gold, tile
             return result[0][1]
 
         except Exception as e:
             raise e
 
-    def get_subproduct_data(self, product, subproduct, start, stop, bounds,
-                            res, tile):
+    def get_subproduct_data(self, product, subproduct, start, stop,
+                            bounds, res, tile, country):
         """
         Extract and return an xarray of data from the datacube
 
@@ -136,6 +143,9 @@ class Connect:
             get_request_metadata['south'] = -90
             get_request_metadata['east'] = 180
             get_request_metadata['west'] = -180
+
+        if country:
+            get_request_metadata["zonal_stats"] = country
 
         # Request data
         data = self.http_client.get({

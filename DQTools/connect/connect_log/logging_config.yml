@@ -19,7 +19,11 @@ handlers:
        class: logging.FileHandler
        formatter: complex
        filename:
+<<<<<<< HEAD
        mode: 'w'
+=======
+       mode: 'a'
+>>>>>>> 44e427e99733328e8da9ca8378bcb2ef7a567b8e
        level: DEBUG
 
    mail_handler:
@@ -38,9 +42,24 @@ handlers:
        mailhost: localhost
        fromaddr: "DQTools@assimila.eu"
        toaddrs: ["prise@assimila.eu"]
+<<<<<<< HEAD
        subject: "Error in DQTools access to datacube"
        level: ERROR
 
+=======
+       subject: "Error in DQTools HTTP CLIENT"
+       level: ERROR
+
+   mail_handler_critical:
+       class: logging.handlers.SMTPHandler
+       formatter: complex
+       mailhost: localhost
+       fromaddr: "DQTools@assimila.eu"
+       toaddrs: ["prise_critical@assimila.eu"]
+       subject: "Critical Error in DQTools HTTP CLIENT"
+       level: CRITICAL
+
+>>>>>>> 44e427e99733328e8da9ca8378bcb2ef7a567b8e
 # What is used when logging.getLogger() is run
 loggers:
      # When logger = logging.getLogger("__main__") is specified, use this logger.
@@ -50,7 +69,11 @@ loggers:
          #           messages. Specifying multiple handlers could
          #           result in double messages.
          level: DEBUG
+<<<<<<< HEAD
          handlers: [info_file_handler, mail_handler]
+=======
+         handlers: [info_file_handler, mail_handler, mail_handler_critical]
+>>>>>>> 44e427e99733328e8da9ca8378bcb2ef7a567b8e
 
 # Different ways to format the logging message
 formatters:
