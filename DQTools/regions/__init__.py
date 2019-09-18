@@ -2,8 +2,7 @@ import os.path as op
 import yaml
 from collections import namedtuple
 
-<<<<<<< HEAD
-=======
+
 def get_country_names():
     """
     Parse the regions.yaml file and extract the 
@@ -21,7 +20,7 @@ def get_country_names():
     country_names = list(data)
     
     return country_names
->>>>>>> 44e427e99733328e8da9ca8378bcb2ef7a567b8e
+
 
 def get_bounds(region):
     """
