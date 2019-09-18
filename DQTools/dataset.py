@@ -157,6 +157,14 @@ Data:
         :return:
         """
 
+        # Silencing SettingWithCopyError caused by subset line below
+        pd.options.mode.chained_assignment = None
+
+        # Filter by selected tile so that mosaicking does not impact return
+        # If >1 tilename specified
+        if len(list(set(all_meta.tilename))) > 1:
+            all_meta = all_meta.loc[all_meta['tilename'] == self.tile]
+
         # Extract the last timestep
         if 'datetime' in all_meta.columns:
 
@@ -164,7 +172,7 @@ Data:
             self.last_timestep = max(all_meta['datetime'])
 
             # Sort this dataframe by datetime
-            all_meta.sort_values(['datetime'], inplace=True)
+            all_meta.sort_values(by=['datetime'], inplace=True)
 
             # Extract last gold
             if (all_meta['gold'] == False).all():
@@ -196,7 +204,7 @@ Data:
 
         # Check there is only one fill value:
         if len(all_meta['datafillvalue'].unique()) == 1:
-            self.fill_value = all_meta['datafillvalue'][0]
+            self.fill_value = all_meta['datafillvalue'].iloc[0]
         else:
             raise Exception("Multiple fill values for single datacube "
                             "subproduct. This shouldn't be possible.")
