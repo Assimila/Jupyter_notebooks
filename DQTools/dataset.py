@@ -278,9 +278,13 @@ Data:
                                              tile=tile,
                                              country=country)
 
-        # Datacube returns a list of xarrays. We only have one subprduct
-        # by definition
-        self.data = data[0]
+        # TODO Fix DQ to ALWAYS return list of xarrays
+        if not country:
+            # Datacube returns a list of xarrays. We only have one subproduct
+            # by definition
+            self.data = data[0]
+        else:
+            self.data = data
 
     def put(self):
         """
