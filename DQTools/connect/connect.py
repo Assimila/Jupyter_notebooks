@@ -39,7 +39,7 @@ class Connect:
                                            'children': 'True'})
 
             retval = list()
-            for item in result['sub-products']:
+            for item in result['subproducts']:
                 retval.append(item['name'])
 
             return retval
@@ -67,11 +67,11 @@ class Connect:
 
     def get_subproduct_meta(self, product, subproduct, bounds=None, tile=None):
         """
-        Extract all available metadata for this product + subproduct and
+        Extract all available metadata for this product & sub-product and
         specific region or tile if requested.
 
         :param product: The name of the product
-        :param subproduct: The name of the subproduct
+        :param subproduct: The name of the sub-product
         :param bounds: dictionary of n-s-e-w bounds
         :param tile: tilename (must match tile registered in DataCube)
         :return:
@@ -80,7 +80,7 @@ class Connect:
 
             result = self.http_client.get({'command': 'GET_META',
                                            'product': product,
-                                           'sub-product': subproduct,
+                                           'subproduct': subproduct,
                                            'bounds': bounds,
                                            'tile': tile})
 
@@ -104,7 +104,7 @@ class Connect:
         Extract and return an xarray of data from the datacube
 
         :param product: The name of the product
-        :param subproduct: The name of the subproduct
+        :param subproduct: The name of the sub-product
         :param start: The starting time for extracting data
         :param stop: The ending time for extracting data
         :param bounds: The bounds for the data (dictionary of n-s-e-w bounds)
@@ -156,7 +156,7 @@ class Connect:
 
     def put_subproduct_data(self, data):
         """
-        Write subproduct data to the datacube
+        Write sub-product data to the datacube
 
         :param data: an xarray DataSet object to be sent to the DataCube
         :return:
@@ -190,7 +190,7 @@ class Connect:
 
     def register(self, config_dict):
         """
-        Register tiles and/or products-subproduct groups into the datacube.
+        Register tiles and/or products+sub-product groups into the datacube.
 
         :param config_dict:
 
