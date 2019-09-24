@@ -41,20 +41,20 @@ class Search:
     @staticmethod
     def subproducts():
         """
-        Return all the subproducts available.
+        Return all the sub-products available.
         :return:
         """
         # Instatiate the datacube connector
         conn = Connect()
 
-        # extract a dataframe of the subproduct table
+        # extract a dataframe of the sub-product table
         df = conn.get_all_table_data("subproduct")
 
         return df
 
     def get_subproduct_list_of_product(self, product):
         """
-        Return a list of subproducts based on product selected
+        Return a list of sub-products based on product selected
         :param product: The name of the product
         :return:
         """
@@ -69,10 +69,10 @@ class Search:
         # # Initialise list
         # list = []
         #
-        # # Gets subproduct of the product
-        # # result[index][1].name -- gets indexth subproduct
+        # # Gets sub-product of the product
+        # # result[index][1].name -- gets indexth sub-product
         # for r in result:
-        #     # Identifies unique subproduct names
+        #     # Identifies unique sub-product names
         #     sub = (r[1].name.unique().tolist())
         #     # Adds to list
         #     list.append(sub)

@@ -16,18 +16,18 @@ class Dataset:
                  key_file=None):
         """
         Connect to the datacube and extract metadata for this particular
-        product/subproduct.
+        product/sub-product.
 
         Attributes passed from the caller are recorded in self:
         self.product: name of the product
-        self.subproduct: name of subproduct
+        self.subproduct: name of sub-product
         self.region [optional]: name of region required
         self.tile [optional]: name of tile required
 
 
         NOTE: If a region/tile is defined, then metadata pertains only to
         that region or tile. If no region/tile is defined then metadata is
-        returned for the entire subproduct extent.
+        returned for the entire sub-product extent.
 
         Empty attributes created for
         - self.data: The xarray DataSet
@@ -35,7 +35,7 @@ class Dataset:
 
         :param product: product name (str)
 
-        :param subproduct: sub product name (str)
+        :param subproduct: sub-product name (str)
 
         :param region [optional]: the name of a region for data/metadata,
                                   as defined in the regions directory
@@ -59,7 +59,7 @@ class Dataset:
                          location as used by the QGIS Plugin.
         """
 
-        # write product & subproduct as attributes
+        # write product & sub-product as attributes
         self.product = product
         self.subproduct = subproduct
 
@@ -90,7 +90,7 @@ class Dataset:
         # Instatiate the datacube connector
         self.conn = Connect(key_file=key_file)
 
-        # Download metadata for this product+subproduct+tile
+        # Download metadata for this product & sub-product & tile
         result = self.conn.get_subproduct_meta(product=self.product,
                                                subproduct=self.subproduct,
                                                bounds=bounds,
@@ -156,7 +156,7 @@ Data:
           the DataCube
         - self.fill_value: The fill value for this data
         - self.all_subproduct_tiles: All tiles available for this
-          subproduct in the data cube
+          sub-product in the data cube
         - self.tiles: The tile currently selected in this instance
 
         :param all_meta: metadata dump from the data cube 'get meta'
@@ -219,7 +219,7 @@ Data:
 
         else:
             raise Exception("Multiple fill values for single datacube "
-                            "subproduct. This shouldn't be possible.")
+                            "sub-product. This shouldn't be possible.")
 
         # Available tiles
         self.all_subproduct_tiles = all_meta['tilename'].unique()
@@ -296,7 +296,7 @@ Data:
 
         # TODO Fix DQ to ALWAYS return list of xarrays
         if not country:
-            # Datacube returns a list of xarrays. We only have one subproduct
+            # Datacube returns a list of xarrays. We only have one sub-product
             # by definition
             self.data = data[0]
         else:
@@ -329,7 +329,7 @@ Data:
             raise Exception("Last gold not set for %s" % self.subproduct)
 
         if self.subproduct not in self.data.data_vars.keys():
-            raise NameError("data.name must be equal to subproduct for "
+            raise NameError("data.name must be equal to sub-product for "
                             "ingesting into the datacube")
 
         # Assign parent attributes to data variable
@@ -369,7 +369,7 @@ Data:
     def calculate_timesteps(self):
         """
         Calculate the time steps available, given the frequency of the
-        dataset (as recorded in the subproduct table) and the first and
+        dataset (as recorded in the sub-product table) and the first and
         last time steps.
 
         NOTE: This method calculates ideal timesteps, rather than
