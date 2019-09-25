@@ -109,28 +109,37 @@ class Dataset:
 
         :return:
         """
-        return f"""<DQ Dataset: {self.product}-{self.subproduct}>
+        return """<DQ Dataset: $product-$subproduct>
 ================================================================================
-Product:        {self.product}
-Sub-product:    {self.subproduct}
+Product:        $product
+Sub-product:    $subproduct
 ================================================================================
-{textwrap.fill(self.description, 79)}
+$desc
 
 Tiles:
-    In datacube:    {self.all_subproduct_tiles}
-    Selected tile:  {self.tile}
+    In datacube:    $tiles
+    Selected tile:  $tile
 
 Timesteps available:
-    First:          {self.first_timestep}
-    Last:           {self.last_timestep}
-    Frequency:      {str(self.frequency)}
+    First:          $first
+    Last:           $last
+    Frequency:      $freq
 
-Last Gold:          {self.last_gold}
+Last Gold:          $last_gold
 ================================================================================
 Data:
-{self.data}
+$data
 ================================================================================
-        """
+        """.format(product=self.product,
+                   subproduct=self.subproduct,
+                   desc=textwrap.fill(self.description, 79),
+                   tiles=self.all_subproduct_tiles,
+                   tile=self.tile,
+                   first=self.first_timestep,
+                   last=self.last_timestep,
+                   freq=str(self.frequency),
+                   last_gold=self.last_gold,
+                   data=self.data)
 
     def extract_metadata(self, all_meta):
         """
@@ -310,7 +319,7 @@ Data:
 
         # Check that this has given us a last gold
         if not self.data[self.subproduct].attrs['last_gold']:
-            raise Exception(f"Last gold not set for {self.subproduct}")
+            raise Exception("Last gold not set for %s" % self.subproduct)
 
         if self.subproduct not in self.data.data_vars.keys():
             raise NameError("data.name must be equal to subproduct for "

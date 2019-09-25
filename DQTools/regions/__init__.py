@@ -53,7 +53,7 @@ def get_bounds(region):
         try:
             bounds_dict = bounds_data[region]
         except KeyError:
-            raise KeyError(f'Region {region} does not exist in regions.yaml')
+            raise KeyError("Region %s does not exist in regions.yaml" % region)
 
     elif isinstance(region, list):
 
