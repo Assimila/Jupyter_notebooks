@@ -109,26 +109,26 @@ class Dataset:
 
         :return:
         """
-        return """<DQ Dataset: $product-$subproduct>
+        return """<DQ Dataset: {product}-{subproduct}>
 ================================================================================
-Product:        $product
-Sub-product:    $subproduct
+Product:        {product}
+Sub-product:    {subproduct}
 ================================================================================
 $desc
 
 Tiles:
-    In datacube:    $tiles
-    Selected tile:  $tile
+    In datacube:    {tiles}
+    Selected tile:  {tile}
 
 Timesteps available:
-    First:          $first
-    Last:           $last
-    Frequency:      $freq
+    First:          {first}
+    Last:           {last}
+    Frequency:      {freq}
 
-Last Gold:          $last_gold
+Last Gold:          {last_gold}
 ================================================================================
 Data:
-$data
+{data}
 ================================================================================
         """.format(product=self.product,
                    subproduct=self.subproduct,
