@@ -392,7 +392,7 @@ class AssimilaData(object):
         self.port = port
         self.full_url = self.url + ':' + self.port
 
-        self.logger.info(f"HTTP Client initialised with keyfile: {keyfile}")
+        self.logger.info("HTTP Client initialised with keyfile: %s" % keyfile)
 
     def __del__(self):
         logging.shutdown()
