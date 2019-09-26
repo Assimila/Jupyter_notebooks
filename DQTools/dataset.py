@@ -161,7 +161,7 @@ Data:
 
         # Filter by selected tile so that mosaicking does not impact return
         # If >1 tilename specified
-        if len(list(set(all_meta.tilename))) > 1:
+        if len(list(set(all_meta.tilename))) > 1 and self.tile:
             all_meta = all_meta.loc[all_meta['tilename'] == self.tile]
 
         # Extract the last timestep
