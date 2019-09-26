@@ -16,11 +16,14 @@ class Connect:
         :param key_file: location of data cube key file
 
         """
+        try:
+            if not key_file:
+                key_file = op.join(op.dirname(__file__), ".assimila_dq")
 
-        if not key_file:
-            key_file = op.join(op.dirname(__file__), ".assimila_dq")
+            self.http_client = AssimilaData(keyfile=key_file)
 
-        self.http_client = AssimilaData(keyfile=key_file)
+        except Exception as e:
+            raise e
 
     def get_product_subproducts(self, product):
         """
@@ -39,7 +42,7 @@ class Connect:
                                            'children': 'True'})
 
             retval = list()
-            for item in result['sub-products']:
+            for item in result['subproducts']:
                 retval.append(item['name'])
 
             return retval
@@ -67,11 +70,11 @@ class Connect:
 
     def get_subproduct_meta(self, product, subproduct, bounds=None, tile=None):
         """
-        Extract all available metadata for this product + subproduct and
+        Extract all available metadata for this product & sub-product and
         specific region or tile if requested.
 
         :param product: The name of the product
-        :param subproduct: The name of the subproduct
+        :param subproduct: The name of the sub-product
         :param bounds: dictionary of n-s-e-w bounds
         :param tile: tilename (must match tile registered in DataCube)
         :return:
@@ -80,7 +83,7 @@ class Connect:
 
             result = self.http_client.get({'command': 'GET_META',
                                            'product': product,
-                                           'sub-product': subproduct,
+                                           'subproduct': subproduct,
                                            'bounds': bounds,
                                            'tile': tile})
 
@@ -104,7 +107,7 @@ class Connect:
         Extract and return an xarray of data from the datacube
 
         :param product: The name of the product
-        :param subproduct: The name of the subproduct
+        :param subproduct: The name of the sub-product
         :param start: The starting time for extracting data
         :param stop: The ending time for extracting data
         :param bounds: The bounds for the data (dictionary of n-s-e-w bounds)
@@ -147,27 +150,35 @@ class Connect:
         if country:
             get_request_metadata["zonal_stats"] = country
 
-        # Request data
-        data = self.http_client.get({
-            'command': 'GET_DATA',
-            'product_metadata': get_request_metadata})
+        try:
+            # Request data
+            data = self.http_client.get({
+                'command': 'GET_DATA',
+                'product_metadata': get_request_metadata})
 
-        return data
+            return data
+
+        except Exception as e:
+            raise e
 
     def put_subproduct_data(self, data):
         """
-        Write subproduct data to the datacube
+        Write sub-product data to the datacube
 
         :param data: an xarray DataSet object to be sent to the DataCube
         :return:
         """
 
-        # Prepare put request
-        put_request = {
-            'command': 'PUT_DATA',
-            'overwrite': 'True'}
+        try:
+            # Prepare put request
+            put_request = {
+                'command': 'PUT_DATA',
+                'overwrite': 'True'}
 
-        self.http_client.put(put_request, data)
+            self.http_client.put(put_request, data)
+
+        except Exception as e:
+            raise e
 
     def get_all_table_data(self, tablename):
         """
@@ -179,18 +190,22 @@ class Connect:
         :return:
         """
 
-        request = {
-            'command': 'GET_META',
-            'bespoke_search': {'get_tables': tablename}
-        }
+        try:
+            request = {
+                'command': 'GET_META',
+                'bespoke_search': {'get_tables': tablename}
+            }
 
-        result = self.http_client.get(request)
+            result = self.http_client.get(request)
 
-        return result
+            return result
+
+        except Exception as e:
+            raise e
 
     def register(self, config_dict):
         """
-        Register tiles and/or products-subproduct groups into the datacube.
+        Register tiles and/or products+sub-product groups into the datacube.
 
         :param config_dict:
 
@@ -201,4 +216,9 @@ class Connect:
             'command': 'PUT_NEW',
             'reg_info': config_dict}
 
-        self.http_client.put(put_request)
+        try:
+            self.http_client.put(put_request)
+
+        except Exception as e:
+            raise e
+

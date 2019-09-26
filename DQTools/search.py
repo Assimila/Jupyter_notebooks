@@ -16,13 +16,17 @@ class Search:
         Return all the tiles available.
         :return:
         """
-        # Instatiate the datacube connector
-        conn = Connect()
+        try:
+            # Instantiate the datacube connector
+            conn = Connect()
 
-        # extract a dataframe of the tile table
-        df = conn.get_all_table_data("tile")
+            # extract a dataframe of the tile table
+            df = conn.get_all_table_data("tile")
 
-        return df
+            return df
+
+        except Exception as e:
+            raise RuntimeError(f"Unable to get tiles.\n{e}")
 
     @staticmethod
     def products():
@@ -30,55 +34,66 @@ class Search:
         Return all the products available.
         :return:
         """
-        # Instatiate the datacube connector
-        conn = Connect()
+        try:
+            # Instantiate the datacube connector
+            conn = Connect()
 
-        # extract a dataframe of the product table
-        df = conn.get_all_table_data("product")
+            # extract a dataframe of the product table
+            df = conn.get_all_table_data("product")
 
-        return df
+            return df
+
+        except Exception as e:
+            raise RuntimeError(f"Unable to get products.\n{e}")
 
     @staticmethod
     def subproducts():
         """
-        Return all the subproducts available.
+        Return all the sub-products available.
         :return:
         """
-        # Instatiate the datacube connector
-        conn = Connect()
+        try:
+            # Instantiate the datacube connector
+            conn = Connect()
 
-        # extract a dataframe of the subproduct table
-        df = conn.get_all_table_data("subproduct")
+            # extract a dataframe of the sub-product table
+            df = conn.get_all_table_data("subproduct")
 
-        return df
+            return df
+
+        except Exception as e:
+            raise RuntimeError(f"Unable to get sub-products.\n{e}")
 
     def get_subproduct_list_of_product(self, product):
         """
-        Return a list of subproducts based on product selected
+        Return a list of sub-products based on product selected
         :param product: The name of the product
         :return:
         """
-        # Instantiate the datacube connector
-        conn = Connect()
+        try:
+            # Instantiate the datacube connector
+            conn = Connect()
 
-        return conn.get_product_subproducts(product)
+            return conn.get_product_subproducts(product)
 
-        # # Get product's dataframe
-        # result = conn.get_product_meta(product)
-        #
-        # # Initialise list
-        # list = []
-        #
-        # # Gets subproduct of the product
-        # # result[index][1].name -- gets indexth subproduct
-        # for r in result:
-        #     # Identifies unique subproduct names
-        #     sub = (r[1].name.unique().tolist())
-        #     # Adds to list
-        #     list.append(sub)
-        #
-        # # Use monoids to extract the list
-        # subproduct_list = sum(list, [])
-        #
-        # return subproduct_list
+            # # Get product's dataframe
+            # result = conn.get_product_meta(product)
+            #
+            # # Initialise list
+            # list = []
+            #
+            # # Gets sub-product of the product
+            # # result[index][1].name -- gets indexth sub-product
+            # for r in result:
+            #     # Identifies unique sub-product names
+            #     sub = (r[1].name.unique().tolist())
+            #     # Adds to list
+            #     list.append(sub)
+            #
+            # # Use monoids to extract the list
+            # subproduct_list = sum(list, [])
+            #
+            # return subproduct_list
 
+        except Exception as e:
+            raise RuntimeError(f"Unable to get product's sub-products.\n{e}")

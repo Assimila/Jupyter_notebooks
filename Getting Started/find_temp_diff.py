@@ -1,7 +1,7 @@
 from DQTools import Dataset, Register, Search
 import datetime as dt
 
-# Register new tile and product/subproduct
+# Register new tile and product/sub-product
 Register('[location of]/new_tiles.yaml')
 Register('[location of]/new_subproduct_product.yaml')
 

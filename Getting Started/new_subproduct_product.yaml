@@ -5,7 +5,7 @@ description: >
 keywords: delete test deleteme
 link:
 srid:
-sub_products:
+subproducts:
   - name: temp_diff
     long_name: Surface-Air temperature difference
     description: The difference between surface temp and 2m temp
