@@ -99,7 +99,7 @@ class Connect:
             raise e
 
     def get_subproduct_data(self, product, subproduct, start, stop,
-                            bounds, res, tile, country):
+                            bounds, res, tile, country, latlon):
         """
         Extract and return an xarray of data from the datacube
 
@@ -138,6 +138,9 @@ class Connect:
             get_request_metadata['south'] = bounds.south
             get_request_metadata['east'] = bounds.east
             get_request_metadata['west'] = bounds.west
+        elif latlon:
+            get_request_metadata['lat'] = latlon[0]
+            get_request_metadata['lon'] = latlon[1]
         else:
             get_request_metadata['north'] = 90
             get_request_metadata['south'] = -90
