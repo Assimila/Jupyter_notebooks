@@ -246,7 +246,7 @@ Data:
             raise e
 
     def get_data(self, start, stop,
-                 region=None, tile=None, res=None,
+                 region=None, tile=None, res=None, latlon=None,
                  country=None):
         """
         Extract data from the datacube to the specification supplied.
@@ -272,6 +272,9 @@ Data:
                         county definitions within that country. The country
                         name is case insensitive but must be one for which
                         the system has a shapefile defining its counties.
+
+        :param latlon:  optional - argument to extract pixel information for
+                        a specific latitude and longitude location.
 
         :return: xarray of data
         """
@@ -301,7 +304,8 @@ Data:
                                                  bounds=bounds,
                                                  res=res,
                                                  tile=tile,
-                                                 country=country)
+                                                 country=country,
+                                                 latlon=latlon)
 
             # TODO Fix DQ to ALWAYS return list of xarrays
             if not country:
