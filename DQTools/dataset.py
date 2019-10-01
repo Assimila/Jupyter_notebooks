@@ -161,8 +161,11 @@ Data:
 
         # Filter by selected tile so that mosaicking does not impact return
         # If >1 tilename specified
-        if len(list(set(all_meta.tilename))) > 1:
+        if len(list(set(all_meta.tilename))) > 1 and self.tile:
             all_meta = all_meta.loc[all_meta['tilename'] == self.tile]
+
+        # Sort this dataframe by datetime
+        all_meta.sort_values(by=['datetime'], inplace=True)
 
         # Extract the last timestep
         if 'datetime' in all_meta.columns:
@@ -222,7 +225,7 @@ Data:
         self.frequency = np.timedelta64(int(fs_split[0]), fs_split[1])
 
     def get_data(self, start, stop,
-                 region=None, tile=None, res=None,
+                 region=None, tile=None, res=None, latlon=None,
                  country=None):
         """
         Extract data from the datacube to the specification supplied.
@@ -248,6 +251,9 @@ Data:
                         county definitions within that country. The country
                         name is case insensitive but must be one for which
                         the system has a shapefile defining its counties.
+
+        :param latlon:  optional - argument to extract pixel information for
+                        a specific latitude and longitude location.
 
         :return: xarray of data
         """
@@ -276,7 +282,8 @@ Data:
                                              bounds=bounds,
                                              res=res,
                                              tile=tile,
-                                             country=country)
+                                             country=country,
+                                             latlon=latlon)
 
         # TODO Fix DQ to ALWAYS return list of xarrays
         if not country:
