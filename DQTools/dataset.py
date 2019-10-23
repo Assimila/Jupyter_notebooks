@@ -286,14 +286,6 @@ Data:
                 raise Exception("Multiple fill values for single datacube "
                                 "sub-product. This shouldn't be possible.")
 
-            # Check there is only one fill value:
-            if len(all_meta['datafillvalue'].unique()) == 1:
-                self.fill_value = all_meta['datafillvalue'].iloc[0]
-
-            else:
-                raise Exception("Multiple fill values for single datacube "
-                                "subproduct. This shouldn't be possible.")
-
             # Available tiles
             self.all_subproduct_tiles = all_meta['tilename'].unique()
 
