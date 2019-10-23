@@ -392,6 +392,7 @@ class AssimilaData(object):
         self.port = port
         self.full_url = self.url + ':' + self.port
 
+        # self.logger.info(f"HTTP Client initialised with keyfile: {keyfile}")
         self.logger.info("HTTP Client initialised with keyfile: %s" % keyfile)
 
     def __del__(self):
@@ -418,11 +419,11 @@ class AssimilaData(object):
                 return c.get_from_dq(req)
 
         except ConnectionRefusedError as e:
-            print("User not authorised : %s" % e.args)
+            # print("User not authorised : %s" % e.args)
             self.logger.warning("User not authorised : %s" % e.args)
             raise
         except Exception as e:
-            print("Error in client get : %s" % e.__repr__())
+            # print("Error in client get : %s" % e.__repr__())
             self.logger.warning("Error in client get : %s" % e.__repr__())
             raise
 
@@ -448,10 +449,10 @@ class AssimilaData(object):
                 c.put_to_dq(req)
 
         except ConnectionRefusedError as e:
-            print("User not authorised : %s" % e.strerror)
+            # print("User not authorised : %s" % e.strerror)
             self.logger.warning("User not authorised : %s" % e.strerror)
             raise
         except Exception as e:
-            print("Error in client put : %s" % e.__repr__())
+            # print("Error in client put : %s" % e.__repr__())
             self.logger.warning("Error in client put : %s" % e.__repr__())
             raise
