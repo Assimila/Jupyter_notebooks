@@ -1,4 +1,8 @@
+import logging
+import datetime
+import os.path as op
 from .connect.connect import Connect
+from .connect.connect_log.setup_logger import SetUpLogger
 
 
 class Search:
@@ -10,8 +14,28 @@ class Search:
     class in the DataCube at: src/datacube/dq_database/db_view.py
     """
 
-    @staticmethod
-    def tiles():
+    def __init__(self):
+        """
+        Set up logging.
+        """
+        try:
+            # base, extension = op.splitext('search.log')
+            # today = datetime.datetime.today()
+            # log_filename = "{}{}{}".format(base,
+            #                                today.strftime("_%Y_%m_%d"),
+            #                                extension)
+            #
+            # SetUpLogger.setup_logger(
+            #     log_filename=op.abspath(op.join(op.dirname(__file__),
+            #                                     log_filename)),
+            #     default_config=op.abspath(op.join(op.dirname(__file__),
+            #                    "./connect/connect_log/logging_config.yml")))
+            self.logger = logging.getLogger("__main__")
+
+        except Exception:
+            raise
+
+    def tiles(self):
         """
         Return all the tiles available.
         :return:
@@ -26,10 +50,11 @@ class Search:
             return df
 
         except Exception as e:
-            raise RuntimeError(f"Unable to get tiles.\n{e}")
+            self.logger.error("Unable to get tiles.\n%s" % e)
+            print("Unable to get tiles, "
+                  "please see logfile for details.")
 
-    @staticmethod
-    def products():
+    def products(self):
         """
         Return all the products available.
         :return:
@@ -44,10 +69,11 @@ class Search:
             return df
 
         except Exception as e:
-            raise RuntimeError(f"Unable to get products.\n{e}")
+            self.logger.error("Unable to get products.\n%s" % e)
+            print("Unable to get products, "
+                  "please see logfile for details.")
 
-    @staticmethod
-    def subproducts():
+    def subproducts(self):
         """
         Return all the sub-products available.
         :return:
@@ -62,7 +88,9 @@ class Search:
             return df
 
         except Exception as e:
-            raise RuntimeError(f"Unable to get sub-products.\n{e}")
+            self.logger.error("Unable to get sub-products.\n%s" % e)
+            print("Unable to get sub-products, "
+                  "please see logfile for details.")
 
     def get_subproduct_list_of_product(self, product):
         """
@@ -96,4 +124,6 @@ class Search:
             # return subproduct_list
 
         except Exception as e:
-            raise RuntimeError(f"Unable to get product's sub-products.\n{e}")
+            self.logger.error("Unable to get product's sub-products.\n%s" % e)
+            print("Unable to get product's sub-products, "
+                  "please see logfile for details.")

@@ -2,9 +2,14 @@ import numpy as np
 import re
 import textwrap
 import pandas as pd
+import logging
+import datetime
+import os.path as op
+import sys
 
 from .connect.connect import Connect
 from .regions import get_bounds
+from .connect.connect_log.setup_logger import SetUpLogger
 
 
 class Dataset:
@@ -84,13 +89,37 @@ class Dataset:
         self.timesteps = None
 
         try:
+            # base, extension = op.splitext('dataset.log')
+            # today = datetime.datetime.today()
+            # log_filename = "{}{}{}".format(base,
+            #                                today.strftime("_%Y_%m_%d"),
+            #                                extension)
+            #
+            # SetUpLogger.setup_logger(
+            #     log_filename=op.abspath(op.join(op.dirname(__file__),
+            #                                     log_filename)),
+            #     default_config=op.abspath(op.join(op.dirname(__file__),
+            #                    "./connect/connect_log/logging_config.yml")))
+            self.logger = logging.getLogger("__main__")
+
+        except Exception:
+            raise
+
+        self.logger.info("Dataset created with product %s, subproduct %s,"
+                         "region %s, tile %s, resolution %s, keyfile %s"
+                         % (product, subproduct, region, tile, res, key_file))
+        try:
             # Extract the bounds for this region, if provided
             if self.region:
                 bounds = get_bounds(self.region)._asdict()
             else:
                 bounds = None
         except RuntimeError as e:
-            raise RuntimeError(f"Failed to initialise Dataset regions.") from e
+            self.logger.error("Failed to initialise Dataset regions.\n"
+                              "%s" % e)
+            print("Failed to initialise Dataset regions, "
+                  "please see logfile for details.")
+            sys.exit(1)
 
         try:
             # Instantiate the datacube connector
@@ -103,10 +132,13 @@ class Dataset:
                                                    tile=tile)
 
             # Extract relevant metadata as attributes.
-            self.extract_metadata(result)
+            self._extract_metadata(result)
 
         except Exception as e:
-            raise RuntimeError("Failed to retrieve Dataset metadata") from e
+            self.logger.error("Failed to retrieve Dataset metadata.\n"
+                              "%s" % e)
+            print("Failed to retrieve Dataset metadata, "
+                  "please see logfile for details.")
 
     def __repr__(self):
         """
@@ -115,33 +147,68 @@ class Dataset:
         :return:
         """
         try:
-            return f"""<DQ Dataset: {self.product}-{self.subproduct}>
+            return """<DQ Dataset: {product}-{subproduct}>
 ================================================================================
-Product:        {self.product}
-Sub-product:    {self.subproduct}
+Product:        {product}
+Sub-product:    {subproduct}
 ================================================================================
-{textwrap.fill(self.description, 79)}
+{desc}
 
 Tiles:
-    In datacube:    {self.all_subproduct_tiles}
-    Selected tile:  {self.tile}
+    In datacube:    {tiles}
+    Selected tile:  {tile}
 
 Timesteps available:
-    First:          {self.first_timestep}
-    Last:           {self.last_timestep}
-    Frequency:      {str(self.frequency)}
+    First:          {first}
+    Last:           {last}
+    Frequency:      {freq}
 
-Last Gold:          {self.last_gold}
+Last Gold:          {last_gold}
 ================================================================================
 Data:
-{self.data}
+{data}
 ================================================================================
-            """
+        """.format(product=self.product,
+                   subproduct=self.subproduct,
+                   desc=textwrap.fill(self.description, 79),
+                   tiles=self.all_subproduct_tiles,
+                   tile=self.tile,
+                   first=self.first_timestep,
+                   last=self.last_timestep,
+                   freq=str(self.frequency),
+                   last_gold=self.last_gold,
+                   data=self.data)
+
+# TODO re-instate this once we ditch support fpr Python 3.5
+#             return f"""<DQ Dataset: {self.product}-{self.subproduct}>
+# ================================================================================
+# Product:        {self.product}
+# Sub-product:    {self.subproduct}
+# ================================================================================
+# {textwrap.fill(self.description, 79)}
+#
+# Tiles:
+#     In datacube:    {self.all_subproduct_tiles}
+#     Selected tile:  {self.tile}
+#
+# Timesteps available:
+#     First:          {self.first_timestep}
+#     Last:           {self.last_timestep}
+#     Frequency:      {str(self.frequency)}
+#
+# Last Gold:          {self.last_gold}
+# ================================================================================
+# Data:
+# {self.data}
+# ================================================================================
+#             """
 
         except Exception as e:
-            raise RuntimeError(f"Error displaying Dataset's metadata.\n{e}")
+            self.logger.error("Error displaying Dataset metadata.\n"
+                              "%s" % e)
+            print("Error displaying Dataset's metadata.")
 
-    def extract_metadata(self, all_meta):
+    def _extract_metadata(self, all_meta):
         """
         Extract the metadata required to populate the attributes on
         initialisation. This parses the metadata sent from the data cube
@@ -240,6 +307,8 @@ Data:
             self.frequency = np.timedelta64(int(fs_split[0]), fs_split[1])
 
         except Exception as e:
+            self.logger.error("Error extracting Dataset metadata.\n"
+                              "%s" % e)
             raise e
 
     def get_data(self, start, stop,
@@ -275,6 +344,10 @@ Data:
 
         :return: xarray of data
         """
+        self.logger.info("Dataset get_data args start %s, stop %s,"
+                         "region %s, tile %s, resolution %s, latlon %s, "
+                         "country %s"
+                         % (start, stop, region, tile, res, latlon, country))
 
         try:
             # Extract the bounds information
@@ -304,17 +377,13 @@ Data:
                                                  country=country,
                                                  latlon=latlon)
 
-            # TODO Fix DQ to ALWAYS return list of xarrays
-            if not country:
-                # Datacube returns a list of xarrays. We only have one sub-product
-                # by definition
-                self.data = data[0]
-            else:
-                self.data = data
+            self.data = data[0]
 
         except Exception as e:
-            raise RuntimeError("Failed to retrieve Dataset subproduct data.") \
-                from e
+            self.logger.error("Failed to retrieve Dataset subproduct data.\n"
+                              "%s" % e)
+            print("Failed to retrieve Dataset subproduct data, "
+                  "please see logfile for details.")
 
     def put(self):
         """
@@ -351,14 +420,16 @@ Data:
             for x in self.data.attrs:
                 self.data[self.subproduct].attrs[x] = self.data.attrs[x]
 
-            # Instatiate the datacube connector
+            # Instantiate the datacube connector
             conn = Connect()
 
             # Put the data into the datacube
             conn.put_subproduct_data(data=self.data)
 
         except Exception as e:
-            raise RuntimeError("Failed to write data to the datacube.") from e
+            self.logger.error("Failed to write data to the datacube.\n"
+                              "%s" % e)
+            print("Failed to write data to the datacube.")
 
     def update(self, script, params=None):
         """
@@ -372,7 +443,8 @@ Data:
 
         :return:
         """
-
+        self.logger.info("Dataset update with script %s, params %s"
+                         % (script, params))
         try:
             # Run the update script with the appropriate parameters
             if params:
@@ -385,10 +457,11 @@ Data:
                           tile=self.tile)
 
         except Exception as e:
-            raise RuntimeError(f"Failed to update the Dataset from script "
-                               f"{script}") from e
+            self.logger.error("Failed to update the Dataset from script %s.\n"
+                              "%s" % (e, script))
+            print("Failed to update the Dataset from script %s" % script)
 
-    def calculate_timesteps(self):
+    def _calculate_timesteps(self):
         """
         Calculate the time steps available, given the frequency of the
         dataset (as recorded in the sub-product table) and the first and
@@ -422,4 +495,6 @@ Data:
                 self.timesteps = None
 
         except Exception as e:
-            raise RuntimeError("Unable to calculate timesteps.") from e
+            self.logger.error("Unable to calculate timesteps.\n"
+                              "%s" % e)
+            raise RuntimeError("Unable to calculate timesteps.")
