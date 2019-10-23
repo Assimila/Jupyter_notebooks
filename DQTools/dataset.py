@@ -173,8 +173,8 @@ Data:
         if len(list(set(all_meta.tilename))) > 1 and self.tile:
             all_meta = all_meta.loc[all_meta['tilename'] == self.tile]
 
-            # Extract the last timestep
-            if 'datetime' in all_meta.columns:
+        # Extract the last timestep
+        if 'datetime' in all_meta.columns:
 
             self.first_timestep = min(all_meta['datetime'])
             self.last_timestep = max(all_meta['datetime'])
