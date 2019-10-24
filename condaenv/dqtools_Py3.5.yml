@@ -8,7 +8,7 @@ dependencies:
   - _libgcc_mutex=0.1=main
   - asn1crypto=0.24.0=py35_0
   - blas=1.0=mkl
-  - ca-certificates=2019.8.28=0
+  - ca-certificates=2019.10.16=0
   - certifi=2018.8.24=py35_1
   - cffi=1.11.5=py35he75722e_1
   - chardet=3.0.4=py35_1
