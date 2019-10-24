@@ -402,7 +402,8 @@ Data:
 
             # Check that this has given us a last gold
             if not self.data[self.subproduct].attrs['last_gold']:
-                raise Exception(f"Last gold not set for {self.subproduct}")
+                raise Exception("Last gold not set for %s " % self.subproduct)
+                # raise Exception(f"Last gold not set for {self.subproduct}")
 
             if self.subproduct not in self.data.data_vars.keys():
                 raise NameError("data.name must be equal to sub-product for "
