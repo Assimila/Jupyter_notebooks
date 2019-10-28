@@ -453,7 +453,7 @@ Data:
                               "%s" % (e, script))
             print("Failed to update the Dataset from script %s" % script)
 
-    def _calculate_timesteps(self):
+    def calculate_timesteps(self):
         """
         Calculate the time steps available, given the frequency of the
         dataset (as recorded in the sub-product table) and the first and
