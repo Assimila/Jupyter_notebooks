@@ -23,8 +23,8 @@ def get_country_names():
         return country_names
 
     except (OSError, FileNotFoundError) as e:
-        raise RuntimeError(f"Failed to load regions file.\n{e}")
-
+        # raise RuntimeError(f"Failed to load regions file.\n{e}")
+        raise RuntimeError("Failed to load regions file.\n%s" % e)
 
 def get_bounds(region):
     """
@@ -57,7 +57,8 @@ def get_bounds(region):
             try:
                 bounds_dict = bounds_data[region]
             except KeyError:
-                raise KeyError(f'Region {region} does not exist in regions.yaml')
+                #raise KeyError(f'Region {region} does not exist in regions.yaml')
+                raise KeyError("Region %s does not exist in regions.yaml" % region)
 
         elif isinstance(region, list):
 
@@ -79,7 +80,8 @@ def get_bounds(region):
         return region_bounds
 
     except (IndexError, KeyError, ValueError) as e:
-        raise RuntimeError(f"Failed to retrieve bounds.\n{e}")
+        # raise RuntimeError(f"Failed to retrieve bounds.\n{e}")
+        raise RuntimeError("Failed to retrieve bounds.\n%s" % e)
 
 
 # Todo: This part of the DQTools codebase could be extended to do some or
