@@ -232,76 +232,13 @@ Data:
         :return:
         """
 
-        try:
-            # Silencing SettingWithCopyError caused by subset line below
-            pd.options.mode.chained_assignment = None
-
-            # Filter by selected tile so that mosaicking does not impact return
-            # If >1 tilename specified
-            if len(list(set(all_meta.tilename))) > 1 and self.tile:
-                all_meta = all_meta.loc[all_meta['tilename'] == self.tile]
-
-            # Extract the last timestep
-            if 'datetime' in all_meta.columns:
-
-                self.first_timestep = min(all_meta['datetime'])
-                self.last_timestep = max(all_meta['datetime'])
-
-                # Sort this dataframe by datetime
-                all_meta.sort_values(by=['datetime'], inplace=True)
-
-                # Extract last gold
-                if (all_meta['gold'] == False).all():
-
-                    # Nothing is 'gold' so there is no concept of last gold
-                    self.last_gold = None
-
-                elif (all_meta['gold'] == True).all():
-
-                    # Last gold is the same as the last timestep
-                    self.last_gold = self.last_timestep
-
-                elif (all_meta['gold'] == False).any():
-
-                    # Last gold is an update point. So if we have gappy
-                    # gold date (i.e. a few gold, few not gold, few gold
-                    # again, all not gold) then the update point is the end
-                    # of the batch of continuous gold.
-                    last_gold_idx = np.where(all_meta['gold'] == False)[0][0] - 1
-                    self.last_gold = list(all_meta['datetime'])[last_gold_idx]
-
-                else:
-                    raise Exception("Unable to ascertain last gold")
-
-            else:
-                self.last_timestep = None
-                self.first_timestep = None
-                self.last_gold = None
-
-            # Check there is only one fill value:
-            if len(all_meta['datafillvalue'].unique()) == 1:
-                self.fill_value = all_meta['datafillvalue'].iloc[0]
-
-            else:
-                raise Exception("Multiple fill values for single datacube "
-                                "sub-product. This shouldn't be possible.")
-
-            # Available tiles
-            self.all_subproduct_tiles = all_meta['tilename'].unique()
-
-            # General Meta
-            self.description = all_meta['description'].unique()[0]
-
-            # Extract acquisition frequency / time step from database. Store
-            # as an np.timedelta64
-            frequency_string = all_meta['frequency'].unique()[0]
-            fs_split = re.split('(\D+)', frequency_string)
-            self.frequency = np.timedelta64(int(fs_split[0]), fs_split[1])
-
-        except Exception as e:
-            self.logger.error("Error extracting Dataset metadata.\n"
-                              "%s" % e)
-            raise e
+        self.frequency = all_meta['frequency']
+        self.first_timestep = all_meta['first_timestep']
+        self.last_timestep = all_meta['last_timestep']
+        self.last_gold = all_meta['last_gold']
+        self.fill_value = all_meta['fill_value']
+        self.all_subproduct_tiles = all_meta['all_subproduct_tiles']
+        self.description = all_meta['description']
 
     def get_data(self, start, stop,
                  region=None, tile=None, res=None, latlon=None,

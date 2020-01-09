@@ -82,24 +82,15 @@ class Connect:
         """
         try:
 
-            result = self.http_client.get({'command': 'GET_META',
-                                           'action':
-                                               'get_metadata_product_with_specific_subproduct',
-                                           'params': {'product': product,
-                                                      'subproduct': subproduct,
-                                                      'bounds': bounds,
-                                                      'tile': tile}})
+            result = self.http_client.get(
+                {'command': 'GET_META',
+                 'action': 'get_subproduct_metadata_for_dqtools',
+                 'params': {'product': product,
+                            'subproduct': subproduct,
+                            'bounds': bounds,
+                            'tile': tile}})
 
-            # Dereference to get 2nd (sub-prod) element of the first (and
-            # only) sub-list
-            # * result[0][0] is the meta-data of the product: idproduct, name,
-            # longname, description, keywords, link, srid
-            # * result[0][1] is of the sub-product where, if it has data,
-            # there is a row for each datetime. Other columns are identical
-            # for each row: idsubproduct, name, longname, description, units,
-            # minvalue, maxvalue, keywords, link, datascalefactor,
-            # dataoffset, datafillvalue, idproduct, frequency, gold, tile
-            return result[0][1]
+            return result[0]
 
         except Exception as e:
             raise e
@@ -160,13 +151,13 @@ class Connect:
                 action = 'get_position_data'
                 get_request_params['lat'] = latlon[0]
                 get_request_params['lon'] = latlon[1]
-            else:
-                # get global data
-                action = 'get_area_data'
-                get_request_params['north'] = 90
-                get_request_params['south'] = -90
-                get_request_params['east'] = 180
-                get_request_params['west'] = -180
+            # else:
+            #     # get global data
+            #     action = 'get_area_data'
+            #     get_request_params['north'] = 90
+            #     get_request_params['south'] = -90
+            #     get_request_params['east'] = 180
+            #     get_request_params['west'] = -180
 
             # Request data
             data = self.http_client.get({
