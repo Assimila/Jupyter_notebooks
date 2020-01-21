@@ -51,3 +51,8 @@ ds.get_data(start=dt.datetime(2019, 1, 1),
             tile='ken_prise', res=0.01, country='kenya')
 ds = None
 
+ds = Dataset(product='tamsat', subproduct='rfe')
+ds.get_data(start=dt.datetime(2018, 6, 3),
+            stop=dt.datetime(2018, 6, 3),
+            region=[10., 10., 0.0, 0.0])
+ds = None
