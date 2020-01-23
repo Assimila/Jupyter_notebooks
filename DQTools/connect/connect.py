@@ -206,6 +206,16 @@ class Connect:
 
         return result
 
+    def register(self, config_dict):
+
+        # Check what is attempting to be registered based on
+        # dictionary keys
+        if 'subproducts' in config_dict:
+            self.register_product(config_dict)
+
+        else:
+            self.register_tile(config_dict)
+
     def register_tile(self, config_dict):
         """
         Register tiles with the datacube.
