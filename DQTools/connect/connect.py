@@ -35,8 +35,10 @@ class Connect:
         try:
 
             result = self.http_client.get({'command': 'GET_META',
-                                           'product_query': {'name': product},
-                                           'children': 'True'})
+                                           'action': 'search_metadata',
+                                           'params': {
+                                               'search_terms': {'name': product},
+                                               'recurse': 'True'}})
 
             retval = list()
             for item in result['subproducts']:
@@ -49,7 +51,7 @@ class Connect:
 
     def get_product_meta(self, product):
         """
-        Extract all available metadata for this product
+        Extract all available metadata for this product and its sub-products.
 
         :param product: The name of the product
 
@@ -58,7 +60,9 @@ class Connect:
         try:
 
             result = self.http_client.get({'command': 'GET_META',
-                                           'product': product})
+                                           'action':
+                                               'get_metadata_product_and_children',
+                                           'params': {'product': product}})
 
             return result
 
@@ -78,22 +82,15 @@ class Connect:
         """
         try:
 
-            result = self.http_client.get({'command': 'GET_META',
-                                           'product': product,
-                                           'subproduct': subproduct,
-                                           'bounds': bounds,
-                                           'tile': tile})
+            result = self.http_client.get(
+                {'command': 'GET_META',
+                 'action': 'get_subproduct_metadata_for_dqtools',
+                 'params': {'product': product,
+                            'subproduct': subproduct,
+                            'bounds': bounds,
+                            'tile': tile}})
 
-            # Dereference to get 2nd (sub-prod) element of the first (and
-            # only) sub-list
-            # * result[0][0] is the meta-data of the product: idproduct, name,
-            # longname, description, keywords, link, srid
-            # * result[0][1] is of the sub-product where, if it has data,
-            # there is a row for each datetime. Other columns are identical
-            # for each row: idsubproduct, name, longname, description, units,
-            # minvalue, maxvalue, keywords, link, datascalefactor,
-            # dataoffset, datafillvalue, idproduct, frequency, gold, tile
-            return result[0][1]
+            return result[0]
 
         except Exception as e:
             raise e
@@ -115,47 +112,63 @@ class Connect:
         the DataCube
         :return:
         """
+        try:
+            # Prepare the product metadata
+            get_request_params = {
+                'product': product,
+                'subproduct': [subproduct],
+                'start_date': start,
+                'end_date': stop,
+            }
 
-        # Prepare the product metadata
-        get_request_metadata = {
-            'product': product,
-            'subproduct': [subproduct],
-            'start_date': start,
-            'end_date': stop,
-            'gap_filled': True,
-        }
+            # If a resolution has been provided then warp
+            if res:
+                get_request_params['warp'] = {'xRes': res, 'yRes': res}
+                get_request_params['warptobounds'] = True
 
-        # If a resolution has been provided then warp
-        if res:
-            get_request_metadata['warp'] = {'xRes': res, 'yRes': res}
-            get_request_metadata['warptobounds'] = True
+            if country:
+                if tile:
+                    action = 'get_zonal_data'
+                    get_request_params['tile'] = tile
+                    get_request_params["zonal_stats"] = country
+                else:
+                    # One cannot expect zonal stats without having a tile
+                    # TODO Support bounds for zonal stats in future
+                    raise Exception('A tile must be specified to calculate '
+                                    'zonal statistics.')
 
-        # Add in bounds information if required
-        if tile:
-            get_request_metadata['tile'] = tile
-        elif bounds:
-            get_request_metadata['north'] = bounds.north
-            get_request_metadata['south'] = bounds.south
-            get_request_metadata['east'] = bounds.east
-            get_request_metadata['west'] = bounds.west
-        elif latlon:
-            get_request_metadata['lat'] = latlon[0]
-            get_request_metadata['lon'] = latlon[1]
-        else:
-            get_request_metadata['north'] = 90
-            get_request_metadata['south'] = -90
-            get_request_metadata['east'] = 180
-            get_request_metadata['west'] = -180
+            # Add in area information if specified
+            if tile and not country:
+                action = 'get_tile_data'
+                get_request_params['tile'] = tile
+            elif bounds:
+                action = 'get_area_data'
+                get_request_params['north'] = bounds.north
+                get_request_params['south'] = bounds.south
+                get_request_params['east'] = bounds.east
+                get_request_params['west'] = bounds.west
+            elif latlon:
+                action = 'get_position_data'
+                get_request_params['lat'] = latlon[0]
+                get_request_params['lon'] = latlon[1]
+            # else:
+            #     # get global data
+            #     action = 'get_area_data'
+            #     get_request_params['north'] = 90
+            #     get_request_params['south'] = -90
+            #     get_request_params['east'] = 180
+            #     get_request_params['west'] = -180
 
-        if country:
-            get_request_metadata["zonal_stats"] = country
+            # Request data
+            data = self.http_client.get({
+                'command': 'GET_DATA',
+                'action': action,
+                'params': get_request_params})
 
-        # Request data
-        data = self.http_client.get({
-            'command': 'GET_DATA',
-            'product_metadata': get_request_metadata})
+            return data
 
-        return data
+        except Exception as e:
+            raise e
 
     def put_subproduct_data(self, data):
         """
@@ -168,7 +181,8 @@ class Connect:
         # Prepare put request
         put_request = {
             'command': 'PUT_DATA',
-            'overwrite': 'True'}
+            'action': 'put_data',
+            'params': {'overwrite': 'True'}}
 
         self.http_client.put(put_request, data)
 
@@ -184,7 +198,8 @@ class Connect:
 
         request = {
             'command': 'GET_META',
-            'bespoke_search': {'get_tables': tablename}
+            'action': 'get_table_contents',
+            'params': {'table': tablename}
         }
 
         result = self.http_client.get(request)
@@ -192,8 +207,18 @@ class Connect:
         return result
 
     def register(self, config_dict):
+
+        # Check what is attempting to be registered based on
+        # dictionary keys
+        if 'subproducts' in config_dict:
+            self.register_product(config_dict)
+
+        else:
+            self.register_tile(config_dict)
+
+    def register_tile(self, config_dict):
         """
-        Register tiles and/or products+sub-product groups into the datacube.
+        Register tiles with the datacube.
 
         :param config_dict:
 
@@ -202,6 +227,26 @@ class Connect:
         # Prepare put request
         put_request = {
             'command': 'PUT_NEW',
-            'reg_info': config_dict}
+            'action': 'register_tile_from_dictionary',
+            'params': {'spec': config_dict}}
 
         self.http_client.put(put_request)
+
+    def register_product(self, config_dict):
+        """
+        Register products+sub-product groups with the datacube.
+
+        :param config_dict:
+
+        :return: N/A
+        """
+        # Prepare put request
+        put_request = {
+            'command': 'PUT_NEW',
+            'action': 'register_product_from_dictionary',
+            'params': {'spec': config_dict}}
+
+        self.http_client.put(put_request)
+
+    # def register_with_file
+    #     use PUT_FILE

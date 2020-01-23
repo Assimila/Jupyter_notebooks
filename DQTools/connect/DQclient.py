@@ -227,13 +227,15 @@ class APIRequest(object):
                     # binary content
                     # tgt.write(resp.content)
                     tgt.write(resp_unpacked)
+
             elif self.service == "GET_DATA":
                 resp_unpacked = gzip.decompress(resp.content)
                 # use pickle to de-serialize xarray data
-                # return pickle.loads(resp.content)
                 return pickle.loads(resp_unpacked)
+
             elif self.service == "GET_META":
                 return pickle.loads(resp.content)
+
             else:
                 # TODO assume text content or raise Exception
                 print(resp.text)
@@ -243,9 +245,9 @@ class APIRequest(object):
 
     def put_to_dq(self, req, data=None):
         """
-        Upload information or data to the datacube.
+        Upload information, data or file to the datacube.
         The service asked for is used to determine the upload location
-        on the server.
+        on the server (if data or file).
 
         :param req: json request
         :param data: optional x-array to upload
@@ -254,18 +256,26 @@ class APIRequest(object):
 
         :raise Exception: for any problems
         """
-        # POST the GET_* service type, server replies with url to send in the
+        # POST to server replies with url to send in the
         # PUT request
         # Also send the metadata so the server has access to it later
         # in the PUT request
 
         try:
+            # for metadata and registration, this request contains ALL info.
             payload = pickle.dumps(req, protocol=-1)
             resp_1 = requests.post(self.url, data=payload)
 
-            put_url = self.url + resp_1.text
+            if resp_1.status_code != 200:
+                formatted_str = resp_1.headers['error'].replace(
+                        "\\n", "\n").replace("\\", " ").replace("(", "") \
+                    .replace(")", "")
+                resp_1.headers.update({'error': formatted_str})
+                raise Exception(resp_1.headers['error'])
 
+            # extract the response's text for PUT_FILE and PUT_DATA only.
             if self.service == "PUT_FILE":
+                put_url = self.url + resp_1.text
                 # 'source' will be local upload filepath
                 if 'source' in req:
                     # requests library allows files to be sent, but I
@@ -286,6 +296,7 @@ class APIRequest(object):
                     raise Exception("Non-existent source file.")
 
             elif self.service == "PUT_DATA":
+                put_url = self.url + resp_1.text
                 if data is not None:  # data is xarray
 
                     # For ERA5 registration, the below line caused a
@@ -298,41 +309,15 @@ class APIRequest(object):
                     if resp_2.status_code != 200:
                         raise Exception(resp_2.headers)
 
-            elif self.service == "PUT_NEW":
-                # for PUT_NEW (registration) we may have a yaml file or a
-                # list of items for which we need to find yaml files locally
-                # or a dictionary registration definition
-                if 'reg_file' in req:
-                    # convert contents of file to bytes and compress
-                    with open(req.get('reg_file'), 'rb') as f_in:
-                        payload = gzip.compress(f_in.read())
+            elif self.service == "PUT_NEW" or self.service == "PUT_META":
+                # for PUT_NEW (registration) we may have a list of items where
+                # their yaml definition files will be local on the server
+                # or a dictionary registration definition.
+                # For registration using a file, use PUT_FILE
 
-                elif 'reg_items' in req:
-                    # the value of the reg_items key will be a list.
-                    # no real need to send again as it was in the original req.
-                    # but, as with PUT_META, it keeps the mechanism the same.
-                    payload = pickle.dumps(req.get('reg_items'), protocol=-1)
-
-                elif 'reg_info' in req:
-                    # value of reg_info key is a dictionary
-                    # ditto mechanism
-                    payload = pickle.dumps(req.get('reg_info'), protocol=-1)
-
-                else:
-                    # raise exception if no source provided.
-                    raise Exception("Non-existent source data.")
-
-                resp_2 = requests.put(put_url, data=payload)
-
-                if resp_2.status_code != 200:
-                    raise Exception(resp_2.headers)
-
-            # no need to send the metadata again really but it keeps the
-            # mechanism the same across all client.put_to_dq() requests
-            elif self.service == "PUT_META":
-                resp_2 = requests.put(put_url, data=payload)
-                if resp_2.status_code != 200:
-                    raise Exception(resp_2.headers)
+                # All information was sent in the first requests.post() where
+                # it is actioned by the server.
+                pass
 
             else:
                 raise Exception("Unsupported http command.")
