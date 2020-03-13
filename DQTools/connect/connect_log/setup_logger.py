@@ -3,7 +3,7 @@ import logging.handlers
 import os
 import yaml
 import datetime
-
+import shutil
 
 class SetUpLogger:
 
@@ -131,9 +131,20 @@ class SetUpLogger:
 
                     # Set up a new file handler
                     h = logging.FileHandler(log_filename)
+
+                    # Change log file permissions to allow any user
+                    # to write to
+                    #os.chmod(log_filename, 0o777)
+
                     h.setLevel(handler.level)
                     h.setFormatter(handler.formatter)
 
                     # Remove the old handler, add new one.
                     logger.removeHandler(handler)
                     logger.addHandler(h)
+
+        # If needed, change log file permissions to allow any user
+        # to write to it.
+        status = os.stat(log_filename)
+        if oct(status.st_mode)[-3:] != '777':
+            os.chmod(log_filename, 0o777)
