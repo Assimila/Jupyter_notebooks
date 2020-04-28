@@ -130,7 +130,7 @@ class Connect:
                 if res: warp_params = {'xRes': res, 'yRes': res}
                 # this next line will add to the dict if 'res' has already
                 # populated it or will make a new entry anyway
-                if projection: warp_params['t_srs'] = projection
+                if projection: warp_params['dstSRS'] = projection
                 get_request_params['warp'] = warp_params
                 get_request_params['warptobounds'] = True
 
