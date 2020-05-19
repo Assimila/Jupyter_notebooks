@@ -127,3 +127,17 @@ class Search:
             self.logger.error("Unable to get product's sub-products.\n%s" % e)
             print("Unable to get product's sub-products, "
                   "please see logfile for details.")
+
+    def list_projections(self):
+        """
+        Return a list of allowed Common Names for projections.
+        :return: Common names and instructions
+        """
+        names = ['WGS84', 'British National Grid', 'Sinusoidal']
+
+        print("The following names are accepted projections:")
+        for name in names: print(name)
+        print("For any other projection, please use the proj4 string,"
+              " details can be found at https://spatialreference.org/ref/"
+              " where, for example, WGS84 Mercator is "
+              "'+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'")

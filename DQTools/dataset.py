@@ -179,7 +179,7 @@ Data:
                    last_gold=self.last_gold,
                    data=self.data)
 
-# TODO re-instate this once we ditch support fpr Python 3.5
+# TODO re-instate this once we ditch support for Python 3.5
 #             return f"""<DQ Dataset: {self.product}-{self.subproduct}>
 # ================================================================================
 # Product:        {self.product}
@@ -242,7 +242,7 @@ Data:
 
     def get_data(self, start, stop,
                  region=None, tile=None, res=None, latlon=None,
-                 country=None):
+                 country=None, projection=None):
         """
         Extract data from the datacube to the specification supplied.
 
@@ -271,12 +271,18 @@ Data:
         :param latlon:  optional - argument to extract pixel information for
                         a specific latitude and longitude location.
 
+        :param projection: optional - use one of the common names or a Proj4
+                        text string fully defining the projection. If none
+                        is provided, the system exports data in its native
+                        form.
+
         :return: xarray of data
         """
         self.logger.info("Dataset get_data args start %s, stop %s,"
                          "region %s, tile %s, resolution %s, latlon %s, "
-                         "country %s"
-                         % (start, stop, region, tile, res, latlon, country))
+                         "country %s, projection %s"
+                         % (start, stop, region, tile, res, latlon, country,
+                            projection))
 
         try:
             # Extract the bounds information
@@ -304,7 +310,8 @@ Data:
                                                  res=res,
                                                  tile=tile,
                                                  country=country,
-                                                 latlon=latlon)
+                                                 latlon=latlon,
+                                                 projection=projection)
 
             self.data = data[0]
 

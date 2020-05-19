@@ -96,7 +96,8 @@ class Connect:
             raise e
 
     def get_subproduct_data(self, product, subproduct, start, stop,
-                            bounds, res, tile, country, latlon):
+                            bounds, res, tile, country, latlon,
+                            projection):
         """
         Extract and return an xarray of data from the datacube
 
@@ -108,8 +109,10 @@ class Connect:
         :param res: The required resolution of the data. If this is provided
         then the DataCube will enact a gdal Warp to return an array of the
         provided latitude, fitting the given bounds.
-        :param tile: A tile name to defines the bounds of the data once in
+        :param tile: A tile name to define the bounds of the data once in
         the DataCube
+        :param country: A country over which to carry out zonal averaging
+        :param projection: Name or proj4 string to define projection.
         :return:
         """
         try:
@@ -121,9 +124,14 @@ class Connect:
                 'end_date': stop,
             }
 
-            # If a resolution has been provided then warp
-            if res:
-                get_request_params['warp'] = {'xRes': res, 'yRes': res}
+            # If a resolution or projection has been provided then warp
+            if res or projection:
+                warp_params = dict()
+                if res: warp_params = {'xRes': res, 'yRes': res}
+                # this next line will add to the dict if 'res' has already
+                # populated it or will make a new entry anyway
+                if projection: warp_params['dstSRS'] = projection
+                get_request_params['warp'] = warp_params
                 get_request_params['warptobounds'] = True
 
             if country:
