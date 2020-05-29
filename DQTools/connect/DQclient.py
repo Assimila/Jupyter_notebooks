@@ -156,26 +156,26 @@ class APIRequest(object):
         self.login = login
         self.pwd = pwd
 
-        try:
-            # check credentials with simple connection. Header could
-            # contain cookie for future use.
-            hdrs = {"From": self.login, "X-DQ-PWD": self.pwd,
-                    "X-DQ-SERVICE": self.service}
-            resp = requests.get(self.url, headers=hdrs)
-
-            if resp.status_code != 200:
-                raise ConnectionRefusedError(resp.headers)
-
-        except ConnectionRefusedError:
-            # catch the error we've just raised to ensure it gets
-            # passed up verbatim.
-            raise
-        except ConnectionError as e:
-            print("Connection Error : %s" % e.args)
-            raise
-        except Exception as e:
-            print("Other error : %s" % e.__repr__())
-            raise
+        # try:
+        #     # check credentials with simple connection. Header could
+        #     # contain cookie for future use.
+        #     hdrs = {"From": self.login, "X-DQ-PWD": self.pwd,
+        #             "X-DQ-SERVICE": self.service}
+        #     resp = requests.get(self.url, headers=hdrs)
+        #
+        #     if resp.status_code != 200:
+        #         raise ConnectionRefusedError(resp.headers)
+        #
+        # except ConnectionRefusedError:
+        #     # catch the error we've just raised to ensure it gets
+        #     # passed up verbatim.
+        #     raise
+        # except ConnectionError as e:
+        #     print("Connection Error : %s" % e.args)
+        #     raise
+        # except Exception as e:
+        #     print("Other error : %s" % e.__repr__())
+        #     raise
 
     def get_from_dq(self, req):
         """
@@ -192,7 +192,7 @@ class APIRequest(object):
         """
         try:
             payload = pickle.dumps(req, protocol=-1)
-            resp = requests.post(self.url, data=payload)
+            resp = requests.post(self.url, auth=(self.login, self.key), data=payload)
 
             if resp.status_code != 200:
 
@@ -265,7 +265,7 @@ class APIRequest(object):
         try:
             # for metadata and registration, this request contains ALL info.
             payload = pickle.dumps(req, protocol=-1)
-            resp_1 = requests.post(self.url, data=payload)
+            resp_1 = requests.post(self.url, auth=(self.login, self.key), data=payload)
 
             if resp_1.status_code != 200:
                 formatted_str = resp_1.headers['error'].replace(
@@ -289,6 +289,7 @@ class APIRequest(object):
                         payload = gzip.compress(f_in.read())
 
                     resp_2 = requests.put(put_url,
+                                          auth=(self.login, self.key),
                                           data=payload)
                     if resp_2.status_code != 200:
                         raise Exception(resp_2.headers)
@@ -305,7 +306,9 @@ class APIRequest(object):
                     payload_pickled = pickle.dumps(data, protocol=-1)
                     payload = gzip.compress(payload_pickled)
 
-                    resp_2 = requests.put(put_url, data=payload)
+                    resp_2 = requests.put(put_url,
+                                          auth=(self.login, self.key),
+                                          data=payload)
 
                     if resp_2.status_code != 200:
                         raise Exception(resp_2.headers)
