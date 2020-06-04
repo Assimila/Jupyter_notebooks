@@ -192,7 +192,7 @@ class APIRequest(object):
         """
         try:
             payload = pickle.dumps(req, protocol=-1)
-            resp = requests.post(self.url, auth=(self.login, self.key), data=payload)
+            resp = requests.post(self.url, auth=(self.login, self.pwd), data=payload)
 
             if resp.status_code != 200:
 
@@ -219,7 +219,10 @@ class APIRequest(object):
 
                 resp.headers.update({'error': formatted_str})
 
-                raise Exception(resp.headers['error'])
+                if resp.status_code == 401:
+                    raise ConnectionRefusedError(resp.headers)
+                else:
+                    raise Exception(resp.headers['error'])
 
             if self.service == "GET_FILE":
                 target = req.get("target")
@@ -265,7 +268,7 @@ class APIRequest(object):
         try:
             # for metadata and registration, this request contains ALL info.
             payload = pickle.dumps(req, protocol=-1)
-            resp_1 = requests.post(self.url, auth=(self.login, self.key), data=payload)
+            resp_1 = requests.post(self.url, auth=(self.login, self.pwd), data=payload)
 
             if resp_1.status_code != 200:
                 formatted_str = resp_1.headers['error'].replace(
@@ -289,7 +292,7 @@ class APIRequest(object):
                         payload = gzip.compress(f_in.read())
 
                     resp_2 = requests.put(put_url,
-                                          auth=(self.login, self.key),
+                                          auth=(self.login, self.pwd),
                                           data=payload)
                     if resp_2.status_code != 200:
                         raise Exception(resp_2.headers)
@@ -307,7 +310,7 @@ class APIRequest(object):
                     payload = gzip.compress(payload_pickled)
 
                     resp_2 = requests.put(put_url,
-                                          auth=(self.login, self.key),
+                                          auth=(self.login, self.pwd),
                                           data=payload)
 
                     if resp_2.status_code != 200:
