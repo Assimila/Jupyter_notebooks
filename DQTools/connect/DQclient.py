@@ -274,8 +274,13 @@ class APIRequest(object):
                 formatted_str = resp_1.headers['error'].replace(
                         "\\n", "\n").replace("\\", " ").replace("(", "") \
                     .replace(")", "")
+
                 resp_1.headers.update({'error': formatted_str})
-                raise Exception(resp_1.headers['error'])
+
+                if resp_1.status_code == 401:
+                    raise ConnectionRefusedError(resp_1.headers)
+                else:
+                    raise Exception(resp_1.headers['error'])
 
             # extract the response's text for PUT_FILE and PUT_DATA only.
             if self.service == "PUT_FILE":
