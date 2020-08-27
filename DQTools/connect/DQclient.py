@@ -101,6 +101,7 @@ def get_dqident_values(identfile=None):
     Get the DataCube identification from the environment or the '.assimila_dq'
     file. The environment is looked at first.
 
+    :param identfile: optional location of user's credentials file
     :return: tuple with the pwd, url, port and login forming the API
              identification.
 
@@ -363,7 +364,7 @@ class AssimilaData(object):
         :param port: DQ server port
         :param pwd: User's unique pwd (as provided by Assimila)
         :param login: User's unique login string with date, access and email
-        :param identfile: optional location of connection file
+        :param identfile: optional location of user's credentials file
         """
         # set up the logging output filename here so that no changes are
         # needed in its configuration file.
