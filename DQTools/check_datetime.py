@@ -4,6 +4,15 @@ import datetime as dt
 
 
 class Datetime_checker:
+    """
+    Datetime_checker object contains a method to convert a given time
+    variable to datetime
+    :param time: The time to be converted to datetime.datetime can be in many
+                 different datatypes such as string, np.datetime64 and
+                 pd.Timestamp
+    :attr formats: Variables where all acceptable formats of string are stored,
+                  these are used to try convert string to datetime
+    """
 
     def __init__(self, time):
         self.time = time
@@ -12,7 +21,8 @@ class Datetime_checker:
 
     def c_and_c(self):
         """
-        Runs checks on self.time
+        Runs checks on self.time and if applicable converts it to
+        datetime.datetime
         """
         try:
             if isinstance(self.time, dt.datetime):
