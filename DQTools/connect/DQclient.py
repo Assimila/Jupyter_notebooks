@@ -368,15 +368,14 @@ class AssimilaData(object):
         """
         # set up the logging output filename here so that no changes are
         # needed in its configuration file.
-        base, extension = os.path.splitext('./connect_log/DQClient.log')
+        base, extension = os.path.splitext('/workspace/logs/DQClient.log')
         today = datetime.datetime.today()
         log_filename = "{}{}{}".format(base,
                                        today.strftime("_%Y_%m_%d"),
                                        extension)
 
         SetUpLogger.setup_logger(
-            log_filename=op.abspath(op.join(op.dirname(__file__),
-                                            log_filename)),
+            log_filename=log_filename,
             default_config=op.abspath(op.join(op.dirname(__file__),
                                       "./connect_log/logging_config.yml")))
         self.logger = logging.getLogger("__main__")

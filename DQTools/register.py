@@ -28,7 +28,7 @@ class Register:
                                            extension)
 
             SetUpLogger.setup_logger(
-                log_filename=op.abspath(op.join(op.dirname(__file__),
+                log_filename=op.abspath(op.join('/workspace/logs/',
                                                 log_filename)),
                 default_config=op.abspath(op.join(op.dirname(__file__),
                                "./connect/connect_log/logging_config.yml")))
