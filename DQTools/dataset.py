@@ -6,6 +6,7 @@ import logging
 import datetime
 import os.path as op
 import sys
+from .check_datetime import Datetime_checker
 
 from .connect.connect import Connect
 from .regions import get_bounds
@@ -300,6 +301,11 @@ Data:
             # Extract res info
             if not res and self.res:
                 res = self.res
+
+            new_start = Datetime_checker(time=start)
+            start = new_start.c_and_c()
+            new_stop = Datetime_checker(time=stop)
+            stop = new_stop.c_and_c()
 
             # Fetch the data from the datacube
             data = self.conn.get_subproduct_data(product=self.product,
