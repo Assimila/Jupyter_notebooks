@@ -353,7 +353,7 @@ class AssimilaData(object):
     command sent in the request determines the behaviour.
     """
     def __init__(self, url=None, port=None, pwd=None, login=None,
-                 identfile=None):
+                 identfile=None, test=False):
         """
         Create the DQ client API object.
         Connection information may be provided. If none, or some is
@@ -365,20 +365,29 @@ class AssimilaData(object):
         :param pwd: User's unique pwd (as provided by Assimila)
         :param login: User's unique login string with date, access and email
         :param identfile: optional location of user's credentials file
+        :param test: optional, to control creation of on-the-fly log filename
         """
         # set up the logging output filename here so that no changes are
-        # needed in its configuration file.
-        base, extension = os.path.splitext('./connect_log/DQClient.log')
-        today = datetime.datetime.today()
-        log_filename = "{}{}{}".format(base,
-                                       today.strftime("_%Y_%m_%d"),
-                                       extension)
+        # needed in its configuration file to account for where the code
+        # may be checked out.
+        if not test:
+            base, extension = os.path.splitext('./connect_log/DQClient.log')
+            today = datetime.datetime.today()
+            log_filename = "{}{}{}".format(base,
+                                           today.strftime("_%Y_%m_%d"),
+                                           extension)
 
-        SetUpLogger.setup_logger(
-            log_filename=op.abspath(op.join(op.dirname(__file__),
-                                            log_filename)),
-            default_config=op.abspath(op.join(op.dirname(__file__),
-                                      "./connect_log/logging_config.yml")))
+            SetUpLogger.setup_logger(
+                log_filename=op.abspath(op.join(op.dirname(__file__),
+                                                log_filename)),
+                default_config=op.abspath(op.join(op.dirname(__file__),
+                                          "./connect_log/logging_config.yml")))
+        else:
+            # for testing, the log filename is controlled by the test class.
+            SetUpLogger.setup_logger(
+                default_config=op.abspath(op.join(op.dirname(__file__),
+                                          "./connect_log/logging_config.yml")))
+
         self.logger = logging.getLogger("__main__")
 
         if url is None or port is None or pwd is None or login is None:
