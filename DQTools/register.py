@@ -3,7 +3,7 @@ import logging
 import datetime
 import os.path as op
 from .connect.connect import Connect
-from .connect.connect_log.setup_logger import SetUpLogger
+from .connect.log.setup_logger import SetUpLogger
 
 
 class Register:
@@ -21,17 +21,17 @@ class Register:
         :return:
         """
         try:
-            base, extension = op.splitext('register.log')
-            today = datetime.datetime.today()
-            log_filename = "{}{}{}".format(base,
-                                           today.strftime("_%Y_%m_%d"),
-                                           extension)
-
-            SetUpLogger.setup_logger(
-                log_filename=op.abspath(op.join('/workspace/logs/',
-                                                log_filename)),
-                default_config=op.abspath(op.join(op.dirname(__file__),
-                               "./connect/connect_log/logging_config.yml")))
+            # base, extension = op.splitext('./connect/log/register.log')
+            # today = datetime.datetime.today()
+            # log_filename = "{}{}{}".format(base,
+            #                                today.strftime("_%Y_%m_%d"),
+            #                                extension)
+            #
+            # SetUpLogger.setup_logger(
+            #     log_filename=op.abspath(op.join(op.dirname(__file__),
+            #                                     log_filename)),
+            #     default_config=op.abspath(op.join(op.dirname(__file__),
+            #                    "./connect/log/logging_config.yml")))
             self.logger = logging.getLogger("__main__")
 
         except Exception:
@@ -47,6 +47,9 @@ class Register:
 
             # Send to the connector
             conn.register(config_dict)
+
+            #self.logger.info(f"Contents of {config_file_path} registered.")
+            self.logger.info("Contents of %s registered." % config_file_path)
 
         except (FileNotFoundError, OSError) as e:
             self.logger.error("Unable to load configuration for registration.\n"

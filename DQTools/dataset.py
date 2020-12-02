@@ -10,7 +10,7 @@ from .check_datetime import Datetime_checker
 
 from .connect.connect import Connect
 from .regions import get_bounds
-from .connect.connect_log.setup_logger import SetUpLogger
+from .connect.log.setup_logger import SetUpLogger
 
 
 class Dataset:
@@ -90,7 +90,7 @@ class Dataset:
         self.timesteps = None
 
         try:
-            # base, extension = op.splitext('dataset.log')
+            # base, extension = op.splitext('./connect/log/dataset.log')
             # today = datetime.datetime.today()
             # log_filename = "{}{}{}".format(base,
             #                                today.strftime("_%Y_%m_%d"),
@@ -100,13 +100,13 @@ class Dataset:
             #     log_filename=op.abspath(op.join(op.dirname(__file__),
             #                                     log_filename)),
             #     default_config=op.abspath(op.join(op.dirname(__file__),
-            #                    "./connect/connect_log/logging_config.yml")))
+            #                    "./connect/log/logging_config.yml")))
             self.logger = logging.getLogger("__main__")
 
         except Exception:
             raise
 
-        self.logger.info("Dataset created with product %s, subproduct %s,"
+        self.logger.info("Dataset created with: product %s, subproduct %s,"
                          "region %s, tile %s, resolution %s,  credentials file %s"
                          % (product, subproduct, region, tile, res, identfile))
         try:
@@ -115,6 +115,7 @@ class Dataset:
                 bounds = get_bounds(self.region)._asdict()
             else:
                 bounds = None
+
         except RuntimeError as e:
             self.logger.error("Failed to initialise Dataset regions.\n"
                               "%s" % e)
@@ -134,6 +135,11 @@ class Dataset:
 
             # Extract relevant metadata as attributes.
             self._extract_metadata(result)
+
+            # self.logger.info(f"Dataset created and metadata available for "
+            #                  f"{self.product} : {self.subproduct}")
+            self.logger.info("Dataset created and metadata available for %s %s"
+                             % (self.product, self.subproduct))
 
         except Exception as e:
             self.logger.error("Failed to retrieve Dataset metadata.\n"
@@ -279,7 +285,7 @@ Data:
 
         :return: xarray of data
         """
-        self.logger.info("Dataset get_data args start %s, stop %s,"
+        self.logger.info("Dataset get_data args: start %s, stop %s,"
                          "region %s, tile %s, resolution %s, latlon %s, "
                          "country %s, projection %s"
                          % (start, stop, region, tile, res, latlon, country,
@@ -322,9 +328,9 @@ Data:
             self.data = data[0]
 
         except Exception as e:
-            self.logger.error("Failed to retrieve Dataset subproduct data.\n"
+            self.logger.error("Failed to retrieve Dataset sub-product data.\n"
                               "%s" % e)
-            print("Failed to retrieve Dataset subproduct data, "
+            print("Failed to retrieve Dataset sub-product data, "
                   "please see logfile for details.")
 
     def put(self):

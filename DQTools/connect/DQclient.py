@@ -17,7 +17,7 @@ Version 2.0 which can be obtained at
 http://www.apache.org/licenses/LICENSE-2.0.
 
 """
-from .connect_log.setup_logger import SetUpLogger
+from .log.setup_logger import SetUpLogger
 
 import logging
 import os.path as op
@@ -371,7 +371,7 @@ class AssimilaData(object):
         # needed in its configuration file to account for where the code
         # may be checked out.
         if not test:
-            base, extension = os.path.splitext('./connect_log/DQClient.log')
+            base, extension = os.path.splitext('./log/DQClient.log')
             today = datetime.datetime.today()
             log_filename = "{}{}{}".format(base,
                                            today.strftime("_%Y_%m_%d"),
@@ -381,12 +381,12 @@ class AssimilaData(object):
                 log_filename=op.abspath(op.join(op.dirname(__file__),
                                                 log_filename)),
                 default_config=op.abspath(op.join(op.dirname(__file__),
-                                          "./connect_log/logging_config.yml")))
+                                          "./log/logging_config.yml")))
         else:
             # for testing, the log filename is controlled by the test class.
             SetUpLogger.setup_logger(
                 default_config=op.abspath(op.join(op.dirname(__file__),
-                                          "./connect_log/logging_config.yml")))
+                                          "./log/logging_config.yml")))
 
         self.logger = logging.getLogger("__main__")
 
