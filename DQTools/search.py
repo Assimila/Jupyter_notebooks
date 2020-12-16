@@ -2,7 +2,7 @@ import logging
 import datetime
 import os.path as op
 from .connect.connect import Connect
-from .connect.connect_log.setup_logger import SetUpLogger
+from .connect.log.setup_logger import SetUpLogger
 
 
 class Search:
@@ -23,17 +23,17 @@ class Search:
         """
         try:
             self.identfile = identfile
-            # base, extension = op.splitext('search.log')
-            # today = datetime.datetime.today()
-            # log_filename = "{}{}{}".format(base,
-            #                                today.strftime("_%Y_%m_%d"),
-            #                                extension)
-            #
-            # SetUpLogger.setup_logger(
-            #     log_filename=op.abspath(op.join(op.dirname(__file__),
-            #                                     log_filename)),
-            #     default_config=op.abspath(op.join(op.dirname(__file__),
-            #                    "./connect/connect_log/logging_config.yml")))
+            base, extension = op.splitext('./connect/log/search.log')
+            today = datetime.datetime.today()
+            log_filename = "{}{}{}".format(base,
+                                           today.strftime("_%Y_%m_%d"),
+                                           extension)
+
+            SetUpLogger.setup_logger(
+                log_filename=op.abspath(op.join(op.dirname(__file__),
+                                                log_filename)),
+                default_config=op.abspath(op.join(op.dirname(__file__),
+                               "./connect/log/logging_config.yml")))
             self.logger = logging.getLogger("__main__")
 
         except Exception:
@@ -50,6 +50,8 @@ class Search:
 
             # extract a dataframe of the tile table
             df = conn.get_all_table_data("tile")
+
+            self.logger.info("Retrieved all tiles.")
 
             return df
 
@@ -70,6 +72,8 @@ class Search:
             # extract a dataframe of the product table
             df = conn.get_all_table_data("product")
 
+            self.logger.info("Retrieved all products.")
+
             return df
 
         except Exception as e:
@@ -89,6 +93,8 @@ class Search:
             # extract a dataframe of the sub-product table
             df = conn.get_all_table_data("subproduct")
 
+            self.logger.info("Retrieved all sub-products.")
+
             return df
 
         except Exception as e:
@@ -105,6 +111,9 @@ class Search:
         try:
             # Instantiate the datacube connector
             conn = Connect(identfile=self.identfile)
+
+            #self.logger.info(f"Retrieved all sub-products for {product}.")
+            self.logger.info(f"Retrieved all sub-products for %s" % product)
 
             return conn.get_product_subproducts(product)
 
@@ -145,3 +154,5 @@ class Search:
               " details can be found at https://spatialreference.org/ref/"
               " where, for example, WGS84 Mercator is "
               "'+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'")
+
+        self.logger.info("Retrieved projection information.")

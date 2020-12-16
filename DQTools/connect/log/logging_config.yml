@@ -18,6 +18,9 @@ handlers:
        #       'a' : append to existing log file.
        class: logging.FileHandler
        formatter: complex
+       # Note that no filename is set here because it is created at runtime
+       # by the client. This is because we DO NOT know where a user may have
+       # cloned the code.
        filename:
        mode: 'a'
        level: DEBUG
