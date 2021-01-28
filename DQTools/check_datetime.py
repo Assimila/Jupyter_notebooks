@@ -17,7 +17,8 @@ class Datetime_checker:
     def __init__(self, time):
         self.time = time
         self.formats = ['%Y-%m-%d', '%Y %m %d', '%Y/%m/%d', '%d-%m-%Y',
-                        '%d %m %Y', '%d/%m/%Y', '%d-%m-%YT%H:%M']
+                        '%d %m %Y', '%d/%m/%Y', '%d-%m-%YT%H:%M',
+                        '%Y-%m-%dT%H:%M:%S']
 
     def c_and_c(self):
         """
