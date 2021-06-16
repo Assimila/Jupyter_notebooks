@@ -234,9 +234,13 @@ class APIRequest(object):
                     tgt.write(resp_unpacked)
 
             elif self.service == "GET_DATA":
-                resp_unpacked = gzip.decompress(resp.content)
-                # use pickle to de-serialize xarray data
-                return pickle.loads(resp_unpacked)
+                # use the switch in the request to control gzip/pickle for DASK
+                if req.get('params').get('use_dask'):
+                    return resp.content
+                else:
+                    resp_unpacked = gzip.decompress(resp.content)
+                    # use pickle to de-serialize xarray data
+                    return pickle.loads(resp_unpacked)
 
             elif self.service == "GET_META":
                 return pickle.loads(resp.content)
