@@ -22,6 +22,7 @@ import matplotlib
 import warnings
 import subprocess
 import json
+import pickle
 
 import sys
 sys.path.append("..")
@@ -129,13 +130,60 @@ class Data:
         with open(filename, 'rb') as f:
             data = pickle.load(f)
         return data
+  
+
+    def color_map_subtraction(self, product, subproduct, north, east, south,
+                                       west, date1, date2):
+        
+         with self.out:
+            clear_output()
+            print("Getting data...")
+
+            # Close all existing figures
+            try:
+                plt.close('all')
+            except ValueError:
+                pass
+
+            self.check_date(product, subproduct, date1)
+            self.check_date(product, subproduct, date2)
+            
+                
+            list_of_results1 = Data.get_data_from_datacube_nesw(
+                self, product, subproduct, north, east,
+                south, west, date1, date1)
+
+            y1 = list_of_results1
     
+                
+            list_of_results2 = Data.get_data_from_datacube_nesw(
+                self, product, subproduct, north, east,
+                south, west, date2, date2)
+            
+            y2 = list_of_results2
+            
+            difference = y2[subproduct][0] - y1[subproduct][0]
+    
+            fig, axs = plt.subplots(figsize=(4, 4))
+        
+                       
+            difference.plot.imshow(ax=axs) 
+
+            # Set aspect to equal to avoid any deformation
+            axs.set_aspect('equal')
+
+            plt.tight_layout()
+
+            # plt.show()
+            plt.show(block=False)
+
+
     
     def color_map_identifying_change(self, product, subproduct, north, east,
                                      south, west, dates):
         
         with self.out:
-            clear_output()
+            #clear_output()
             print("Getting data...")
             
             try:
@@ -144,30 +192,43 @@ class Data:
                 pass
             
             results_arr = []
-            
-            fig, axs = plt.subplots(1, len(dates), figsize=(9, 4),
-                                    sharex=True, sharey=True)
-           
-            for count, date in enumerate(dates):
 
+            for count, date in enumerate(dates):
                 self.check_date(product, subproduct, date)
                 
                 results = Data.get_data_from_datacube_nesw(
                         self, product, subproduct, north, east,
                         south, west, dates[count], dates[count])
-                print(results)
+
                 results_arr.append(results)
-              
-                results_arr[count][subproduct][0].plot.imshow(ax=axs[count])
-
-
-                # Set aspect to equal to avoid any deformation
-                axs[count].set_aspect('equal')
                 
-
+            
+            
+            fig, axs = plt.subplots(1, len(dates), figsize=(9, 4),
+                                    sharex=True, sharey=True)
+                              
+            for i in range(len(dates)):
+                axs[i].set_aspect('equal')
+                results_arr[i][subproduct][0].plot.imshow(ax=axs[i])
+               
             plt.tight_layout()
-
-            plt.show(block=False)
+            plt.show(block=True)
+            
+       
+    def trend_analysis(self, product, subproduct, trend, north, east, 
+                       south, west, date1, date2, date3, date4):
+        
+        if trend == 'timeseries':
+            pass # do timeseries plots
+        
+        else:
+            pass # do area plots
+    
+    def average_subproduct(self, product, subproduct, frequency, north, 
+                           east, south, west, date1, date2):
+        
+        pass
+    
         
         
 
@@ -203,6 +264,7 @@ class Data:
             y2.__getitem__(subproduct).plot(ax=axs[1])
             plt.tight_layout()
             plt.show()
+    
 
     def color_map_nesw_compare_reduced(self, product, subproduct, north, east, south,
                                        west, date1, date2):
@@ -251,6 +313,7 @@ class Data:
             # plt.show()
             plt.show(block=False)
 
+            
     def compare_rfe_skt_time(self, longitude, latitude, start, end):
 
         Data.check(self, None, None, None, None, start, end)

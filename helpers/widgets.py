@@ -94,13 +94,13 @@ class Widgets:
                                         readout=False,
                                         readout_format='d')
 
-    def product(self, peat=True):
+    def product(self, description, peat=True):
 
         if peat:
             projection_list = [' ', 'MOD11A1', 'MOD13A2', 'MCD43A3', 'era5']
             return widgets.Dropdown(
                 options=projection_list,
-                description='Product:',
+                description=description,
                 layout=self.item_layout,
                 disabled=False, )
         else:
@@ -110,13 +110,13 @@ class Widgets:
                 layout=self.item_layout,
                 disabled=False, )
 
-    def subproduct(self, layout):
+    def subproduct(self, description, layout):
 
         if layout == 'subproduct1':
-            return widgets.Dropdown(description="Subproduct:",
+            return widgets.Dropdown(description=description,
                                     layout=self.item_layout_subproduct1)
         elif layout == 'subproduct2':
-            return widgets.Dropdown(description="Subproduct:",
+            return widgets.Dropdown(description=description,
                                     layout=self.item_layout_subproduct2)
 
     def projection(self):
@@ -148,15 +148,17 @@ class Widgets:
 
     def average(self):
 
-        return widgets.Dropdown(description="Average")
+        return widgets.Dropdown(options = [ '', 'by pixel', 'by area'],
+                                description="Average")
 
     def trends(self):
 
-        return widgets.Dropdown(description="Trends")
+        return widgets.Dropdown(options = [' ', 'timeseries', 'area plot'],
+                                description="Trends")
 
     def frequency(self):
 
-        return widgets.Dropdown(options = [2, 3, 4, 5],
+        return widgets.Dropdown(options = [' ', 2, 3, 4, 5],
                                 description="Frequency",
                                 disabled=True)
     
@@ -290,8 +292,8 @@ class Widgets:
         from ipywidgets import HBox, VBox, Box
 
         box1 = VBox([operation, product1, subproduct1, date1, date2, product2, subproduct2,
-                     date3, date4, projection, frequency, date_carousel, north, east, south, west, button_loc, upload_file, button,
-                     average, trends])
+                     date3, date4, projection, average, trends, frequency, date_carousel, north, 
+                     east, south, west, button_loc, upload_file, button])
 
         box_layout = widgets.Layout(
             display='flex',
@@ -384,6 +386,15 @@ class Widgets:
             return['skt']
         else:
             return self.search.get_subproduct_list_of_product(product)
+    
+    def get_subproduct_trend_analysis(self, product):
+        
+        if product == 'MOD13A2':
+            return ['1_km_16_days_EVI']
+        
+        else:
+            return self.get_subproduct_list(product)
+        
 
     def get_date_widgets(self):
 
