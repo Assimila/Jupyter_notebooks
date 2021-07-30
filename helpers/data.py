@@ -23,6 +23,7 @@ import warnings
 import subprocess
 import json
 import pickle
+import xarray
 
 import sys
 sys.path.append("..")
@@ -147,7 +148,7 @@ class Data:
 
             self.check_date(product, subproduct, date1)
             self.check_date(product, subproduct, date2)
-            
+            self.check(north, east, south, west, date1, date2)
                 
             list_of_results1 = Data.get_data_from_datacube_nesw(
                 self, product, subproduct, north, east,
@@ -164,9 +165,8 @@ class Data:
             
             difference = y2[subproduct][0] - y1[subproduct][0]
     
-            fig, axs = plt.subplots(figsize=(4, 4))
-        
-                       
+            fig, axs = plt.subplots(figsize=(7, 4))
+                
             difference.plot.imshow(ax=axs) 
 
             # Set aspect to equal to avoid any deformation
@@ -183,7 +183,7 @@ class Data:
                                      south, west, dates):
         
         with self.out:
-            #clear_output()
+            clear_output()
             print("Getting data...")
             
             try:
@@ -218,12 +218,54 @@ class Data:
     def trend_analysis(self, product, subproduct, trend, north, east, 
                        south, west, date1, date2, date3, date4):
         
-        if trend == 'timeseries':
-            pass # do timeseries plots
-        
-        else:
-            pass # do area plots
+        with self.out:
+            clear_output()
+            print("Getting data...")
+            
+            try:
+                plt.close('all')
+            except ValueError:
+                pass
+            
+            self.check_date(product, subproduct, date1)
+            self.check_date(product, subproduct, date2)
+            self.check_date(product, subproduct, date3)
+            self.check_date(product, subproduct, date4)
+            self.check(north, east, south, west, date1, date2)
+            self.check(north, east, south, west, date3, date4 )
+            
+            list_of_results1 = Data.get_data_from_datacube_nesw(
+                self, product, subproduct, north, east,
+                south, west, date1, date2)
+
+            y1 = list_of_results1
     
+                
+            list_of_results2 = Data.get_data_from_datacube_nesw(
+                self, product, subproduct, north, east,
+                south, west, date3, date4)
+            
+            y2 = list_of_results2
+               
+            if trend == 'timeseries':
+                pass 
+
+            else:
+
+                # Share axis to allow zooming on both plots simultaneously
+                fig, axs = plt.subplots(1, 2, figsize=(9, 4),
+                                        sharex=True, sharey=True)
+
+                y1[subproduct].mean('time').plot.imshow(ax=axs[0])
+                y2[subproduct].mean('time').plot.imshow(ax=axs[1])
+
+                # Set aspect to equal to avoid any deformation
+                axs[0].set_aspect('equal')
+                axs[1].set_aspect('equal')
+
+                plt.tight_layout()
+                plt.show(block=False)
+
     def average_subproduct(self, product, subproduct, frequency, north, 
                            east, south, west, date1, date2):
         

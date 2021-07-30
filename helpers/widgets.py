@@ -148,18 +148,23 @@ class Widgets:
 
     def average(self):
 
-        return widgets.Dropdown(options = [ '', 'by pixel', 'by area'],
-                                description="Average")
+        return widgets.Dropdown(options = [' ', 'by pixel', 'by area'],
+                                description="Average",
+                                placeholder='Select averaging method',
+                                disabled = True)
 
     def trends(self):
 
         return widgets.Dropdown(options = [' ', 'timeseries', 'area plot'],
-                                description="Trends")
+                                description="Trends",
+                                placeholder='Select plot type',
+                                disabled = True)
 
     def frequency(self):
 
         return widgets.Dropdown(options = [' ', 2, 3, 4, 5],
                                 description="Frequency",
+                                placeholder = 'Select analysis frequency',
                                 disabled=True)
     
     def date_carousel(self):
