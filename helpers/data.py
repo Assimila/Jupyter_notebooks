@@ -239,16 +239,26 @@ class Data:
                 south, west, date1, date2)
 
             y1 = list_of_results1
-    
+            print(y1)
                 
             list_of_results2 = Data.get_data_from_datacube_nesw(
                 self, product, subproduct, north, east,
                 south, west, date3, date4)
             
             y2 = list_of_results2
-               
+            print(y2)
             if trend == 'timeseries':
-                pass 
+                fig, axs = plt.subplots(1, 2, figsize=(9, 4),
+                                        sharex=True, sharey=True)
+                
+                y1[subproduct].plot(ax=axs[0])
+                y2[subproduct].plot(ax=axs[1])
+                
+                axs[0].set_aspect('equal')
+                axs[1].set_aspect('equal')
+
+                plt.tight_layout()
+                plt.show(block=False)
 
             else:
 
@@ -352,8 +362,10 @@ class Data:
 
             plt.tight_layout()
 
-            # plt.show()
             plt.show(block=False)
+            plt.imsave(fname='../helpers/files/fig.png', arr=y1[subproduct][0])
+#             extent = axs[0].get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+#             plt.savefig('../helpers/files/fig.png', bbox_inches=extent.expanded(1.1, 1.2))
 
             
     def compare_rfe_skt_time(self, longitude, latitude, start, end):
