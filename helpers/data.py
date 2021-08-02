@@ -138,7 +138,6 @@ class Data:
         
          with self.out:
             clear_output()
-            print("Getting data...")
 
             # Close all existing figures
             try:
@@ -184,7 +183,6 @@ class Data:
         
         with self.out:
             clear_output()
-            print("Getting data...")
             
             try:
                 plt.close('all')
@@ -220,7 +218,6 @@ class Data:
         
         with self.out:
             clear_output()
-            print("Getting data...")
             
             try:
                 plt.close('all')
@@ -289,7 +286,6 @@ class Data:
 
         with self.out:
             clear_output()
-            print("Getting data...")
 
             start1 = Data.combine_date_hour(self, date1, hour1)
             end1 = Data.combine_date_hour(self, date1, hour1)
@@ -324,7 +320,6 @@ class Data:
         # TODO 3.9: option to display or save results for UI
         with self.out:
             clear_output()
-            print("Getting data...")
 
             # Close all existing figures
             try:
@@ -848,20 +843,21 @@ class Data:
             lat, lon = y, x
         return lat, lon
 
-    def bng_to_latlon(self, northing, easting, to_latlon=True):
+    def bng_to_latlon(self, y, x, to_latlon=True):
         """ convert British National Grid easting and northing to latitude and longitude"""
-        bng_proj = Proj(
-            '+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.1502,0.247,0.8421,-20.4894 +units=m +no_defs=True')
+#         bng_proj = Proj(
+#             '+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.1502,0.247,0.8421,-20.4894 +units=m +no_defs=True')
+
+        bng_proj = Proj(init='epsg:27700')
         latlon_proj = Proj(init='epsg:4326')
 
-        # TODO: PROBLEM HERE
-        lat, lon = transform(bng_proj, latlon_proj, northing, easting)
-
-        nort, east = transform(latlon_proj, bng_proj, lat, lon)
-
         if to_latlon:
+            lat, lon = transform(bng_proj, latlon_proj, y, x)
+            print(f'lat, lon: {lat}{lon}')
             return lat, lon
         else:
+            nort, east = transform(latlon_proj, bng_proj, y, x)
+            print(f'nort, east: {nort}{east}')
             return nort, east
 
     @staticmethod

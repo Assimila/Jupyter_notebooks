@@ -96,18 +96,24 @@ class MapTools:
         group.add_layer(colombia)
 
     def add_map_point(self, lon, lat):
-
+        """
+        add a marker point to the map with given latitude and longitude.
+        """
         marker = Marker(location=(lat, lon), draggable=True, )
         self.map.add_layer(marker)
 
     def add_map_rect(self, north, east, south, west):
-
+        """
+        add a rectangular bounding box tho the map with given coordinates.
+        """
         rectangle = Rectangle(bounds=((south, west), (north, east)), color='#FF0000')
         self.map.add_layer(rectangle)
 
     @staticmethod
     def get_coords_point(geo_json):
-
+        """
+        returnt the coordinates of a user-drawn marker point on the map.
+        """
         coords = (geo_json.get('geometry', 'Point'))
         x = coords.get('coordinates')[0]
         y = coords.get('coordinates')[1]
@@ -119,7 +125,9 @@ class MapTools:
 
     @staticmethod
     def get_coords_polygon(geo_json):
-
+        """
+        return the north east south and west coordinated of the user-drawn polygon on the map.
+        """
         poly = (geo_json.get('geometry', 'Polygon'))
         coords = poly.get('coordinates')[0]
         SW = coords[0]
@@ -134,7 +142,10 @@ class MapTools:
         return north, east, south, west
 
     def add_geojson(self, fname):
-
+        """
+        return the north east south and west coords of a .geojson file defined 
+        rectangular bounding box and add this as a layer to the map.
+        """
         with open(fname, 'r') as f:
             data = json.load(f)
 
@@ -158,7 +169,30 @@ class MapTools:
         west = (NW[0] + SW[0]) / 2
 
         return north, east, south, west
-
+    
+    def add_image(self, bounds):
+        """
+        add image as an overlay onto the map at the bounding box.
+        """
+        image = ImageOverlay(
+                            url='/ui.png',
+                            bounds=bounds
+                            )
+        
+        self.map.add_layer(image)
+    
+    def remove_layer(self):
+        """
+        remove a layer from the map.
+        """
+        self.map.remove_layer(layer)
+        
+    def save_map(self):
+        """
+        save the map and layers as a static HTML.
+        """
+        self.map.save('map.html', title='My Map')
+        
     @staticmethod
     def update_nesw(x):
         def create_wid(a):

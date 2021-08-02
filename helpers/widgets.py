@@ -57,11 +57,15 @@ class Widgets:
                                               display='flex')
 
     def get_lat_lon_widgets(self):
-
+        """
+        call the latitude() and longitde() methods which return BoundedFloatText widgets.
+        """
         return self.latitude(), self.longitude()
 
     def get_product_widgets(self):
-
+        """
+        call the product() method, returning the relevant product list widget.
+        """
         return self.product()
 
     def longitude(self):
@@ -172,7 +176,11 @@ class Widgets:
         items = []#[self.get_date(value=datetime.date(2018,1,1), description=f'Date {i+1}:') for i in range(n)]
         carousel = widgets.Box(children=items, layout = self.carousel_layout)
         return carousel
-        
+    
+    
+    def save_format(self):
+        pass
+            
    
 
     def rainfall_products(self):
@@ -227,23 +235,23 @@ class Widgets:
                                         disabled=False,
                                         layout=self.item_layout)
 
-    def set_up_button(self, method):
+    def set_up_button(self, method, description):
 
-        button = LoadedButton(description="Get Data",
+        button = LoadedButton(description=description,
                               layout=self.item_layout)
         button.on_click(method)
         button.button_style = 'primary'
 
         return button
 
-    def set_up_loc_button(self, method):
+#     def set_up_loc_button(self, method):
 
-        button = LoadedButton(description="Get Location",
-                              layout=self.item_layout_loc)
-        button.on_click(method)
-        button.button_style = 'primary'
+#         button = LoadedButton(description="Get Location",
+#                               layout=self.item_layout_loc)
+#         button.on_click(method)
+#         button.button_style = 'primary'
 
-        return button
+#         return button
 
     @ staticmethod
     def display_widget(widget_list):
@@ -310,6 +318,17 @@ class Widgets:
         box2 = HBox([m, box1], layout=box_layout)
 
         display(box2)
+        
+    @staticmethod
+    def output_widgets(out):
+        # Display relevant saving widgets to save after finished running
+        from ipywidgets import HBox, VBox, Box
+        
+        with out2:
+            display(box)
+            
+            
+            
 
 #     @ staticmethod
 #     def upgraded_display(operation, product1, subproduct1, product2, subproduct2,
