@@ -11,6 +11,7 @@ from ipyleaflet import (
     GeoJSON, WidgetControl, DrawControl, LayerGroup, FullScreenControl,
     interactive)
 import ipywidgets as widgets
+from ipywidgets import HBox, VBox, Box
 from pyproj import Proj, transform
 from traitlets import traitlets
 import pandas as pd
@@ -55,6 +56,7 @@ class Widgets:
                                               height='60px',
                                               flex_flow='row',
                                               display='flex')
+        self.save_layout = widgets.Layout(width='auto', height='auto')
 
     def get_lat_lon_widgets(self):
         """
@@ -179,9 +181,13 @@ class Widgets:
     
     
     def save_format(self):
-        pass
+        # csv of netCDF is timeseries
+        # netCDF or shp if area
+        
+        return widgets.Dropdown(description='Save Format',
+                               disabled=True,
+                               layout = self.save_layout)
             
-   
 
     def rainfall_products(self):
 
@@ -235,23 +241,20 @@ class Widgets:
                                         disabled=False,
                                         layout=self.item_layout)
 
-    def set_up_button(self, method, description):
-
-        button = LoadedButton(description=description,
-                              layout=self.item_layout)
+    def set_up_button(self, method, description, layout='default'):
+        
+        if layout=='default':
+            button = LoadedButton(description=description,
+                                  layout=self.item_layout)
+        elif layout=='save':
+            button = LoadedButton(description=description,
+                              layout=self.save_layout)
         button.on_click(method)
         button.button_style = 'primary'
 
         return button
 
-#     def set_up_loc_button(self, method):
 
-#         button = LoadedButton(description="Get Location",
-#                               layout=self.item_layout_loc)
-#         button.on_click(method)
-#         button.button_style = 'primary'
-
-#         return button
 
     @ staticmethod
     def display_widget(widget_list):
@@ -259,104 +262,47 @@ class Widgets:
         for w in widget_list:
             display(w)
 
-    @ staticmethod
-    def display_widgets(product, subproduct, north, east, south,
-                        west, date, hour, button, m):
-
-        from ipywidgets import HBox, VBox
-
-        # for w in widget_list:
-        #     display(w)
-        box1 = VBox([product, subproduct, north, east, south,
-                     west, date, hour, button])
-
-        box2 = HBox([box1, m])
-        box_layout = widgets.Layout(
-            display='flex',
-            flex_flow='row',
-            align_items='stretch',
-            width='100%')
-        display(box2)
-
-    @ staticmethod
-    def display_widget_comparison(product, subproduct, north, east, south,
-                                  west, date1, hour1, date2, hour2, button, m):
-
-        from ipywidgets import HBox, VBox
-
-        # for w in widget_list:
-        #     display(w)
-        box1 = VBox([product, subproduct, north, east, south,
-                     west, date1, hour1, date2, hour2, button])
-        box2 = HBox([m, box1])
-        box_layout = widgets.Layout(
-            display='flex',
-            flex_flow='row',
-            align_items='stretch',
-            width='100%')
-        display(box2)
 
     @ staticmethod
     def display_widget_comparison_reduced(operation, product1, subproduct1, product2, subproduct2,
                                           projection, date_carousel, north, east, south, west, button_loc, date1,
                                           date2, date3, date4, upload_file, button, m, average, 
-                                          trends, frequency):
-
-        from ipywidgets import HBox, VBox, Box
-
-        box1 = VBox([operation, product1, subproduct1, date1, date2, product2, subproduct2,
-                     date3, date4, projection, average, trends, frequency, date_carousel, north, 
-                     east, south, west, button_loc, upload_file, button])
-
+                                          trends, frequency, save_map, save_format, save_data):
+        
         box_layout = widgets.Layout(
             display='flex',
             flex_flow='row',
             align_items='stretch',
             align_content='center',
             width='100%')
+        
+        box_save = HBox([save_map, save_format, save_data], layout=box_layout)
+        
+        box1 = VBox([operation, product1, subproduct1, date1, date2, product2, subproduct2,
+                     date3, date4, projection, average, trends, frequency, date_carousel, north, 
+                     east, south, west, button_loc, upload_file, button, box_save])
+
+
 
         box2 = HBox([m, box1], layout=box_layout)
 
         display(box2)
         
     @staticmethod
-    def output_widgets(out):
-        # Display relevant saving widgets to save after finished running
-        from ipywidgets import HBox, VBox, Box
+    def output_widgets(save_map, save_data, save_format):
         
-        with out2:
-            display(box)
+        box_layout5 = widgets.Layout(
+            display='flex',
+            flex_flow='row',
+            align_items='stretch',
+            align_content='center',
+            width='100%')
+        
+        box = HBox([save_map, save_format, save_data], layout=box_layout5)
+
+        display(box)
             
             
-            
-
-#     @ staticmethod
-#     def upgraded_display(operation, product1, subproduct1, product2, subproduct2,
-#                          projection, north, east, south, west, button_loc, date1,
-#                          date2, date3, date4, upload_file, button, m, average, trends, change):
-
-#         from ipywidgets import HBox, VBox, Box, Layout
-
-#         box_layout = Layout(display='flex',
-#                             flex_flow='row',
-#                             align_items='stretch',
-#                             align_content='center',
-#                             width='100%')
-
-#         box10 = VBox([subproduct2, date4])
-#         box9 = VBox([product2, date3])
-#         box6 = HBox([box9, box10])
-#         box8 = VBox([subproduct1, date2])
-#         box7 = VBox([product1, date1])
-#         box5 = HBox([box7, box8])
-#         box4_1 = VBox([north, east, south, west])
-#         box4 = HBox([upload_file, box4_1, projection])
-#         box3 = VBox([box4, box5, box6])
-#         box2 = HBox([average, trends, change])
-#         box1_1 = VBox([operation, m])
-#         box1 = HBox([box1_1, box3])
-#         main_box = VBox([box1, box2])
-#         display(main_box)
 
     @ staticmethod
     def gridspec_display(operation, product1, subproduct1, product2, subproduct2,
@@ -403,13 +349,35 @@ class Widgets:
         out = widgets.Output()
         display(out)
         return out
+    
+    
+    @staticmethod
+    def show_save_options(save_map, save_format, save_data):
+        """
+        show the saving options in the UI once plots appear.
+        """
+        save_map.layout.visibility = 'visible'
+        save_format.layout.visibility = 'visible'
+        save_data.layout.visibility = 'visible'
+    
+    
+    @staticmethod
+    def hide_save_options(save_map, save_format, save_data):
+        """
+        hide saving options in the UI when no plots are displayed.
+        """
+        save_map.layout.visibility = 'hidden'
+        save_format.layout.visibility = 'hidden'
+        save_data.layout.visibility = 'hidden'
 
+        
     def get_subproduct_list(self, product):
 
         if product == 'era5':
             return['skt']
         else:
             return self.search.get_subproduct_list_of_product(product)
+    
     
     def get_subproduct_trend_analysis(self, product):
         

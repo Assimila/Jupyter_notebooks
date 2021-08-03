@@ -45,36 +45,32 @@ class Data:
         else:
             self.keyfile = keyfile
 
-    def get_data_from_datacube(self, product, subproduct, start, end,
-                               latitude, longitude, projection=None):
-        ds = Dataset(product=product,
-                     subproduct=subproduct,
-                     identfile=self.keyfile)
 
-        first, last = self.get_dates(ds, start, end)
-        ds.get_data(start=first, stop=last, projection=projection,
-                    latlon=[latitude, longitude])
+    def get_data_from_datacube_latlon(self, product, subproduct, start, end,
+                                       latitude, longitude):
+        """
+        return datacube dataset for a point location request (lat/lon)
+        """
+        
+        with self.out:
+            clear_output()
+            print("Getting data...")
 
-        return ds.data
+            ds = Dataset(product=product,
+                         subproduct=subproduct,
+                         identfile=self.keyfile)
 
-#     def get_data_from_datacube(self, product, subproduct, start, end,
-#                                latitude, longitude):
-#         """
-#         REMOVE
-#         """
+            ds.get_data(start=start, stop=end,
+                        latlon=[latitude, longitude])
 
-#         ds = Dataset(product=product,
-#                      subproduct=subproduct,
-#                      identfile=self.keyfile)
-
-#         ds.get_data(start=start, stop=end,
-#                     latlon=[latitude, longitude])
-
-        return ds.data
+            return ds.data
 
     def get_data_from_datacube_nesw(self, product, subproduct, north, east,
                                     south, west, start, end):
-
+        """
+        return datacube dataset for an area location request (NESW)
+        """
+        
         with self.out:
             clear_output()
             print("Getting data...")
@@ -88,6 +84,7 @@ class Data:
 
             return ds.data
 
+        
     def check(self, north, east, south, west, start, end):
 
         if str(end) < str(start):
@@ -98,6 +95,8 @@ class Data:
 
         if north and south and north < south:
             raise ValueError('North value should be greater than south')
+         
+        
 
     def color_map_nesw(self, product, subproduct, north, east, south, west,
                        date, hour):
@@ -117,6 +116,9 @@ class Data:
             y = list_of_results
             y.__getitem__(subproduct).plot()
             plt.show()
+
+  
+
 
     @staticmethod
     def pickle_data(filename, your_content):
@@ -148,33 +150,56 @@ class Data:
             self.check_date(product, subproduct, date1)
             self.check_date(product, subproduct, date2)
             self.check(north, east, south, west, date1, date2)
-                
-            list_of_results1 = Data.get_data_from_datacube_nesw(
-                self, product, subproduct, north, east,
-                south, west, date1, date1)
-
-            y1 = list_of_results1
-    
-                
-            list_of_results2 = Data.get_data_from_datacube_nesw(
-                self, product, subproduct, north, east,
-                south, west, date2, date2)
             
-            y2 = list_of_results2
-            
-            difference = y2[subproduct][0] - y1[subproduct][0]
-    
-            fig, axs = plt.subplots(figsize=(7, 4))
+            if north == south and east == west:
+                list_of_results1 = Data.get_data_from_datacube_latlon(
+                self, product, subproduct, date1, date1, north, east)
+                                
+                y1 = list_of_results1
                 
-            difference.plot.imshow(ax=axs) 
+                list_of_results2 = Data.get_data_from_datacube_latlon(
+                self, product, subproduct, date2, date2, north, east)
+            
+                y2 = list_of_results2
+                
+                difference = y2[subproduct][0] - y1[subproduct][0]
+                
+                print(f"""
+==========================================================                
+Product:    {product}
+Subproduct: {subproduct}
+Lat/Lon:    {north}/{south}
+===========================================================
+Change was {difference.data} from {date1} to {date2}.""")
+            
+            else:
+                list_of_results1 = Data.get_data_from_datacube_nesw(
+                    self, product, subproduct, north, east,
+                    south, west, date1, date1)
 
-            # Set aspect to equal to avoid any deformation
-            axs.set_aspect('equal')
+                y1 = list_of_results1
 
-            plt.tight_layout()
 
-            # plt.show()
-            plt.show(block=False)
+                list_of_results2 = Data.get_data_from_datacube_nesw(
+                    self, product, subproduct, north, east,
+                    south, west, date2, date2)
+
+                y2 = list_of_results2
+                
+            
+                difference = y2[subproduct][0] - y1[subproduct][0]
+
+                fig, axs = plt.subplots(figsize=(7, 4))
+
+                difference.plot.imshow(ax=axs) 
+
+                # Set aspect to equal to avoid any deformation
+                axs.set_aspect('equal')
+
+                plt.tight_layout()
+
+                # plt.show()
+                plt.show(block=False)
 
 
     
@@ -194,24 +219,41 @@ class Data:
             for count, date in enumerate(dates):
                 self.check_date(product, subproduct, date)
                 
-                results = Data.get_data_from_datacube_nesw(
-                        self, product, subproduct, north, east,
-                        south, west, dates[count], dates[count])
+                if north == south and east == west:
+                    results = Data.get_data_from_datacube_latlon(
+                            self, product, subproduct, dates[count], dates[count], north, east)
+                    
+                else:
+                    results = Data.get_data_from_datacube_nesw(
+                            self, product, subproduct, north, east,
+                            south, west, dates[count], dates[count])
 
                 results_arr.append(results)
+            
+            if north == south and east == west:
+                print(f"""
+==================================================                
+Product:    {product}
+Subproduct: {subproduct}
+Lat/Lon:    {north}/{south}
+================================================== """)
+                for count, date in enumerate(dates):
+                    print(f"""  
+{results_arr[count][subproduct][0].data} for {date}""")
                 
-            
-            
-            fig, axs = plt.subplots(1, len(dates), figsize=(9, 4),
-                                    sharex=True, sharey=True)
-                              
-            for i in range(len(dates)):
-                axs[i].set_aspect('equal')
-                results_arr[i][subproduct][0].plot.imshow(ax=axs[i])
-               
-            plt.tight_layout()
-            plt.show(block=True)
-            
+
+            else:
+                        
+                fig, axs = plt.subplots(1, len(dates), figsize=(9, 4),
+                                        sharex=True, sharey=True)
+
+                for i in range(len(dates)):
+                    axs[i].set_aspect('equal')
+                    results_arr[i][subproduct][0].plot.imshow(ax=axs[i])
+
+                plt.tight_layout()
+                plt.show(block=True)
+
        
     def trend_analysis(self, product, subproduct, trend, north, east, 
                        south, west, date1, date2, date3, date4):
@@ -231,33 +273,45 @@ class Data:
             self.check(north, east, south, west, date1, date2)
             self.check(north, east, south, west, date3, date4 )
             
-            list_of_results1 = Data.get_data_from_datacube_nesw(
-                self, product, subproduct, north, east,
-                south, west, date1, date2)
-
-            y1 = list_of_results1
-            print(y1)
-                
-            list_of_results2 = Data.get_data_from_datacube_nesw(
-                self, product, subproduct, north, east,
-                south, west, date3, date4)
             
-            y2 = list_of_results2
-            print(y2)
-            if trend == 'timeseries':
+            if north == south and east == west:
                 fig, axs = plt.subplots(1, 2, figsize=(9, 4),
                                         sharex=True, sharey=True)
                 
+                list_of_results1 = Data.get_data_from_datacube_latlon(
+                    self, product, subproduct, date1, date2, north, east)
+
+                y1 = list_of_results1
+
+                list_of_results2 = Data.get_data_from_datacube_latlon(
+                    self, product, subproduct, date3, date4, north, east)
+
+                y2 = list_of_results2               
+                
+                print(y1[subproduct])
                 y1[subproduct].plot(ax=axs[0])
                 y2[subproduct].plot(ax=axs[1])
-                
+                   
+    
                 axs[0].set_aspect('equal')
                 axs[1].set_aspect('equal')
 
                 plt.tight_layout()
-                plt.show(block=False)
-
+                plt.show()
+               
             else:
+                
+                list_of_results1 = Data.get_data_from_datacube_nesw(
+                    self, product, subproduct, north, east,
+                    south, west, date1, date2)
+
+                y1 = list_of_results1
+
+                list_of_results2 = Data.get_data_from_datacube_nesw(
+                    self, product, subproduct, north, east,
+                    south, west, date3, date4)
+
+                y2 = list_of_results2
 
                 # Share axis to allow zooming on both plots simultaneously
                 fig, axs = plt.subplots(1, 2, figsize=(9, 4),
@@ -273,13 +327,103 @@ class Data:
                 plt.tight_layout()
                 plt.show(block=False)
 
-    def average_subproduct(self, product, subproduct, frequency, north, 
+    def average_subproduct(self, product, subproduct, frequency, average, north, 
                            east, south, west, date1, date2):
         
-        pass
-    
-        
-        
+        with self.out:
+            clear_output()
+
+            try:
+                plt.close('all')
+            except ValueError:
+                pass
+
+            self.check_date(product, subproduct, date1)
+            self.check_date(product, subproduct, date2)
+
+            self.check(north, east, south, west, date1, date2)
+         
+            if north == south and east == west:
+
+                list_of_results = Data.get_data_from_datacube_latlon(
+                                   self, product, subproduct, date1, date2, north, east)
+                
+            else:
+                list_of_results = Data.get_data_from_datacube_nesw(
+                                self, product, subproduct, north, east,
+                                south, west, date1, date2)
+
+            y = list_of_results
+            #print(pd.DatetimeIndex(y['time'].data))
+             
+            timesteps = len(y['time'].data)
+            print(timesteps)
+           # print(len(y))
+            
+            
+            # calculate timesteps
+            if frequency == 'days':
+                if average == 'by pixel':
+                
+                    # Share axis to allow zooming on both plots simultaneously
+                    fig, axs = plt.subplots(figsize=(9, 4),
+                                            sharex=True, sharey=True)
+
+                    y[subproduct].mean('time').plot.imshow(ax=axs)
+
+                    # Set aspect to equal to avoid any deformation
+                    axs.set_aspect('equal')
+
+                    plt.tight_layout()
+                    plt.show(block=False)
+            
+            
+                elif average == 'by area':
+                    pass
+                
+                
+            
+            elif frequency == 'months':
+                if average == 'by pixel':
+                
+                    # Share axis to allow zooming on both plots simultaneously
+                    fig, axs = plt.subplots(figsize=(9, 4),
+                                            sharex=True, sharey=True)
+
+                    y[subproduct].mean('time').plot.imshow(ax=axs)
+
+                    # Set aspect to equal to avoid any deformation
+                    axs.set_aspect('equal')
+
+                    plt.tight_layout()
+                    plt.show(block=False)
+            
+            
+                elif average == 'by area':
+                    pass
+                
+            
+            elif frequency == 'years':
+                if average == 'by pixel':
+                
+                    # Share axis to allow zooming on both plots simultaneously
+                    fig, axs = plt.subplots(figsize=(9, 4),
+                                            sharex=True, sharey=True)
+
+                    y[subproduct].mean('time').plot.imshow(ax=axs)
+
+                    # Set aspect to equal to avoid any deformation
+                    axs.set_aspect('equal')
+
+                    plt.tight_layout()
+                    plt.show(block=False)
+
+            
+                elif average == 'by area':
+                    pass
+            
+
+
 
     def color_map_nesw_compare(self, product, subproduct, north, east, south,
                                west, date1, hour1, date2, hour2):
