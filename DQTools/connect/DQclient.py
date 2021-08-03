@@ -159,14 +159,17 @@ class APIRequest(object):
         self.pwd = pwd
 
         # Specifically for dask use
-        wkspace_root = op.join(__file__, '../../../')
+        wkspace_root = op.join(__file__, '../../../../')
         # make sure we can import the modules we need by adding them to the Python
         # environment search path
         syspath.append(op.normpath(os.path.join(wkspace_root, 'datacube')))
         try:
-            import src.datacube.dq_interface as dqif
-        except (ImportError, ModuleNotFoundError):
-            pass
+            from src.datacube.dq_interface import DatacubeInterface
+            self.dqif = DatacubeInterface()
+        except Exception as e:
+            print(e)
+        # except (ImportError, ModuleNotFoundError):
+        #     pass
 
         # try:
         #     # check credentials with simple connection. Header could
@@ -203,7 +206,9 @@ class APIRequest(object):
         :raise Exception: for any problems
         """
         try:
-            if not req['params']['use_dask']:
+            # if not req['params']['use_dask']:
+            if not 'use_dask' in req['params'] or \
+                ('use_dask' in req['params'] and not req['params']['use_dask']):
                 # Unless we are using DASK, the message goes through the
                 # http server. It will be a GET_DATA message.
                 payload = pickle.dumps(req, protocol=-1)
@@ -253,12 +258,12 @@ class APIRequest(object):
                 # use the switch in the request to control gzip/pickle for DASK
                 if req.get('params').get('use_dask'):
                     try:
-                        direct_interface = dqif.DatacubeInterface(self.login,
-                                                                  self.pwd,
-                                                                  req)
-                        return direct_interface.get_address()
-                    except NameError:
-                        pass #TODO requires error message
+                        self.dqif.authenticate(self.login, self.pwd, req)
+
+                        return self.dqif.get_address()
+                    except Exception as e:
+                        # pass #TODO requires error message
+                        print(e)
                 else:
                     resp_unpacked = gzip.decompress(resp.content)
                     # use pickle to de-serialize xarray data

@@ -340,7 +340,7 @@ Data:
                 print("Failed to retrieve Dataset sub-product data, "
                       "please see logfile for details.")
             else:
-                self.logger.error("Failed to retrieve Dataset sub-product DASK"
+                self.logger.error("Failed to retrieve Dataset sub-product DASK "
                                   "pointer.\n%s" % e)
                 print("Failed to retrieve Dataset sub-product DASK pointer, "
                       "please see logfile for details.")
