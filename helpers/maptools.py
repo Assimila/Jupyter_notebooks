@@ -28,9 +28,6 @@ sys.path.append("..")
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-# matplotlib.use('nbagg')
-
-
 
 class MapTools:
     """
@@ -45,14 +42,14 @@ class MapTools:
         self.height = height
         self.dc = DrawControl()
         self.basemap = self.os_map_api()
-        self.map = Map(basemap=self.basemap, center=self.center, zoom=self.zoom,
+        self.map = Map(basemap = self.basemap, center=self.center, zoom=self.zoom,
                        layout=dict(width=self.width, height=self.height))
     
     def os_map_api(self):
         key = 'k49EE9jmNlTQtGq6rGMXKgeQ2BYYADJG'
-        secret_key = 'GL5RryNtcbGzCBw7'
+        #secret_key = 'GL5RryNtcbGzCBw7'
 
-        os_maps_api = {'url': f'https://api.os.uk/maps/raster/v1/zxy/Light_3857/{{z}}/{{x}}/{{y}}.png?key={secret_key}',
+        os_maps_api = {'url': f'https://api.os.uk/maps/raster/v1/zxy/Light_3857/{{z}}/{{x}}/{{y}}.png?key={key}',
                    'min_zoom': 7,
                    'max_zoom': 20,
                    'attribution': f'Contains OS data &copy; Crown copyright and database rights                                              {datetime.datetime.now().year}'}

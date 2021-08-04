@@ -104,7 +104,7 @@ class Data:
         with self.out:
             clear_output()
             print("Getting data...")
-
+            
             start = Data.combine_date_hour(self, date, hour)
             end = Data.combine_date_hour(self, date, hour)
 
@@ -118,8 +118,6 @@ class Data:
             plt.show()
 
   
-
-
     @staticmethod
     def pickle_data(filename, your_content):
         # REMOVE AFTER TESTING
@@ -168,7 +166,7 @@ class Data:
 ==========================================================                
 Product:    {product}
 Subproduct: {subproduct}
-Lat/Lon:    {north}/{south}
+Lat/Lon:    {north}/{east}
 ===========================================================
 Change was {difference.data} from {date1} to {date2}.""")
             
@@ -200,7 +198,8 @@ Change was {difference.data} from {date1} to {date2}.""")
 
                 # plt.show()
                 plt.show(block=False)
-
+                
+                return fig
 
     
     def color_map_identifying_change(self, product, subproduct, north, east,
@@ -235,7 +234,7 @@ Change was {difference.data} from {date1} to {date2}.""")
 ==================================================                
 Product:    {product}
 Subproduct: {subproduct}
-Lat/Lon:    {north}/{south}
+Lat/Lon:    {north}/{east}
 ================================================== """)
                 for count, date in enumerate(dates):
                     print(f"""  
@@ -253,7 +252,8 @@ Lat/Lon:    {north}/{south}
 
                 plt.tight_layout()
                 plt.show(block=True)
-
+                
+                return fig
        
     def trend_analysis(self, product, subproduct, trend, north, east, 
                        south, west, date1, date2, date3, date4):
@@ -266,10 +266,10 @@ Lat/Lon:    {north}/{south}
             except ValueError:
                 pass
             
-            self.check_date(product, subproduct, date1)
-            self.check_date(product, subproduct, date2)
-            self.check_date(product, subproduct, date3)
-            self.check_date(product, subproduct, date4)
+#             self.check_date(product, subproduct, date1)
+#             self.check_date(product, subproduct, date2)
+#             self.check_date(product, subproduct, date3)
+#             self.check_date(product, subproduct, date4)
             self.check(north, east, south, west, date1, date2)
             self.check(north, east, south, west, date3, date4 )
             
@@ -277,7 +277,7 @@ Lat/Lon:    {north}/{south}
             if north == south and east == west:
                 fig, axs = plt.subplots(1, 2, figsize=(9, 4),
                                         sharex=True, sharey=True)
-                
+     
                 list_of_results1 = Data.get_data_from_datacube_latlon(
                     self, product, subproduct, date1, date2, north, east)
 
@@ -288,16 +288,19 @@ Lat/Lon:    {north}/{south}
 
                 y2 = list_of_results2               
                 
-                print(y1[subproduct])
                 y1[subproduct].plot(ax=axs[0])
                 y2[subproduct].plot(ax=axs[1])
-                   
     
                 axs[0].set_aspect('equal')
                 axs[1].set_aspect('equal')
-
+                  
+                plt.savefig('trend.png')
                 plt.tight_layout()
                 plt.show()
+                
+                print('done')
+                return fig
+                
                
             else:
                 
@@ -326,7 +329,9 @@ Lat/Lon:    {north}/{south}
 
                 plt.tight_layout()
                 plt.show(block=False)
-
+                
+                return fig 
+            
     def average_subproduct(self, product, subproduct, frequency, average, north, 
                            east, south, west, date1, date2):
         
@@ -456,7 +461,8 @@ Lat/Lon:    {north}/{south}
             y2.__getitem__(subproduct).plot(ax=axs[1])
             plt.tight_layout()
             plt.show()
-    
+            
+            return fig
 
     def color_map_nesw_compare_reduced(self, product, subproduct, north, east, south,
                                        west, date1, date2):
@@ -506,7 +512,8 @@ Lat/Lon:    {north}/{south}
 #             extent = axs[0].get_window_extent().transformed(fig.dpi_scale_trans.inverted())
 #             plt.savefig('../helpers/files/fig.png', bbox_inches=extent.expanded(1.1, 1.2))
 
-            
+            return fig 
+
     def compare_rfe_skt_time(self, longitude, latitude, start, end):
 
         Data.check(self, None, None, None, None, start, end)
@@ -978,34 +985,117 @@ Lat/Lon:    {north}/{south}
 
         return available
 
-    def reproject_coords(self, y, x, projection):
+    def reproject_coords(self, x, y, projection):
+        """
+        Coords must be reprojected to WSG84 before being passed to DataCube.
+        """
+        if projection == "WGS84":
+            return x, y
+        
+        elif projection == "BNG":
+            x, y = self.coord_transform(x, y, conv='bng_to_latlon') 
+            return x, y
+        
+        elif projection == 'Sinusoidal':
+            x, y = self.coord_transform(x, y, conv = 'sinu_to_latlon')
+            return x, y
 
-        if projection == "British National Grid":
-            lat, lon = self.bng_to_latlon(y, x)
-        else:
-            # Assuming coords in lat lon if not BNG
-            lat, lon = y, x
-        return lat, lon
+    def coord_transform(self, x, y, conv):
+        """
+        convert between coordinate systems.
+        :param: x (float)  - x position
+        :param: y (float)  - y position
+        
+        :param: conv (str) - 'bng_to_latlon'
+                           - 'latlon_to_bng'
+                           - 'bng_to_sinu'
+                           - 'sinu_to_bng'
+                           - 'latlon_to_sinu'
+                           - 'sinu_to_latlon'
+        """
+        import osr
 
-    def bng_to_latlon(self, y, x, to_latlon=True):
-        """ convert British National Grid easting and northing to latitude and longitude"""
-#         bng_proj = Proj(
-#             '+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.1502,0.247,0.8421,-20.4894 +units=m +no_defs=True')
+        # Sinusoidal definition
+        # from https://spatialreference.org/ref/sr-org/6842/
+        # It fully match with the metadata in the MODIS products
+        sinusoidal_srs = (f'+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 '
+                          f'+b=6371007.181 +units=m +no_defs ')
 
-        bng_proj = Proj(init='epsg:27700')
-        latlon_proj = Proj(init='epsg:4326')
+        # British National Grid (BNG) definition
+        # from https://spatialreference.org/ref/epsg/osgb-1936-british-national-grid/
+        # User should pass those parameters?
+        bng_srs = (f' +proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 '
+                   f' +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 '
+                   f' +units=m +no_defs ')
 
-        if to_latlon:
-            lat, lon = transform(bng_proj, latlon_proj, y, x)
-            print(f'lat, lon: {lat}{lon}')
-            return lat, lon
-        else:
-            nort, east = transform(latlon_proj, bng_proj, y, x)
-            print(f'nort, east: {nort}{east}')
-            return nort, east
+        # Sinu spatial reference system
+        sinu = osr.SpatialReference()
+        sinu.ImportFromProj4(sinusoidal_srs)
+
+        # BNG spatial reference system
+        bng = osr.SpatialReference()
+        bng.ImportFromProj4(bng_srs)
+
+        # lat/lon spatial reference system
+        latlon = osr.SpatialReference()
+        latlon.ImportFromEPSG(4326)
+        
+        
+        if conv == 'bng_to_latlon': 
+            transform = osr.CoordinateTransformation(bng, latlon)
+            x, y, z = transform.TransformPoint(x, y)
+            return x, y
+
+        elif conv == 'latlon_to_bng':
+            transform = osr.CoordinateTransformation(latlon, bng)
+            x, y, z = transform.TransformPoint(x, y)
+            return x, y
+        
+        elif conv == 'bng_to_sinu':
+            transform = osr.CoordinateTransformation(bng, sinu)
+            x, y, z = transform.TransformPoint(x, y)
+            return x, y
+        
+        elif conv == 'sinu_to_bng':
+            transform = osr.CoordinateTransformation(sinu, bng)
+            x, y, z = transform.TransformPoint(x, y)
+            return x, y
+        
+        elif conv == 'latlon_to_sinu':
+            transform = osr.CoordinateTransformation(latlon, sinu)
+            x, y, z = transform.TransformPoint(x, y)
+            return x, y
+            
+        elif conv == 'sinu_to_latlon':
+            transform = osr.CoordinateTransformation(sinu, latlon)
+            x, y, z = transform.TransformPoint(x, y)
+            return x, y
+        
+        
+    def check_coords(self, north, east, south, west, projection):
+        """
+        return converted coordinates to handle drawing on map in different projections.
+        """
+        if projection == 'WGS84':
+            return north, east, south, west
+
+        if projection == 'BNG':
+            x1, y1 = self.coord_transform(x=east, y=north, conv='latlon_to_bng')
+            x2, y2 = self.coord_transform(x=west, y=south, conv='latlon_to_bng')
+            north, east, south, west = y1, x1, y2, x2
+            return north, east, south, west
+
+        if projection == 'Sinusoidal':
+            x1, y1 = self.coord_transform(x=east, y=north, conv='latlon_to_sinu')
+            x2, y2 = self.coord_transform(x=west, y=south, conv='latlon_to_sinu')  
+            north, east, south, west = y1, x1, y2, x2
+            return north, east, south, west  
+        
 
     @staticmethod
     def shape_to_geojson(input_shp, output_geoJson):
-
+        """
+        use GDAL to convert .shp file to .geojson.
+        """
         cmd = "ogr2ogr -f GeoJSON -t_srs crs:84 " + output_geoJson + " " + input_shp
         subprocess.call(cmd, shell=True)

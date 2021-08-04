@@ -92,8 +92,8 @@ class Widgets:
 
     def get_point(self, value, description):
         return widgets.BoundedFloatText(value=value,
-                                        min=-180,
-                                        max=180,
+                                        min=-9999999,
+                                        max=9999999,
                                         description=description,
                                         layout=self.item_layout,
                                         disabled=False,
@@ -185,7 +185,7 @@ class Widgets:
         # netCDF or shp if area
         
         return widgets.Dropdown(description='Save Format',
-                               disabled=True,
+                               disabled=False,
                                layout = self.save_layout)
             
 
