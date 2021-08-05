@@ -217,7 +217,9 @@ Subproduct: {subproduct}
 Lat/Lon:    {north}/{east}
 ===========================================================
 Change was {difference.data} from {date1} to {date2}.""")
-
+                
+                return y1, y2
+                
             else:
                 list_of_results1 = Data.get_data_from_datacube_nesw(
                     self, product, subproduct, north, east,
@@ -245,7 +247,7 @@ Change was {difference.data} from {date1} to {date2}.""")
                 # plt.show()
                 plt.show(block=False)
 
-                return fig
+                return y1, y2, fig
 
     def color_map_identifying_change(self, product, subproduct, north, east,
                                      south, west, dates):
@@ -297,7 +299,9 @@ Lat/Lon:    {north}/{east}
                 for count, date in enumerate(dates):
                     print(f"""
 {results_arr[count][subproduct][0].data} for {date}""")
-
+            
+                return results_arr 
+            
             else:
 
                 fig, axs = plt.subplots(1, len(dates), figsize=(16, 4),
@@ -310,7 +314,7 @@ Lat/Lon:    {north}/{east}
                 plt.tight_layout()
                 plt.show(block=True)
 
-                return fig
+                return results_arr, fig
 
     def trend_analysis(self, product, subproduct, north, east,
                        south, west, date1, date2, date3, date4):
@@ -342,10 +346,10 @@ Lat/Lon:    {north}/{east}
             except ValueError:
                 pass
 
-#             self.check_date(product, subproduct, date1)
-#             self.check_date(product, subproduct, date2)
-#             self.check_date(product, subproduct, date3)
-#             self.check_date(product, subproduct, date4)
+            self.check_date(product, subproduct, date1)
+            self.check_date(product, subproduct, date2)
+            self.check_date(product, subproduct, date3)
+            self.check_date(product, subproduct, date4)
             self.check(north, east, south, west, date1, date2)
             self.check(north, east, south, west, date3, date4)
 
@@ -374,7 +378,7 @@ Lat/Lon:    {north}/{east}
                 plt.show()
 
                 print('done')
-                return fig
+                return y1, y2, fig
 
             else:
 
@@ -400,11 +404,14 @@ Lat/Lon:    {north}/{east}
                 # Set aspect to equal to avoid any deformation
                 axs[0].set_aspect('equal')
                 axs[1].set_aspect('equal')
-
+                
+                axs[0].set_title(date1)
+                axs[1].set_title(date2)
+                
                 plt.tight_layout()
                 plt.show(block=False)
 
-                return fig
+                return y1, y2, fig
 
     def average_subproduct(self, product, subproduct, frequency, average, north,
                            east, south, west, date1, date2):
@@ -432,26 +439,33 @@ Lat/Lon:    {north}/{east}
             the average per specified time increment ['1D', '1MS', '1YS'].
             """
             if north == south and east == west:
-                pixel_average = y[subproduct].resample(time=freq).mean('time').mean('time').data
+                pixel_average = y[subproduct].resample(time=freq).mean('time').mean('time')
                 print(f"""
 ==================================================
 Product:    {product}
 Subproduct: {subproduct}
 Lat/Lon:    {north}/{east}
 ================================================== 
-Average = {pixel_average}
+Average = {pixel_average.data}
 """)
-     
+                 return pixel_average
+                
             else:
                 fig, axs = plt.subplots(figsize=(9, 4),
                                         sharex=True, sharey=True)
 
                 y[subproduct].resample(time=freq).mean('time').mean('time').plot.imshow(ax=axs)
                 axs.set_aspect('equal')
+                if freq == '1D':
+                    plt.title(f'average: days')
+                elif freq == '1MS':
+                    plt.title(f'average: months')
+                elif freq == '1YS':
+                    plt.title(f'average: years')
                 plt.tight_layout()
                 plt.show(block=False)
 
-                return fig 
+                return y[subproduct].resample(time=freq).mean('time').mean('time'), fig 
             
         def by_area(freq):
             """
@@ -465,8 +479,9 @@ Product:    {product}
 Subproduct: {subproduct}
 Lat/Lon:    {north}/{east}
 ================================================== 
-Average = {area_average}
+Average = {area_average.data}
 """)
+            return area_average
             
         with self.out:
             clear_output()
@@ -476,10 +491,10 @@ Average = {area_average}
             except ValueError:
                 pass
 
-#             self.check_date(product, subproduct, date1)
-#             self.check_date(product, subproduct, date2)
+            self.check_date(product, subproduct, date1)
+            self.check_date(product, subproduct, date2)
 
-#             self.check(north, east, south, west, date1, date2)
+            self.check(north, east, south, west, date1, date2)
 
             if north == south and east == west:
 
@@ -642,6 +657,8 @@ Average = {area_average}
             # otherwise the right y-label is slightly clipped
             fig.tight_layout()
             plt.show()
+            
+            return fig
 
     def compare_rainfall_products(self, latitude, longitude, start, end):
 
@@ -996,8 +1013,6 @@ Average = {area_average}
         return dates
 
     def get_dates(self, dataset, start, end):
-        # start = np.datetime64(start)
-        # end = np.datetime64(end)
         first_date = dataset.first_timestep
         last_date = dataset.last_timestep
         if end < start:
