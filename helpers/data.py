@@ -1,31 +1,22 @@
 from __future__ import print_function
+import pickle
+import subprocess
+import warnings
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+import datetime
+import pandas as pd
+from pyproj import Proj, transform
+
+from IPython.display import display, clear_output
+from IPython.lib.display import FileLink
+from DQTools.DQTools.dataset import Dataset
+from DQTools.DQTools.search import Search
 import sys
 sys.path.append("../")
-from DQTools.DQTools.search import Search
-from DQTools.DQTools.dataset import Dataset
-from IPython.lib.display import FileLink
-from IPython.display import display, clear_output
-from ipyleaflet import (
-    Map, Marker, basemaps, basemap_to_tiles,
-    TileLayer, ImageOverlay, Polyline, Polygon, Rectangle,
-    GeoJSON, WidgetControl, DrawControl, LayerGroup, FullScreenControl,
-    interactive)
-import ipywidgets as widgets
-from pyproj import Proj, transform
-from traitlets import traitlets
-import pandas as pd
-import datetime 
-import os
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib
-import warnings
-import subprocess
-import json
-import pickle
-import xarray
 
-import sys
 sys.path.append("..")
 
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -33,10 +24,16 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 
 class Data:
     """
-    Data reading, plotting and displaying methods.
+    Data reading, analysing and plotting methods.
     """
 
     def __init__(self, out, keyfile=None):
+        """
+        :param out:                 Output() widget to capture generated output.
+        :param keyfile [optional]:  user crediential file.
+
+        :return:
+        """
 
         self.out = out
         if keyfile is None:
@@ -45,13 +42,21 @@ class Data:
         else:
             self.keyfile = keyfile
 
-
     def get_data_from_datacube_latlon(self, product, subproduct, start, end,
-                                       latitude, longitude):
+                                      latitude, longitude):
         """
-        return datacube dataset for a point location request (lat/lon)
+        Get a datacube dataset for a point location request.
+
+        :param product:     the name of the datacube product
+        :param subproduct:  the name of the datacube subproduct
+        :param start:       the start date of the period
+        :param end:         the end date of the period
+        :param latitude     the latitude of the point location
+        :param longitude    the longitude of the point location
+
+        :return: xarray of datacube dataset data
         """
-        
+
         with self.out:
             clear_output()
             print("Getting data...")
@@ -68,9 +73,20 @@ class Data:
     def get_data_from_datacube_nesw(self, product, subproduct, north, east,
                                     south, west, start, end):
         """
-        return datacube dataset for an area location request (NESW)
+        Get a datacube dataset for a region location request.
+
+        :param product:     the name of the datacube product
+        :param subproduct:  the name of the datacube subproduct
+        :param north:       northern latitude
+        :param east:        eatern longitude
+        :param south:       southern latitude
+        :param west:        western latitude
+        :param start:       the start date of the period
+        :param end:         the end date of the period
+
+        :return: xarray of datacube dataset data
         """
-        
+
         with self.out:
             clear_output()
             print("Getting data...")
@@ -84,8 +100,20 @@ class Data:
 
             return ds.data
 
-        
     def check(self, north, east, south, west, start, end):
+        """
+        Check that the north, east, south, west, start and end
+        parameters given make sense.
+
+        :param north: northern latitude
+        :param east:  eatern longitude
+        :param south: southern latitude
+        :param west:  western latitude
+        :param start: datetime object for the start date
+        :param end:   datetime object for the end date
+
+        :return:
+        """
 
         if str(end) < str(start):
             raise ValueError('End date should not be before start date')
@@ -95,16 +123,27 @@ class Data:
 
         if north and south and north < south:
             raise ValueError('North value should be greater than south')
-         
-        
 
     def color_map_nesw(self, product, subproduct, north, east, south, west,
                        date, hour):
+        """
+        Plot a colour map of the subproduct over a bounding box.
 
+        :param product:     the name of the datacube product
+        :param subproduct:  the name of the datacube subproduct
+        :param north:       northern latitude
+        :param east:        eatern longitude
+        :param south:       southern latitude
+        :param west:        western latitude
+        :param date:        the date of the analysis
+        :param hour:        the hour of the analysis
+
+        :return:
+        """
         with self.out:
             clear_output()
             print("Getting data...")
-            
+
             start = Data.combine_date_hour(self, date, hour)
             end = Data.combine_date_hour(self, date, hour)
 
@@ -117,7 +156,6 @@ class Data:
             y.__getitem__(subproduct).plot()
             plt.show()
 
-  
     @staticmethod
     def pickle_data(filename, your_content):
         # REMOVE AFTER TESTING
@@ -131,12 +169,24 @@ class Data:
         with open(filename, 'rb') as f:
             data = pickle.load(f)
         return data
-  
 
     def color_map_subtraction(self, product, subproduct, north, east, south,
-                                       west, date1, date2):
-        
-         with self.out:
+                              west, date1, date2):
+        """
+        Plot a colour map of a subproduct subtraction over 2 dates.
+
+        :param product:     the name of the datacube product
+        :param subproduct:  the name of the datacube subproduct
+        :param north:       northern latitude
+        :param east:        eatern longitude
+        :param south:       southern latitude
+        :param west:        western latitude
+        :param date1:       the first date (being subtracted from)
+        :param date2:       the second date (being subtracted)
+
+        :return fig: figure object for the plot
+        """
+        with self.out:
             clear_output()
 
             # Close all existing figures
@@ -148,28 +198,28 @@ class Data:
             self.check_date(product, subproduct, date1)
             self.check_date(product, subproduct, date2)
             self.check(north, east, south, west, date1, date2)
-            
+
             if north == south and east == west:
                 list_of_results1 = Data.get_data_from_datacube_latlon(
-                self, product, subproduct, date1, date1, north, east)
-                                
+                    self, product, subproduct, date1, date1, north, east)
+
                 y1 = list_of_results1
-                
+
                 list_of_results2 = Data.get_data_from_datacube_latlon(
-                self, product, subproduct, date2, date2, north, east)
-            
+                    self, product, subproduct, date2, date2, north, east)
+
                 y2 = list_of_results2
-                
+
                 difference = y2[subproduct][0] - y1[subproduct][0]
-                
+
                 print(f"""
-==========================================================                
+==========================================================
 Product:    {product}
 Subproduct: {subproduct}
 Lat/Lon:    {north}/{east}
 ===========================================================
 Change was {difference.data} from {date1} to {date2}.""")
-            
+
             else:
                 list_of_results1 = Data.get_data_from_datacube_nesw(
                     self, product, subproduct, north, east,
@@ -177,19 +227,17 @@ Change was {difference.data} from {date1} to {date2}.""")
 
                 y1 = list_of_results1
 
-
                 list_of_results2 = Data.get_data_from_datacube_nesw(
                     self, product, subproduct, north, east,
                     south, west, date2, date2)
 
                 y2 = list_of_results2
-                
-            
+
                 difference = y2[subproduct][0] - y1[subproduct][0]
 
                 fig, axs = plt.subplots(figsize=(7, 4))
 
-                difference.plot.imshow(ax=axs) 
+                difference.plot.imshow(ax=axs)
 
                 # Set aspect to equal to avoid any deformation
                 axs.set_aspect('equal')
@@ -198,51 +246,62 @@ Change was {difference.data} from {date1} to {date2}.""")
 
                 # plt.show()
                 plt.show(block=False)
-                
+
                 return fig
 
-    
     def color_map_identifying_change(self, product, subproduct, north, east,
                                      south, west, dates):
-        
+        """
+        Plot a colour maps of a subproduct comparing different dates.
+
+        :param product:     the name of the datacube product
+        :param subproduct:  the name of the datacube subproduct
+        :param north:       northern latitude
+        :param east:        eatern longitude
+        :param south:       southern latitude
+        :param west:        western latitude
+        :param dates:       list of dates which will be displayed
+
+        :return fig: figure object for the plot
+        """
+
         with self.out:
             clear_output()
-            
+
             try:
                 plt.close('all')
             except ValueError:
                 pass
-            
+
             results_arr = []
 
             for count, date in enumerate(dates):
                 self.check_date(product, subproduct, date)
-                
+
                 if north == south and east == west:
                     results = Data.get_data_from_datacube_latlon(
-                            self, product, subproduct, dates[count], dates[count], north, east)
-                    
+                        self, product, subproduct, dates[count], dates[count], north, east)
+
                 else:
                     results = Data.get_data_from_datacube_nesw(
-                            self, product, subproduct, north, east,
-                            south, west, dates[count], dates[count])
+                        self, product, subproduct, north, east,
+                        south, west, dates[count], dates[count])
 
                 results_arr.append(results)
-            
+
             if north == south and east == west:
                 print(f"""
-==================================================                
+==================================================
 Product:    {product}
 Subproduct: {subproduct}
 Lat/Lon:    {north}/{east}
 ================================================== """)
                 for count, date in enumerate(dates):
-                    print(f"""  
+                    print(f"""
 {results_arr[count][subproduct][0].data} for {date}""")
-                
 
             else:
-                        
+
                 fig, axs = plt.subplots(1, len(dates), figsize=(9, 4),
                                         sharex=True, sharey=True)
 
@@ -252,32 +311,50 @@ Lat/Lon:    {north}/{east}
 
                 plt.tight_layout()
                 plt.show(block=True)
-                
+
                 return fig
-       
-    def trend_analysis(self, product, subproduct, trend, north, east, 
+
+    def trend_analysis(self, product, subproduct, north, east,
                        south, west, date1, date2, date3, date4):
-        
+        """
+        Plot a timeseries of points if a point location is given and a
+        colour map if an area is given, identifying trends in subproducts
+        over 2 defined periods.
+
+
+        :param product:     the name of the datacube product
+        :param subproduct:  the name of the datacube subproduct
+        :param north:       northern latitude
+        :param east:        eatern longitude
+        :param south:       southern latitude
+        :param west:        western latitude
+        :param date1:       the start of the first analysis period
+        :param date2:       the end of the first analysis period
+        :param date3:       the start of the second analysis period
+        :param date4:       the end of the second analysis period
+
+        :return fig: figure object for the plot
+        """
+
         with self.out:
             clear_output()
-            
+
             try:
                 plt.close('all')
             except ValueError:
                 pass
-            
+
 #             self.check_date(product, subproduct, date1)
 #             self.check_date(product, subproduct, date2)
 #             self.check_date(product, subproduct, date3)
 #             self.check_date(product, subproduct, date4)
             self.check(north, east, south, west, date1, date2)
-            self.check(north, east, south, west, date3, date4 )
-            
-            
+            self.check(north, east, south, west, date3, date4)
+
             if north == south and east == west:
                 fig, axs = plt.subplots(1, 2, figsize=(9, 4),
                                         sharex=True, sharey=True)
-     
+
                 list_of_results1 = Data.get_data_from_datacube_latlon(
                     self, product, subproduct, date1, date2, north, east)
 
@@ -286,24 +363,23 @@ Lat/Lon:    {north}/{east}
                 list_of_results2 = Data.get_data_from_datacube_latlon(
                     self, product, subproduct, date3, date4, north, east)
 
-                y2 = list_of_results2               
-                
+                y2 = list_of_results2
+
                 y1[subproduct].plot(ax=axs[0])
                 y2[subproduct].plot(ax=axs[1])
-    
+
                 axs[0].set_aspect('equal')
                 axs[1].set_aspect('equal')
-                  
+
                 plt.savefig('trend.png')
                 plt.tight_layout()
                 plt.show()
-                
+
                 print('done')
                 return fig
-                
-               
+
             else:
-                
+
                 list_of_results1 = Data.get_data_from_datacube_nesw(
                     self, product, subproduct, north, east,
                     south, west, date1, date2)
@@ -329,12 +405,12 @@ Lat/Lon:    {north}/{east}
 
                 plt.tight_layout()
                 plt.show(block=False)
-                
-                return fig 
-            
-    def average_subproduct(self, product, subproduct, frequency, average, north, 
+
+                return fig
+
+    def average_subproduct(self, product, subproduct, frequency, average, north,
                            east, south, west, date1, date2):
-        
+
         with self.out:
             clear_output()
 
@@ -347,29 +423,28 @@ Lat/Lon:    {north}/{east}
             self.check_date(product, subproduct, date2)
 
             self.check(north, east, south, west, date1, date2)
-         
+
             if north == south and east == west:
 
                 list_of_results = Data.get_data_from_datacube_latlon(
-                                   self, product, subproduct, date1, date2, north, east)
-                
+                    self, product, subproduct, date1, date2, north, east)
+
             else:
                 list_of_results = Data.get_data_from_datacube_nesw(
-                                self, product, subproduct, north, east,
-                                south, west, date1, date2)
+                    self, product, subproduct, north, east,
+                    south, west, date1, date2)
 
             y = list_of_results
-            #print(pd.DatetimeIndex(y['time'].data))
-             
+            # print(pd.DatetimeIndex(y['time'].data))
+
             timesteps = len(y['time'].data)
             print(timesteps)
            # print(len(y))
-            
-            
+
             # calculate timesteps
             if frequency == 'days':
                 if average == 'by pixel':
-                
+
                     # Share axis to allow zooming on both plots simultaneously
                     fig, axs = plt.subplots(figsize=(9, 4),
                                             sharex=True, sharey=True)
@@ -381,16 +456,13 @@ Lat/Lon:    {north}/{east}
 
                     plt.tight_layout()
                     plt.show(block=False)
-            
-            
+
                 elif average == 'by area':
                     pass
-                
-                
-            
+
             elif frequency == 'months':
                 if average == 'by pixel':
-                
+
                     # Share axis to allow zooming on both plots simultaneously
                     fig, axs = plt.subplots(figsize=(9, 4),
                                             sharex=True, sharey=True)
@@ -402,15 +474,13 @@ Lat/Lon:    {north}/{east}
 
                     plt.tight_layout()
                     plt.show(block=False)
-            
-            
+
                 elif average == 'by area':
                     pass
-                
-            
+
             elif frequency == 'years':
                 if average == 'by pixel':
-                
+
                     # Share axis to allow zooming on both plots simultaneously
                     fig, axs = plt.subplots(figsize=(9, 4),
                                             sharex=True, sharey=True)
@@ -423,12 +493,8 @@ Lat/Lon:    {north}/{east}
                     plt.tight_layout()
                     plt.show(block=False)
 
-            
                 elif average == 'by area':
                     pass
-            
-
-
 
     def color_map_nesw_compare(self, product, subproduct, north, east, south,
                                west, date1, hour1, date2, hour2):
@@ -461,7 +527,7 @@ Lat/Lon:    {north}/{east}
             y2.__getitem__(subproduct).plot(ax=axs[1])
             plt.tight_layout()
             plt.show()
-            
+
             return fig
 
     def color_map_nesw_compare_reduced(self, product, subproduct, north, east, south,
@@ -512,7 +578,7 @@ Lat/Lon:    {north}/{east}
 #             extent = axs[0].get_window_extent().transformed(fig.dpi_scale_trans.inverted())
 #             plt.savefig('../helpers/files/fig.png', bbox_inches=extent.expanded(1.1, 1.2))
 
-            return fig 
+            return fig
 
     def compare_rfe_skt_time(self, longitude, latitude, start, end):
 
@@ -988,30 +1054,40 @@ Lat/Lon:    {north}/{east}
     def reproject_coords(self, x, y, projection):
         """
         Coords must be reprojected to WSG84 before being passed to DataCube.
+
+        :param x:           the x-coordinate in the respective base
+        :param y:           the y-cooordinate in the respective base
+        :param projection:  the coordinate projection of x and y
+
+        :return x, y:       reprojected x, y coordinates in WGS84 base
         """
         if projection == "WGS84":
             return x, y
-        
+
         elif projection == "BNG":
-            x, y = self.coord_transform(x, y, conv='bng_to_latlon') 
+            x, y = self.coord_transform(x, y, conv='bng_to_latlon')
             return x, y
-        
+
         elif projection == 'Sinusoidal':
-            x, y = self.coord_transform(x, y, conv = 'sinu_to_latlon')
+            x, y = self.coord_transform(x, y, conv='sinu_to_latlon')
             return x, y
 
     def coord_transform(self, x, y, conv):
         """
-        convert between coordinate systems.
-        :param: x (float)  - x position
-        :param: y (float)  - y position
-        
-        :param: conv (str) - 'bng_to_latlon'
-                           - 'latlon_to_bng'
-                           - 'bng_to_sinu'
-                           - 'sinu_to_bng'
-                           - 'latlon_to_sinu'
-                           - 'sinu_to_latlon'
+        Convert a given set of coordinates between 3 coordinate systems: WGS84,
+        British National Grid and Sinusoidal.
+
+        :param x:     the x-coordinate in the respective base
+        :param y:     the y-coordinate in the respective base
+
+        :param: conv: the conversion required: ['bng_to_latlon'
+                                                'latlon_to_bng',
+                                                'bng_to_sinu',
+                                                'sinu_to_bng',
+                                                'latlon_to_sinu',
+                                                'sinu_to_latlon']
+
+        :return x, y:  reprojected x, y coordinates in the required base
         """
         import osr
 
@@ -1039,9 +1115,8 @@ Lat/Lon:    {north}/{east}
         # lat/lon spatial reference system
         latlon = osr.SpatialReference()
         latlon.ImportFromEPSG(4326)
-        
-        
-        if conv == 'bng_to_latlon': 
+
+        if conv == 'bng_to_latlon':
             transform = osr.CoordinateTransformation(bng, latlon)
             x, y, z = transform.TransformPoint(x, y)
             return x, y
@@ -1050,31 +1125,41 @@ Lat/Lon:    {north}/{east}
             transform = osr.CoordinateTransformation(latlon, bng)
             x, y, z = transform.TransformPoint(x, y)
             return x, y
-        
+
         elif conv == 'bng_to_sinu':
             transform = osr.CoordinateTransformation(bng, sinu)
             x, y, z = transform.TransformPoint(x, y)
             return x, y
-        
+
         elif conv == 'sinu_to_bng':
             transform = osr.CoordinateTransformation(sinu, bng)
             x, y, z = transform.TransformPoint(x, y)
             return x, y
-        
+
         elif conv == 'latlon_to_sinu':
             transform = osr.CoordinateTransformation(latlon, sinu)
             x, y, z = transform.TransformPoint(x, y)
             return x, y
-            
+
         elif conv == 'sinu_to_latlon':
             transform = osr.CoordinateTransformation(sinu, latlon)
             x, y, z = transform.TransformPoint(x, y)
             return x, y
-        
-        
+
     def check_coords(self, north, east, south, west, projection):
         """
-        return converted coordinates to handle drawing on map in different projections.
+        When drawing onto the map make sure the correct CRS choice is
+        displayed in the NESW boxes.
+
+        :param north:        northern latitude in original CRS
+        :param east:         eatern longitude in original CRS
+        :param south:        southern latitude in original CRS
+        :param west:         western latitude in original CRS
+        :param projection:   required projection to be displayed on the UI
+
+        :return north, east,
+                south, west: coordinates after reprojection to
+                                          required CRS.
         """
         if projection == 'WGS84':
             return north, east, south, west
@@ -1087,15 +1172,19 @@ Lat/Lon:    {north}/{east}
 
         if projection == 'Sinusoidal':
             x1, y1 = self.coord_transform(x=east, y=north, conv='latlon_to_sinu')
-            x2, y2 = self.coord_transform(x=west, y=south, conv='latlon_to_sinu')  
+            x2, y2 = self.coord_transform(x=west, y=south, conv='latlon_to_sinu')
             north, east, south, west = y1, x1, y2, x2
-            return north, east, south, west  
-        
+            return north, east, south, west
 
     @staticmethod
     def shape_to_geojson(input_shp, output_geoJson):
         """
-        use GDAL to convert .shp file to .geojson.
+        Use GDAL to convert shapefiles into geojsons.
+
+        :param input_shp:      the name of the read-in shapefiles
+        :param output_geoJson: the desired name of the converted file
+
+        :return:
         """
         cmd = "ogr2ogr -f GeoJSON -t_srs crs:84 " + output_geoJson + " " + input_shp
         subprocess.call(cmd, shell=True)

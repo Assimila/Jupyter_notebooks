@@ -1,30 +1,19 @@
 from __future__ import print_function
-import sys
-sys.path.append("../")
-from DQTools.DQTools.search import Search
-from DQTools.DQTools.dataset import Dataset
-from IPython.lib.display import FileLink
-from IPython.display import display, clear_output
+import warnings
+import os
+import datetime
+from traitlets import traitlets
+from ipywidgets import HBox, VBox, Box
+import ipywidgets as widgets
 from ipyleaflet import (
     Map, Marker, basemaps, basemap_to_tiles,
     TileLayer, ImageOverlay, Polyline, Polygon, Rectangle,
     GeoJSON, WidgetControl, DrawControl, LayerGroup, FullScreenControl,
     interactive)
-import ipywidgets as widgets
-from ipywidgets import HBox, VBox, Box
-from pyproj import Proj, transform
-from traitlets import traitlets
-import pandas as pd
-import datetime 
-import os
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib
-import warnings
-import subprocess
-import json
-
+from IPython.display import display, clear_output
+from DQTools.DQTools.search import Search
 import sys
+sys.path.append("../")
 sys.path.append("..")
 
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -154,40 +143,39 @@ class Widgets:
 
     def average(self):
 
-        return widgets.Dropdown(options = [' ', 'by pixel', 'by area'],
+        return widgets.Dropdown(options=[' ', 'by pixel', 'by area'],
                                 description="Average",
                                 placeholder='Select averaging method',
-                                disabled = True)
+                                disabled=True)
 
     def trends(self):
 
-        return widgets.Dropdown(options = [' ', 'timeseries', 'area plot'],
+        return widgets.Dropdown(options=[' ', 'timeseries', 'area plot'],
                                 description="Trends",
                                 placeholder='Select plot type',
-                                disabled = True)
+                                disabled=True)
 
     def frequency(self):
 
-        return widgets.Dropdown(options = [' ', 2, 3, 4, 5],
+        return widgets.Dropdown(options=[' ', 2, 3, 4, 5],
                                 description="Frequency",
-                                placeholder = 'Select analysis frequency',
+                                placeholder='Select analysis frequency',
                                 disabled=True)
-    
+
     def date_carousel(self):
-        
-        items = []#[self.get_date(value=datetime.date(2018,1,1), description=f'Date {i+1}:') for i in range(n)]
-        carousel = widgets.Box(children=items, layout = self.carousel_layout)
+
+        # [self.get_date(value=datetime.date(2018,1,1), description=f'Date {i+1}:') for i in range(n)]
+        items = []
+        carousel = widgets.Box(children=items, layout=self.carousel_layout)
         return carousel
-    
-    
+
     def save_format(self):
         # csv of netCDF is timeseries
         # netCDF or shp if area
-        
+
         return widgets.Dropdown(description='Save Format',
-                               disabled=False,
-                               layout = self.save_layout)
-            
+                                disabled=False,
+                                layout=self.save_layout)
 
     def rainfall_products(self):
 
@@ -242,19 +230,17 @@ class Widgets:
                                         layout=self.item_layout)
 
     def set_up_button(self, method, description, layout='default'):
-        
-        if layout=='default':
+
+        if layout == 'default':
             button = LoadedButton(description=description,
                                   layout=self.item_layout)
-        elif layout=='save':
+        elif layout == 'save':
             button = LoadedButton(description=description,
-                              layout=self.save_layout)
+                                  layout=self.save_layout)
         button.on_click(method)
         button.button_style = 'primary'
 
         return button
-
-
 
     @ staticmethod
     def display_widget(widget_list):
@@ -262,47 +248,42 @@ class Widgets:
         for w in widget_list:
             display(w)
 
-
     @ staticmethod
     def display_widget_comparison_reduced(operation, product1, subproduct1, product2, subproduct2,
                                           projection, date_carousel, north, east, south, west, button_loc, date1,
-                                          date2, date3, date4, upload_file, button, m, average, 
+                                          date2, date3, date4, upload_file, button, m, average,
                                           trends, frequency, save_map, save_format, save_data):
-        
+
         box_layout = widgets.Layout(
             display='flex',
             flex_flow='row',
             align_items='stretch',
             align_content='center',
             width='100%')
-        
+
         box_save = HBox([save_map, save_format, save_data], layout=box_layout)
-        
+
         box1 = VBox([operation, product1, subproduct1, date1, date2, product2, subproduct2,
-                     date3, date4, projection, average, trends, frequency, date_carousel, north, 
+                     date3, date4, projection, average, trends, frequency, date_carousel, north,
                      east, south, west, button_loc, upload_file, button, box_save])
-
-
 
         box2 = HBox([m, box1], layout=box_layout)
 
         display(box2)
-        
+
     @staticmethod
     def output_widgets(save_map, save_data, save_format):
-        
+
         box_layout5 = widgets.Layout(
             display='flex',
             flex_flow='row',
             align_items='stretch',
             align_content='center',
             width='100%')
-        
+
         box = HBox([save_map, save_format, save_data], layout=box_layout5)
 
         display(box)
-            
-            
 
     @ staticmethod
     def gridspec_display(operation, product1, subproduct1, product2, subproduct2,
@@ -349,8 +330,7 @@ class Widgets:
         out = widgets.Output()
         display(out)
         return out
-    
-    
+
     @staticmethod
     def show_save_options(save_map, save_format, save_data):
         """
@@ -359,8 +339,7 @@ class Widgets:
         save_map.layout.visibility = 'visible'
         save_format.layout.visibility = 'visible'
         save_data.layout.visibility = 'visible'
-    
-    
+
     @staticmethod
     def hide_save_options(save_map, save_format, save_data):
         """
@@ -370,23 +349,20 @@ class Widgets:
         save_format.layout.visibility = 'hidden'
         save_data.layout.visibility = 'hidden'
 
-        
     def get_subproduct_list(self, product):
 
         if product == 'era5':
             return['skt']
         else:
             return self.search.get_subproduct_list_of_product(product)
-    
-    
+
     def get_subproduct_trend_analysis(self, product):
-        
+
         if product == 'MOD13A2':
             return ['1_km_16_days_EVI']
-        
+
         else:
             return self.get_subproduct_list(product)
-        
 
     def get_date_widgets(self):
 

@@ -1,29 +1,19 @@
 from __future__ import print_function
-import sys
-sys.path.append("../")
-from DQTools.DQTools.search import Search
-from DQTools.DQTools.dataset import Dataset
-from IPython.lib.display import FileLink
-from IPython.display import display, clear_output
+import json
+import warnings
+import os
+import datetime
+import ipywidgets as widgets
 from ipyleaflet import (
     Map, Marker, basemaps, basemap_to_tiles,
     TileLayer, ImageOverlay, Polyline, Polygon, Rectangle,
     GeoJSON, WidgetControl, DrawControl, LayerGroup, FullScreenControl,
     interactive)
-import ipywidgets as widgets
-from pyproj import Proj, transform
-from traitlets import traitlets
-import pandas as pd
-import datetime 
-import os
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib
-import warnings
-import subprocess
-import json
-
+from IPython.display import display, clear_output
 import sys
+sys.path.append("../")
+
+
 sys.path.append("..")
 
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -35,29 +25,48 @@ class MapTools:
     """
 
     def __init__(self, center, zoom, width, height):
+        """
+        Initialise parameters and create Map object.
 
+        :param center: tuple defining center of the map when displayed
+        :param zoom:   zoom level of the map when displayed
+        :param width:  width of the displayed map in pixels
+        :param height: height of the displayed map in pixels
+
+        :return:
+        """
         self.center = center
         self.zoom = zoom
         self.width = width
         self.height = height
+        self.key = 'k49EE9jmNlTQtGq6rGMXKgeQ2BYYADJG'
         self.dc = DrawControl()
         self.basemap = self.os_map_api()
-        self.map = Map(basemap = self.basemap, center=self.center, zoom=self.zoom,
+        self.map = Map(basemap=self.basemap, center=self.center, zoom=self.zoom,
                        layout=dict(width=self.width, height=self.height))
-    
-    def os_map_api(self):
-        key = 'k49EE9jmNlTQtGq6rGMXKgeQ2BYYADJG'
-        #secret_key = 'GL5RryNtcbGzCBw7'
 
-        os_maps_api = {'url': f'https://api.os.uk/maps/raster/v1/zxy/Light_3857/{{z}}/{{x}}/{{y}}.png?key={key}',
-                   'min_zoom': 7,
-                   'max_zoom': 20,
-                   'attribution': f'Contains OS data &copy; Crown copyright and database rights                                              {datetime.datetime.now().year}'}
-        
+    def os_map_api(self):
+        """
+        Retrieve the OS basemap used in the displayed map.
+
+        :return os_maps_api: dictionary containing endpoint URL with key and
+                             other map attributes.
+        """
+        #secret_key = 'GL5RryNtcbGzCBw7'
+        os_maps_api = {'url': f'https://api.os.uk/maps/raster/v1/zxy/Light_3857/{{z}}/{{x}}/{{y}}.png?key={self.key}',
+                       'min_zoom': 7,
+                       'max_zoom': 20,
+                       'attribution': f'Contains OS data &copy; Crown copyright and database rights{datetime.datetime.now().year}'}
+
         return os_maps_api
-    
 
     def prepare_map(self):
+        """
+        Set up map properties and define options for rectangle and
+        marker drawing.
+
+        :return:
+        """
 
         self.dc.rectangle = {'shapeOptions': {'color': '#FF0000'}}
         self.dc.marker = {"shapeOptions": {"fillColor": "#fca45d",
@@ -67,6 +76,12 @@ class MapTools:
         self.dc.circlemarker = {}
 
     def prepare_map_africa_colombia(self):
+        """
+        Set up map properties and define options for rectangle and
+        marker drawing. GeoJSON layers for Africa and Colombia are added.
+
+        :return:
+        """
 
         self.dc.rectangle = {'shapeOptions': {'color': '#FF0000'}}
         self.dc.marker = {"shapeOptions": {"fillColor": "#fca45d",
@@ -107,14 +122,26 @@ class MapTools:
 
     def add_map_point(self, lon, lat):
         """
-        add a marker point to the map with given latitude and longitude.
+        Add a marker point to the map with given latitude and longitude.
+
+        :param lon: the longitude of the point location
+        :param lat: the latitude of the point location
+
+        :return:
         """
         marker = Marker(location=(lat, lon), draggable=True, )
         self.map.add_layer(marker)
 
     def add_map_rect(self, north, east, south, west):
         """
-        add a rectangular bounding box tho the map with given coordinates.
+        Add a rectangular bounding box tho the map with given coordinates.
+
+        :param north: northern boundary latitude
+        :param east: eastern boundary longitude
+        :param south: southern boundary latitude
+        :param west: western boundary longitude
+
+        :return:
         """
         rectangle = Rectangle(bounds=((south, west), (north, east)), color='#FF0000')
         self.map.add_layer(rectangle)
@@ -153,7 +180,7 @@ class MapTools:
 
     def add_geojson(self, fname):
         """
-        return the north east south and west coords of a .geojson file defined 
+        return the north east south and west coords of a .geojson file defined
         rectangular bounding box and add this as a layer to the map.
         """
         with open(fname, 'r') as f:
@@ -179,30 +206,30 @@ class MapTools:
         west = (NW[0] + SW[0]) / 2
 
         return north, east, south, west
-    
+
     def add_image(self, bounds):
         """
         add image as an overlay onto the map at the bounding box.
         """
         image = ImageOverlay(
-                            url='/ui.png',
-                            bounds=bounds
-                            )
-        
+            url='/ui.png',
+            bounds=bounds
+        )
+
         self.map.add_layer(image)
-    
+
     def remove_layer(self):
         """
         remove a layer from the map.
         """
         self.map.remove_layer(layer)
-        
+
     def save_map(self):
         """
         save the map and layers as a static HTML.
         """
         self.map.save('map.html', title='My Map')
-        
+
     @staticmethod
     def update_nesw(x):
         def create_wid(a):
