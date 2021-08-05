@@ -10,11 +10,6 @@ from ipyleaflet import (
     GeoJSON, WidgetControl, DrawControl, LayerGroup, FullScreenControl,
     interactive)
 from IPython.display import display, clear_output
-import sys
-sys.path.append("../")
-
-
-sys.path.append("..")
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -240,7 +235,6 @@ class MapTools:
         def on_change(change):
             if change['type'] == 'change' and change['name'] == 'value':
                 x.value = change['new']
-                # print(x.value)
         w.observe(on_change)
         return w
 

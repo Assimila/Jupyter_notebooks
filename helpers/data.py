@@ -8,16 +8,14 @@ import numpy as np
 import os
 import datetime
 import pandas as pd
-from pyproj import Proj, transform
-
+#from pyproj import Proj, transform
+import osr
+import sys
+sys.path.append("../")
 from IPython.display import display, clear_output
 from IPython.lib.display import FileLink
 from DQTools.DQTools.dataset import Dataset
 from DQTools.DQTools.search import Search
-import sys
-sys.path.append("../")
-
-sys.path.append("..")
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -302,7 +300,7 @@ Lat/Lon:    {north}/{east}
 
             else:
 
-                fig, axs = plt.subplots(1, len(dates), figsize=(9, 4),
+                fig, axs = plt.subplots(1, len(dates), figsize=(16, 4),
                                         sharex=True, sharey=True)
 
                 for i in range(len(dates)):
@@ -410,7 +408,66 @@ Lat/Lon:    {north}/{east}
 
     def average_subproduct(self, product, subproduct, frequency, average, north,
                            east, south, west, date1, date2):
+        """
+        Find the average of a subproduct over an area or point over 2 given dates.
+        Averaging done by area or by pixel with an averaging frequency of days/
+        months/years.
 
+        :param product:     the name of the datacube product
+        :param subproduct:  the name of the datacube subproduct
+        :param frequency:   the time period over which to average 
+        :param north:       northern latitude
+        :param east:        eatern longitude
+        :param south:       southern latitude
+        :param west:        western latitude
+        :param date1:       the start of the analysis period
+        :param date2:       the end of the analysis period
+
+        :return fig: figure object for the plot
+        """      
+        
+        def by_pixel(freq):
+            """
+            Average the subproduct by pixel using resampling (up and down) to find 
+            the average per specified time increment ['1D', '1MS', '1YS'].
+            """
+            if north == south and east == west:
+                pixel_average = y[subproduct].resample(time=freq).mean('time').mean('time').data
+                print(f"""
+==================================================
+Product:    {product}
+Subproduct: {subproduct}
+Lat/Lon:    {north}/{east}
+================================================== 
+Average = {pixel_average}
+""")
+     
+            else:
+                fig, axs = plt.subplots(figsize=(9, 4),
+                                        sharex=True, sharey=True)
+
+                y[subproduct].resample(time=freq).mean('time').mean('time').plot.imshow(ax=axs)
+                axs.set_aspect('equal')
+                plt.tight_layout()
+                plt.show(block=False)
+
+                return fig 
+            
+        def by_area(freq):
+            """
+            Average the subproduct by area using resampling (up and down) to find 
+            the average per specified time increment ['1D', '1MS', '1YS'].
+            """
+            area_average = y[subproduct].resample(time=freq).mean('time').mean(['longitude', 'latitude']).mean('time')
+            print(f"""
+==================================================
+Product:    {product}
+Subproduct: {subproduct}
+Lat/Lon:    {north}/{east}
+================================================== 
+Average = {area_average}
+""")
+            
         with self.out:
             clear_output()
 
@@ -419,10 +476,10 @@ Lat/Lon:    {north}/{east}
             except ValueError:
                 pass
 
-            self.check_date(product, subproduct, date1)
-            self.check_date(product, subproduct, date2)
+#             self.check_date(product, subproduct, date1)
+#             self.check_date(product, subproduct, date2)
 
-            self.check(north, east, south, west, date1, date2)
+#             self.check(north, east, south, west, date1, date2)
 
             if north == south and east == west:
 
@@ -435,66 +492,30 @@ Lat/Lon:    {north}/{east}
                     south, west, date1, date2)
 
             y = list_of_results
-            # print(pd.DatetimeIndex(y['time'].data))
-
-            timesteps = len(y['time'].data)
-            print(timesteps)
-           # print(len(y))
-
-            # calculate timesteps
+            
             if frequency == 'days':
+                freq='1D'
                 if average == 'by pixel':
-
-                    # Share axis to allow zooming on both plots simultaneously
-                    fig, axs = plt.subplots(figsize=(9, 4),
-                                            sharex=True, sharey=True)
-
-                    y[subproduct].mean('time').plot.imshow(ax=axs)
-
-                    # Set aspect to equal to avoid any deformation
-                    axs.set_aspect('equal')
-
-                    plt.tight_layout()
-                    plt.show(block=False)
-
+                    by_pixel(freq)
+                
                 elif average == 'by area':
-                    pass
+                    by_area(freq)
 
             elif frequency == 'months':
+                freq='1MS'
                 if average == 'by pixel':
-
-                    # Share axis to allow zooming on both plots simultaneously
-                    fig, axs = plt.subplots(figsize=(9, 4),
-                                            sharex=True, sharey=True)
-
-                    y[subproduct].mean('time').plot.imshow(ax=axs)
-
-                    # Set aspect to equal to avoid any deformation
-                    axs.set_aspect('equal')
-
-                    plt.tight_layout()
-                    plt.show(block=False)
-
+                    by_pixel(freq)
+                    
                 elif average == 'by area':
-                    pass
+                    by_area(freq)
 
             elif frequency == 'years':
+                freq='1YS'
                 if average == 'by pixel':
-
-                    # Share axis to allow zooming on both plots simultaneously
-                    fig, axs = plt.subplots(figsize=(9, 4),
-                                            sharex=True, sharey=True)
-
-                    y[subproduct].mean('time').plot.imshow(ax=axs)
-
-                    # Set aspect to equal to avoid any deformation
-                    axs.set_aspect('equal')
-
-                    plt.tight_layout()
-                    plt.show(block=False)
-
+                    by_pixel(freq)
+                    
                 elif average == 'by area':
-                    pass
+                    by_area(freq)
 
     def color_map_nesw_compare(self, product, subproduct, north, east, south,
                                west, date1, hour1, date2, hour2):
@@ -1089,7 +1110,6 @@ Lat/Lon:    {north}/{east}
 
         :return x, y:  reprojected x, y coordinates in the required base
         """
-        import osr
 
         # Sinusoidal definition
         # from https://spatialreference.org/ref/sr-org/6842/

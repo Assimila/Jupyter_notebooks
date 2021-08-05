@@ -12,9 +12,6 @@ from ipyleaflet import (
     interactive)
 from IPython.display import display, clear_output
 from DQTools.DQTools.search import Search
-import sys
-sys.path.append("../")
-sys.path.append("..")
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -264,7 +261,7 @@ class Widgets:
         box_save = HBox([save_map, save_format, save_data], layout=box_layout)
 
         box1 = VBox([operation, product1, subproduct1, date1, date2, product2, subproduct2,
-                     date3, date4, projection, average, trends, frequency, date_carousel, north,
+                     date3, date4, projection, average, frequency, date_carousel, north,
                      east, south, west, button_loc, upload_file, button, box_save])
 
         box2 = HBox([m, box1], layout=box_layout)
