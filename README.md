@@ -2,11 +2,13 @@
 Up to date notebooks for all projects.
 
 start notebook server in correct folder with
-  ???
+  jupyter-notebook 
   
-use the argument ??? to make it available on a browser served by the host at post 8888
-  ???
+use the arguments below to make it available on a browser served by the host at post 8888
+  jupyter-notebook --no-browser --ip='*'
 
+access using
+  http://ip:8888/?token={}
 
 
 ## Jupyter notebook information in Shared\Projects\2016-042 IPP PRISE\
