@@ -1,0 +1,34 @@
+1. Timeseries plots for 'Trend analysis' (point location) save as .png 
+   figures but won't appear on display.
+
+2. Saving files as .csv not implemented yet. NetCDF save fails for 
+   'Identifying Change' mode.
+
+3. 'Save Map' feature raises error as this method comes from a newer
+    version of ipyleaflet.
+
+4. ogr2ogr command has stopped converting .shp to .geojson when run from
+   the notebook but still works on command line? Reccently new issue was
+   working fine before.
+
+5. When user saves a file they are stored in a folder on the server, not 
+   downloaded to the client yet.
+
+6. Gerardo has a method to overlay data on the map which needs implemented 
+   as ipyleaflet 'add_image()' doesn't seem to support local paths.
+
+7. When a user enters manual coordinates into the float boxes the resulting
+   marker/rectangle cannot be cleared with the DrawControl() class. Same 
+   applies to when a shapefile location is displayed.
+
+8. When a user enters manual coordinates into the float boxes, previous layers
+   drawn on the map are not yet cleared.
+
+9. Overall styling and positioning of widgets/map/plot area could be 
+   tweaked such that it looks more aesthetically pleasing.
+
+10. Maybe possible to limit the boundaries of the map as if you move too
+   far away from the UK all that is displayed is grey squares. Same 
+   if zooming too far out.
+
+11. OAuth2 could be used the handle the OS API key/secret key.

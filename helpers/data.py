@@ -8,10 +8,9 @@ import numpy as np
 import os
 import datetime
 import pandas as pd
-#from pyproj import Proj, transform
 import osr
 import sys
-sys.path.append("../")
+sys.path.append("../../")
 from IPython.display import display, clear_output
 from IPython.lib.display import FileLink
 from DQTools.DQTools.dataset import Dataset
@@ -218,7 +217,7 @@ Lat/Lon:    {north}/{east}
 ===========================================================
 Change was {difference.data} from {date1} to {date2}.""")
                 
-                return y1, y2
+                return y2[subproduct][0] - y1[subproduct][0]
                 
             else:
                 list_of_results1 = Data.get_data_from_datacube_nesw(
@@ -247,7 +246,7 @@ Change was {difference.data} from {date1} to {date2}.""")
                 # plt.show()
                 plt.show(block=False)
 
-                return y1, y2, fig
+                return y2[subproduct][0] - y1[subproduct][0], fig
 
     def color_map_identifying_change(self, product, subproduct, north, east,
                                      south, west, dates):
@@ -378,7 +377,7 @@ Lat/Lon:    {north}/{east}
                 plt.show()
 
                 print('done')
-                return y1, y2, fig
+                return y1[subproduct], y2[subproduct], fig
 
             else:
 
@@ -395,7 +394,7 @@ Lat/Lon:    {north}/{east}
                 y2 = list_of_results2
 
                 # Share axis to allow zooming on both plots simultaneously
-                fig, axs = plt.subplots(1, 2, figsize=(9, 4),
+                fig, axs = plt.subplots(1, 2, figsize=(16, 4),
                                         sharex=True, sharey=True)
 
                 y1[subproduct].mean('time').plot.imshow(ax=axs[0])
@@ -411,7 +410,7 @@ Lat/Lon:    {north}/{east}
                 plt.tight_layout()
                 plt.show(block=False)
 
-                return y1, y2, fig
+                return y1[subproduct].mean('time'), y2[subproduct].mean('time'), fig
 
     def average_subproduct(self, product, subproduct, frequency, average, north,
                            east, south, west, date1, date2):
@@ -448,8 +447,8 @@ Lat/Lon:    {north}/{east}
 ================================================== 
 Average = {pixel_average.data}
 """)
-                 return pixel_average
-                
+                return pixel_average
+                    
             else:
                 fig, axs = plt.subplots(figsize=(9, 4),
                                         sharex=True, sharey=True)
@@ -511,26 +510,26 @@ Average = {area_average.data}
             if frequency == 'days':
                 freq='1D'
                 if average == 'by pixel':
-                    by_pixel(freq)
+                    return by_pixel(freq)
                 
                 elif average == 'by area':
-                    by_area(freq)
+                    return by_area(freq)
 
             elif frequency == 'months':
                 freq='1MS'
                 if average == 'by pixel':
-                    by_pixel(freq)
+                    return by_pixel(freq)
                     
                 elif average == 'by area':
-                    by_area(freq)
+                    return by_area(freq)
 
             elif frequency == 'years':
                 freq='1YS'
                 if average == 'by pixel':
-                    by_pixel(freq)
+                    return by_pixel(freq)
                     
                 elif average == 'by area':
-                    by_area(freq)
+                    return by_area(freq)
 
     def color_map_nesw_compare(self, product, subproduct, north, east, south,
                                west, date1, hour1, date2, hour2):
@@ -1200,7 +1199,7 @@ Average = {area_average.data}
             return north, east, south, west
 
         if projection == 'BNG':
-            x1, y1 = self.coord_transform(x=east, y=north, conv='latlon_to_bng')
+            x1, y1 = self.coord_transform(x=east, y=P{north, conv='latlon_to_bng')
             x2, y2 = self.coord_transform(x=west, y=south, conv='latlon_to_bng')
             north, east, south, west = y1, x1, y2, x2
             return north, east, south, west
