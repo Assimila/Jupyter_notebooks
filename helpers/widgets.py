@@ -18,19 +18,21 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 
 class Widgets:
     """
-    UI widget related functions.
+    Controls the majority of the widget set-up and displaying on the UI.
     """
 
     def __init__(self, width=None, height=None):
+        """
+        Initialise the DQTools Search class and different layout styles
+        for different types of widgets.
 
+        :param width [optional]: user-defined widget width
+        :param height [optional]: user-defined widget height
+
+        :return:
+        """
         self.search = Search()
         self.item_layout_user = widgets.Layout(height=height, width=width)
-
-#         self.item_layout = widgets.Layout(height='30px', width='250px')
-#         self.item_layout_subproduct1 = widgets.Layout(height='30px', width='250px')
-#         self.item_layout_subproduct2 = widgets.Layout(height='30px', width='250px')
-#         self.item_layout_radio = widgets.Layout(height='70px', width='250px')
-#         self.item_layout_loc = widgets.Layout(height='30px', width='100px', align_items='center')
 
         self.item_layout = widgets.Layout(width='auto', height='auto')
         self.item_layout_subproduct1 = widgets.Layout(width='auto', height='auto')
@@ -46,18 +48,29 @@ class Widgets:
 
     def get_lat_lon_widgets(self):
         """
-        call the latitude() and longitde() methods which return BoundedFloatText widgets.
+        Calls the latitude and longitde methods which display the
+        relevant widgets to the UI.
+
+        :return lattitude(), longitude(): methods which display widgets.
         """
         return self.latitude(), self.longitude()
 
     def get_product_widgets(self):
         """
-        call the product() method, returning the relevant product list widget.
+        Calls the product() method which returns the relevant
+        product list widget.
+
+        :return product(): method to displaya product list.
         """
         return self.product()
 
     def longitude(self):
+        """
+        Call the BoundedFloatText method from widgets to display a
+        longitude text box.
 
+        :return widgets.BoundedFloatText: bounded longitude text box.
+        """
         return widgets.BoundedFloatText(value=7.5,
                                         min=-180,
                                         max=180.0,
@@ -67,7 +80,12 @@ class Widgets:
                                         layout=self.item_layout)
 
     def latitude(self):
+        """
+        Call the BoundedFloatText method from widgets to display a
+        lattitude text box.
 
+        :return widgets.BoundedFloatText: bounded lattitude text box.
+        """
         return widgets.BoundedFloatText(value=7.5,
                                         min=-90.0,
                                         max=90.0,
@@ -77,6 +95,17 @@ class Widgets:
                                         layout=self.item_layout)
 
     def get_point(self, value, description):
+        """
+        Return a bounded text box with a specified value and description,
+        depending on CRS.
+
+        :param value: the value to be displayed in the coordinate box.
+        :param description: the description of the coordinate box,
+                            varies between CRS's.
+
+        :return widgets.BoundedFloatText: bounded text box containing specified
+                                          value and description.
+        """
         return widgets.BoundedFloatText(value=value,
                                         min=-9999999,
                                         max=9999999,
@@ -87,7 +116,15 @@ class Widgets:
                                         readout_format='d')
 
     def product(self, description, peat=True):
+        """
+        Return a dropdown list of products for the user to choose from.
 
+        :param description: description to be displayed next to widget.
+        :param peat [optional]: if True [default], peatland products are returned,
+                                else, all products are returned.
+
+        :return widgets.Dropdown: Dropdown widegt object.
+        """
         if peat:
             projection_list = [' ', 'MOD11A1', 'MOD13A2', 'MCD43A3', 'era5']
             return widgets.Dropdown(
@@ -103,7 +140,15 @@ class Widgets:
                 disabled=False, )
 
     def subproduct(self, description, layout):
+        """
+        Return an empty dropdown subproduct list. Once populated the user can
+        choose subproducts from it.
 
+        :param description: description to be displayed next to widget.
+        :param layout: the layout to be specified to each subproduct list.
+
+        :return widgets.Dropdown: Dropdown object widget.
+        """
         if layout == 'subproduct1':
             return widgets.Dropdown(description=description,
                                     layout=self.item_layout_subproduct1)
@@ -112,7 +157,12 @@ class Widgets:
                                     layout=self.item_layout_subproduct2)
 
     def projection(self):
+        """
+        Return radio buttons defining different CRS projections for the
+        user to choose from.
 
+        :return widgets.Dropdown: WGS84, BNG, Sinusoidal radio button options.
+        """
         projection_list = ['WGS84', 'BNG', 'Sinusoidal']
         return widgets.RadioButtons(
             options=projection_list,
@@ -121,6 +171,12 @@ class Widgets:
             disabled=False)
 
     def operation(self):
+        """
+        Return a widgets dropdown menu with 4 different results analysis
+        operations for the user to choose from.
+
+        :return widgets.Dropdown: dropdown menu of choices.
+        """
         return widgets.Dropdown(options=[" ",
                                          "Average of one sub-product",
                                          "Subtraction of one sub-product",
@@ -130,65 +186,114 @@ class Widgets:
                                 layout=self.item_layout)
 
     def get_projection_widgets(self):
+        """
+        Get the projection list.
+
+        :return projection(): Projection list.
+        """
         return self.projection()
 
     def upload_file(self):
+        """
+        Return a button which allows the user to upload file(s)
+        from the UI.
 
+        :return widgets.FileUpload: widget to allow file upload.
+        """
         return widgets.FileUpload(description="Shapefile",
                                   accept='.shp, .shx, .prj, .dbf, .geojson',
                                   multiple=True)
 
     def average(self):
+        """
+        Return a dropdown widget to allow the user to select which method
+        they would like to use to average the chosen subproduct.
 
+        :return widgets.Dropdown: dropdown list of options.
+        """
         return widgets.Dropdown(options=[' ', 'by pixel', 'by area'],
                                 description="Average",
                                 placeholder='Select averaging method',
                                 disabled=True)
 
     def trends(self):
+        """
+        Return a dropdown widget to allow the user to select if they would
+        like the results to be displayed as an area plot or a timeseries.
 
+        :return widgets.Dropdown: dropdown list of options.
+        """
         return widgets.Dropdown(options=[' ', 'timeseries', 'area plot'],
                                 description="Trends",
                                 placeholder='Select plot type',
                                 disabled=True)
 
     def frequency(self):
+        """
+        Return a dropdown widget which allows the user to select the number
+        of datetimes they would like to be analysed and displayed.
 
+        :return widgets.Dropdown: dropdown list of options.
+        """
         return widgets.Dropdown(options=[' ', 2, 3, 4, 5],
                                 description="Frequency",
                                 placeholder='Select analysis frequency',
                                 disabled=True)
 
     def date_carousel(self):
+        """
+        Return an empty scrolling horizontal carousel which can be populated
+        with datetime selector objects depending on the user input frequency.
 
-        # [self.get_date(value=datetime.date(2018,1,1), description=f'Date {i+1}:') for i in range(n)]
+        :return carousel: widgets.Box object with carousel of datetimes.
+        """
         items = []
         carousel = widgets.Box(children=items, layout=self.carousel_layout)
         return carousel
 
     def save_format(self):
-        # csv of netCDF is timeseries
-        # netCDF or shp if area
+        """
+        Return a dropdown allowing the user to select which format they would
+        like their results to be saved in.
+
+        :return widgets.Dropdown: dropdown list of options.
+        """
 
         return widgets.Dropdown(description='Save Format',
                                 disabled=False,
                                 layout=self.save_layout)
 
     def rainfall_products(self):
+        """
+        Return a dropdown which contains different rainfall products for the
+        user to select from.
 
+        :return widgets.Dropdown: dropdown list of options.
+        """
         return widgets.Dropdown(options=['TAMSAT', 'CHIRPS', 'GPM'],
                                 description='Product:',
                                 layout=self.item_layout,
                                 disabled=False, )
 
     def temperature_products(self):
+        """
+        Return a dropdown which contains different temperature products for the
+        user to select from.
 
+        :return widgets.Dropdown: dropdown list of options.
+        """
         return widgets.Dropdown(options=['skt'],
                                 description='Product:',
                                 layout=self.item_layout,
                                 disabled=False, )
 
     def get_year_widgets(self):
+        """
+        Return BoundedFloatText allowing the user to select two
+        different years.
+
+        :return y1, y2: widgets.BoundedFloatText selectors
+        """
 
         y1 = widgets.BoundedFloatText(value=2018, min=2000, max=2019, step=1,
                                       description='Year 1 :', disabled=False,
@@ -201,14 +306,29 @@ class Widgets:
         return y1, y2
 
     def get_date(self, value, description):
+        """
+        Return a date selector widget to allow interactive date selection.
 
+        :param value: the initial date displayed on the selector.
+        :param description: the description displayed next to the selector.
+
+        :return widgets.DatePicker: date selection object
+        """
         return widgets.DatePicker(description=description,
                                   layout=self.item_layout,
                                   value=value,
                                   disabled=False)
 
     def get_hour(self, value, description):
+        """
+        Return an integer slider selector widget to allow
+        interactive hour selection.
 
+        :param value: the initial hour displayed on the selector.
+        :param description: the description displayed next to the selector.
+
+        :return widgets.IntSlider: hour selector object.
+        """
         return widgets.IntSlider(description=description,
                                  layout=self.item_layout,
                                  value=value,
@@ -217,7 +337,10 @@ class Widgets:
                                  max='23')
 
     def degree_day_threshold(self, min_val, max_val, value, string):
+        """
 
+
+        """
         return widgets.BoundedFloatText(value=value,
                                         min=min_val,
                                         max=max_val,
@@ -227,7 +350,10 @@ class Widgets:
                                         layout=self.item_layout)
 
     def set_up_button(self, method, description, layout='default'):
+        """
 
+
+        """
         if layout == 'default':
             button = LoadedButton(description=description,
                                   layout=self.item_layout)

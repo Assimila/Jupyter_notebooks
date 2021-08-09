@@ -144,7 +144,11 @@ class MapTools:
     @staticmethod
     def get_coords_point(geo_json):
         """
-        returnt the coordinates of a user-drawn marker point on the map.
+        Find the coordinates of a point drawn on the map with DrawControl().
+
+        :param geo_json: map GeoJSON passed to function from on_draw method.
+
+        :return north, east, south, west: lat/long coords of map point
         """
         coords = (geo_json.get('geometry', 'Point'))
         x = coords.get('coordinates')[0]
@@ -158,7 +162,11 @@ class MapTools:
     @staticmethod
     def get_coords_polygon(geo_json):
         """
-        return the north east south and west coordinated of the user-drawn polygon on the map.
+        Find the coordinates of a rectangle drawn on the map with DrawControl().
+
+        :param geo_json: map GeoJSON passed to function from on_draw method.
+
+        :return north, east, south, west: lat/long coords of map point
         """
         poly = (geo_json.get('geometry', 'Polygon'))
         coords = poly.get('coordinates')[0]
@@ -175,8 +183,11 @@ class MapTools:
 
     def add_geojson(self, fname):
         """
-        return the north east south and west coords of a .geojson file defined
-        rectangular bounding box and add this as a layer to the map.
+        Add a layer onto the map using a .geojson file saved locally on server.
+
+        :param fname: filename of .geojson file to be added to the map.
+
+        :return north, east, south, west: lat/long coords of map point
         """
         with open(fname, 'r') as f:
             data = json.load(f)
@@ -204,7 +215,12 @@ class MapTools:
 
     def add_image(self, bounds):
         """
-        add image as an overlay onto the map at the bounding box.
+        Add image as an overlay onto the map at the bounding box.
+
+        :param bounds: tuple of 2 tuples defining NW and SW corners of
+                       the images position.
+
+        :return:
         """
         image = ImageOverlay(
             url='/ui.png',
@@ -213,20 +229,34 @@ class MapTools:
 
         self.map.add_layer(image)
 
-    def remove_layer(self):
+    def remove_layer(self, layer):
         """
-        remove a layer from the map.
+        Remove a layer from the map.
+
+        :param layer: name of the layer to be removed from the map.
+
+        :return:
         """
         self.map.remove_layer(layer)
 
     def save_map(self):
         """
-        save the map and layers as a static HTML.
+        Save the map and layers as a static HTML.
+
+        :return:
         """
         self.map.save('map.html', title='My Map')
 
     @staticmethod
     def update_nesw(x):
+        """
+        Update the NESW coordinate boxes on the map when layers are
+        added using DrawControl().
+
+        :param x: value to be updated in the boxes.
+
+        :return w: interactive widget to be linked to a value.
+        """
         def create_wid(a):
             w.observe(on_change)
             return a
@@ -239,6 +269,12 @@ class MapTools:
         return w
 
     def mouse_interaction(self, label):
+        """
+        Handle mouse hovering over the map and display live coordinates
+        which correspond to the mouse position.
+
+        :param label: label widget which is displayed on the map as coords.
+        """
         def handle_interaction(**kwargs):
             if kwargs.get('type') == 'mousemove':
                 label.value = str(kwargs.get('coordinates'))
