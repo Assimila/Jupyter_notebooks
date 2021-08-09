@@ -338,7 +338,7 @@ Change was {difference.data} from {date1} to {date2}.""")
 
 
     def trend_analysis(self, product, subproduct, north, east,
-                       south, west, date1, date2, date3, date4):
+                       south, west, date1, date2, date3, date4, trends):
         """
         Plot a timeseries of points if a point location is given and a
         colour map if an area is given, identifying trends in subproducts
@@ -385,17 +385,34 @@ Change was {difference.data} from {date1} to {date2}.""")
                     self, product, subproduct, date3, date4, north, east)
 
                 y2 = list_of_results2
-
-                fig, axs = plt.subplots(1, 2, figsize=(16, 4))
                 
-                y1[subproduct].plot(ax=axs[0])
-                y2[subproduct].plot(ax=axs[1])
+                if trends == 'overlaid':
+                    fig = plt.figure(figsize=(16, 4))
+                    
+                    axs0 = fig.add_subplot(111)
+                    axs1 = axs0.twiny()
+                    
+                    y1[subproduct].plot(ax=axs0, label='Period 1')
+                    y2[subproduct].plot(ax=axs1, color='orange', label='Period 2')
+                    
+                    axs0.set_xlabel('Period 1')
+                    axs1.set_xlabel('Period 2')
+                    
+                    fig.legend()
+                    plt.tight_layout()
+                    plt.show(block=False)
+                    
+                elif trends == 'side-by-side':
+                    fig, axs = plt.subplots(1, 2, figsize=(16, 4))
 
-                axs[0].set_aspect('equal')
-                axs[1].set_aspect('equal')
+                    y1[subproduct].plot(ax=axs[0])
+                    y2[subproduct].plot(ax=axs[1])
 
-                plt.tight_layout()
-                plt.show(block=False)
+                    axs[0].set_aspect('equal')
+                    axs[1].set_aspect('equal')
+
+                    plt.tight_layout()
+                    plt.show(block=False)
 
                 return y1[subproduct], y2[subproduct], fig
 

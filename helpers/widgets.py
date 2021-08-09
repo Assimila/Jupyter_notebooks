@@ -39,6 +39,7 @@ class Widgets:
         self.item_layout_subproduct2 = widgets.Layout(width='auto', height='auto')
         self.item_layout_radio = widgets.Layout(width='auto', height='auto')
         self.item_layout_loc = widgets.Layout(width='auto', height='auto')
+        self.item_layout_coords = widgets.Layout(width='60%', height='auto')
         self.carousel_layout = widgets.Layout(overflow='scroll hidden',
                                               width='500px',
                                               height='60px',
@@ -110,7 +111,7 @@ class Widgets:
                                         min=-9999999,
                                         max=9999999,
                                         description=description,
-                                        layout=self.item_layout,
+                                        layout=self.item_layout_coords,
                                         disabled=False,
                                         readout=False,
                                         readout_format='d')
@@ -219,11 +220,11 @@ class Widgets:
     def trends(self):
         """
         Return a dropdown widget to allow the user to select if they would
-        like the results to be displayed as an area plot or a timeseries.
+        like to see timeseries results overlaid or side-by-side.
 
         :return widgets.Dropdown: dropdown list of options.
         """
-        return widgets.Dropdown(options=[' ', 'timeseries', 'area plot'],
+        return widgets.Dropdown(options=['side-by-side', 'overlaid'],
                                 description="Trends",
                                 placeholder='Select plot type',
                                 disabled=True)
@@ -387,7 +388,7 @@ class Widgets:
         box_save = HBox([save_map, save_format, save_data], layout=box_layout)
 
         box1 = VBox([operation, product1, subproduct1, date1, date2, product2, subproduct2,
-                     date3, date4, projection, average, frequency, date_carousel, north,
+                     date3, date4, projection, average, frequency, trends, date_carousel, north,
                      east, south, west, button_loc, upload_file, button, box_save])
 
         box2 = HBox([m, box1], layout=box_layout)

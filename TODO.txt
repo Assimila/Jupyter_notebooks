@@ -5,7 +5,7 @@ Ross Carmichael, 6/8/21
 1. [Fixed]
 
 2. Saving files as .csv not implemented yet. NetCDF save fails for 
-   'Identifying Change' mode.
+   'Identifying Change'and 'Trend Analysis : timeseries' modes.
 
 3. 'Save Map' feature raises error as this method comes from a newer
     version of ipyleaflet.
@@ -14,11 +14,10 @@ Ross Carmichael, 6/8/21
    the notebook but still works on command line? Reccently new issue was
    working fine before.
 
-5. When user saves a file they are stored in a folder on the server, not 
-   downloaded to the client yet.
+5. [Fixed]
 
 6. Gerardo has a method to overlay data on the map which needs implemented 
-   as ipyleaflet 'add_image()' doesn't seem to support local paths.
+   as ipyleaflet 'ImageOverlay()' doesn't seem to support local paths.
 
 7. When a user enters manual coordinates into the float boxes the resulting
    marker/rectangle isn't cleared with the DrawControl() class. Same 
