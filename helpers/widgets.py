@@ -339,8 +339,14 @@ class Widgets:
 
     def degree_day_threshold(self, min_val, max_val, value, string):
         """
+        Return a BoundedFloatBox which contains degree day thresholds.
+        
+        :param min_val: minimum float value allowed
+        :param max_val: maximum float value allowed
+        :param value:   initial value displayed
+        :param string:  description displayed next to box
 
-
+        :return widgets.BoundedFloatText.
         """
         return widgets.BoundedFloatText(value=value,
                                         min=min_val,
@@ -352,8 +358,14 @@ class Widgets:
 
     def set_up_button(self, method, description, layout='default'):
         """
-
-
+        Sets up buttons who's value traits can be accessed.
+        
+        :param method: the function exectuted when the button is pressed.
+        :param description: description displayed on button.
+        :param layout [optional]: indicates if a button is a save-related
+                                  so that it's layout can be hidden as req.
+        
+        return button: widget.LoadedButton object.
         """
         if layout == 'default':
             button = LoadedButton(description=description,
@@ -366,18 +378,43 @@ class Widgets:
 
         return button
 
-    @ staticmethod
-    def display_widget(widget_list):
-
-        for w in widget_list:
-            display(w)
-
-    @ staticmethod
+    @staticmethod
     def display_widget_comparison_reduced(operation, product1, subproduct1, product2, subproduct2,
                                           projection, date_carousel, north, east, south, west, button_loc, date1,
                                           date2, date3, date4, upload_file, button, m, average,
                                           trends, frequency, save_map, save_format, save_data):
-
+        """
+        Displays the widgets and map on the UI using Boxes.
+        
+        :param operation:     operation selection dropdown widget
+        :param product1:      product1 selection dropdown widget
+        :param subproduct1:   subproduct1 selection dropdown widget  
+        :param product2:      product2 selection dropdown widget
+        :param subproduct2:   subproduct2 selection dropdown widget
+        :param projection:    CRS projection radio button widget
+        :param date_carousel: scrolling box of date selection widgets
+        :param north:         north coordinate selection flaot box widget
+        :param east:          east coordinate selection flaot box widget
+        :param south:         south coordinate selection flaot box widget
+        :param west:          west coordinate selection flaot box widget
+        :param button_loc:    get location button widget
+        :param date1:         date 1 selection widget
+        :param date2:         date 2 selection widget
+        :param date3:         date 3 selection widget
+        :param date4:         date 4 selection widget
+        :param upload_file:   file upload widget
+        :param button:        get data selection weidget
+        :param m:             ipywidget Map object 
+        :param average:       averaging method dropdown widget
+        :param trends:        trend display dropdown widget
+        :param frequency:     number of date selections for carousel 
+                              dropdown widget
+        :param save_map:      save map button
+        :param save_format:   file format for saving, dropdown widget
+        :param save_data:     save data to file format button 
+        
+        :return:
+        """
         box_layout = widgets.Layout(
             display='flex',
             flex_flow='row',
@@ -396,60 +433,13 @@ class Widgets:
         display(box2)
 
     @staticmethod
-    def output_widgets(save_map, save_data, save_format):
-
-        box_layout5 = widgets.Layout(
-            display='flex',
-            flex_flow='row',
-            align_items='stretch',
-            align_content='center',
-            width='100%')
-
-        box = HBox([save_map, save_format, save_data], layout=box_layout5)
-
-        display(box)
-
-    @ staticmethod
-    def gridspec_display(operation, product1, subproduct1, product2, subproduct2,
-                         projection, north, east, south, west, button_loc, date1,
-                         date2, date3, date4, upload_file, button, m, average, trends, frequency):
-
-        from ipywidgets import GridspecLayout
-
-        grid = GridspecLayout(20, 20)
-        grid.layout.height = '2000 px'
-
-        grid[:1, :8] = operation
-        grid[:9, :8] = m
-
-        grid[:2, 9:11] = upload_file
-        grid[2, 9:12] = button_loc
-
-        grid[0, 12:16] = north
-        grid[2:3, 12:16] = east
-        grid[2, 12:16] = south
-        grid[3, 12:16] = west
-
-        grid[:3, 16:] = projection
-
-#         grid[3:5, 9:13] = product1
-#         grid[6:8, 9:13] = date1
-#         grid[3:5, 13:16] = subproduct1
-#         grid[4:6, 13:18] = date2
-
-#         grid[7:8, 9:11] = product2
-#         grid[8:9, 9:11] = date3
-#         grid[7:8, 13:18] = subproduct2
-        grid[8:9, 13:17] = date4
-
-        grid[9:11, :5] = average
-        grid[9:11, 6:10] = trends
-        grid[9:11, 13:20] = frequency
-
-        display(grid)
-
-    @ staticmethod
     def display_output():
+        """
+        Returns an output widget, used as a context manager to output
+        to different areas of the UI.
+        
+        :return out: output widget 
+        """
 
         out = widgets.Output()
         display(out)
@@ -458,8 +448,14 @@ class Widgets:
     @staticmethod
     def show_save_options(save_map, save_format, save_data):
         """
-        show the saving options in the UI once plots appear.
-        """
+        Shows the saving options in the UI once plots appear.
+        
+        :param save_map:    save map widget 
+        :param save_format: save format dropdown widget 
+        :param save_data:   save data format button.
+        
+        :return:
+        """  
         save_map.layout.visibility = 'visible'
         save_format.layout.visibility = 'visible'
         save_data.layout.visibility = 'visible'
@@ -467,13 +463,27 @@ class Widgets:
     @staticmethod
     def hide_save_options(save_map, save_format, save_data):
         """
-        hide saving options in the UI when no plots are displayed.
-        """
+        Hides the saving options in the UI when no plots are displayed.
+        
+        :param save_map:    save map widget 
+        :param save_format: save format dropdown widget 
+        :param save_data:   save data format button.
+        
+        :return:
+        """  
         save_map.layout.visibility = 'hidden'
         save_format.layout.visibility = 'hidden'
         save_data.layout.visibility = 'hidden'
 
     def get_subproduct_list(self, product):
+        """
+        Finds the list of availible subproducts for a given product.
+        Used to populate the dropdown subproduct widget.
+        
+        :param product: name of the product 
+        
+        :return: list of availible subproducts
+        """
 
         if product == 'era5':
             return['skt']
@@ -481,6 +491,15 @@ class Widgets:
             return self.search.get_subproduct_list_of_product(product)
 
     def get_subproduct_trend_analysis(self, product):
+        """
+        Finds the reduced list of availible subproducts for a given
+        product when the 'trend analysis' operation is selected. Used
+        to populate the dropdown subproduct widget.
+        
+        :param product: name of the product 
+        
+        :return: list of availible subproducts
+        """
 
         if product == 'MOD13A2':
             return ['1_km_16_days_EVI']
@@ -489,6 +508,9 @@ class Widgets:
             return self.get_subproduct_list(product)
 
     def get_date_widgets(self):
+        """
+        
+        """
 
         return self.start_date(), self.end_date()
 

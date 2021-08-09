@@ -1242,3 +1242,14 @@ Lat/Lon:    {north}/{east}
         """
         cmd = "ogr2ogr -f GeoJSON -t_srs crs:84 " + output_geoJson + " " + input_shp
         subprocess.call(cmd, shell=True)
+        
+        
+    @staticmethod
+    def geojson_to_shape(input_geojson, output_shp):
+        cmd = "ogr2ogr -nlt POLYGON -skipfailures " + output_shp + " " + input_geojson + "OGRGeoJSON"
+        subprocess.call(cmd, shell=True)
+    
+    
+    
+    
+    
