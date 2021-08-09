@@ -2,8 +2,7 @@ Peatlands Demonstrator: TODO List
 Ross Carmichael, 6/8/21
 ==================================
 
-1. Timeseries plots for 'Trend analysis' (point location) save as .png 
-   figures but won't appear on display.
+1. [Fixed]
 
 2. Saving files as .csv not implemented yet. NetCDF save fails for 
    'Identifying Change' mode.
@@ -36,3 +35,5 @@ Ross Carmichael, 6/8/21
    if zooming too far out.
 
 11. OAuth2 could be used the handle the OS API key/secret key.
+
+12. Add functionality to save rectangle and a .shp file.

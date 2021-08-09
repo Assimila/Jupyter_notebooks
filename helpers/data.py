@@ -121,38 +121,6 @@ class Data:
         if north and south and north < south:
             raise ValueError('North value should be greater than south')
 
-    def color_map_nesw(self, product, subproduct, north, east, south, west,
-                       date, hour):
-        """
-        Plot a colour map of the subproduct over a bounding box.
-
-        :param product:     the name of the datacube product
-        :param subproduct:  the name of the datacube subproduct
-        :param north:       northern latitude
-        :param east:        eatern longitude
-        :param south:       southern latitude
-        :param west:        western latitude
-        :param date:        the date of the analysis
-        :param hour:        the hour of the analysis
-
-        :return:
-        """
-        with self.out:
-            clear_output()
-            print("Getting data...")
-
-            start = Data.combine_date_hour(self, date, hour)
-            end = Data.combine_date_hour(self, date, hour)
-
-            Data.check(self, north, east, south, west, start, end)
-
-            list_of_results = Data.get_data_from_datacube_nesw(
-                self, product, subproduct, north, east, south, west, start, end)
-
-            y = list_of_results
-            y.__getitem__(subproduct).plot()
-            plt.show()
-
     @staticmethod
     def pickle_data(filename, your_content):
         # REMOVE AFTER TESTING
@@ -166,7 +134,127 @@ class Data:
         with open(filename, 'rb') as f:
             data = pickle.load(f)
         return data
+    
+    def average_subproduct(self, product, subproduct, frequency, average, north,
+                               east, south, west, date1, date2):
+            """
+            Find the average of a subproduct over an area or point over 2 given dates.
+            Averaging done by area or by pixel with an averaging frequency of days/
+            months/years.
 
+            :param product:     the name of the datacube product
+            :param subproduct:  the name of the datacube subproduct
+            :param frequency:   the time period over which to average 
+            :param north:       northern latitude
+            :param east:        eatern longitude
+            :param south:       southern latitude
+            :param west:        western latitude
+            :param date1:       the start of the analysis period
+            :param date2:       the end of the analysis period
+
+            :return fig: figure object for the plot
+            """      
+
+            def by_pixel(freq):
+                """
+                Average the subproduct by pixel using resampling (up and down) to find 
+                the average per specified time increment ['1D', '1MS', '1YS'].
+                """
+                if north == south and east == west:
+                    pixel_average = y[subproduct].resample(time=freq).mean('time').mean('time')
+                    print(f"""
+    ==================================================
+    Product:    {product}
+    Subproduct: {subproduct}
+    Lat/Lon:    {north}/{east}
+    ================================================== 
+    Average = {pixel_average.data}
+    """)
+                    return pixel_average
+
+                else:
+                    fig, axs = plt.subplots(figsize=(9, 4),
+                                            sharex=True, sharey=True)
+
+                    y[subproduct].resample(time=freq).mean('time').mean('time').plot.imshow(ax=axs)
+                    axs.set_aspect('equal')
+                    if freq == '1D':
+                        plt.title(f'average: days')
+                    elif freq == '1MS':
+                        plt.title(f'average: months')
+                    elif freq == '1YS':
+                        plt.title(f'average: years')
+                    plt.tight_layout()
+                    plt.show(block=False)
+
+                    return y[subproduct].resample(time=freq).mean('time').mean('time'), fig 
+
+            def by_area(freq):
+                """
+                Average the subproduct by area using resampling (up and down) to find 
+                the average per specified time increment ['1D', '1MS', '1YS'].
+                """
+                area_average = y[subproduct].resample(time=freq).mean('time').mean(['longitude', 'latitude']).mean('time')
+                print(f"""
+    ==================================================
+    Product:    {product}
+    Subproduct: {subproduct}
+    Lat/Lon:    {north}/{east}
+    ================================================== 
+    Average = {area_average.data}
+    """)
+                return area_average
+
+            with self.out:
+                clear_output()
+
+                try:
+                    plt.close('all')
+                except ValueError:
+                    pass
+
+                self.check_date(product, subproduct, date1)
+                self.check_date(product, subproduct, date2)
+
+                self.check(north, east, south, west, date1, date2)
+
+                if north == south and east == west:
+
+                    list_of_results = Data.get_data_from_datacube_latlon(
+                        self, product, subproduct, date1, date2, north, east)
+
+                else:
+                    list_of_results = Data.get_data_from_datacube_nesw(
+                        self, product, subproduct, north, east,
+                        south, west, date1, date2)
+
+                y = list_of_results
+
+                if frequency == 'days':
+                    freq='1D'
+                    if average == 'by pixel':
+                        return by_pixel(freq)
+
+                    elif average == 'by area':
+                        return by_area(freq)
+
+                elif frequency == 'months':
+                    freq='1MS'
+                    if average == 'by pixel':
+                        return by_pixel(freq)
+
+                    elif average == 'by area':
+                        return by_area(freq)
+
+                elif frequency == 'years':
+                    freq='1YS'
+                    if average == 'by pixel':
+                        return by_pixel(freq)
+
+                    elif average == 'by area':
+                        return by_area(freq)
+
+                    
     def color_map_subtraction(self, product, subproduct, north, east, south,
                               west, date1, date2):
         """
@@ -248,6 +336,103 @@ Change was {difference.data} from {date1} to {date2}.""")
 
                 return y2[subproduct][0] - y1[subproduct][0], fig
 
+
+    def trend_analysis(self, product, subproduct, north, east,
+                       south, west, date1, date2, date3, date4):
+        """
+        Plot a timeseries of points if a point location is given and a
+        colour map if an area is given, identifying trends in subproducts
+        over 2 defined periods.
+
+
+        :param product:     the name of the datacube product
+        :param subproduct:  the name of the datacube subproduct
+        :param north:       northern latitude
+        :param east:        eatern longitude
+        :param south:       southern latitude
+        :param west:        western latitude
+        :param date1:       the start of the first analysis period
+        :param date2:       the end of the first analysis period
+        :param date3:       the start of the second analysis period
+        :param date4:       the end of the second analysis period
+
+        :return fig: figure object for the plot
+        """
+
+        with self.out:
+            clear_output()
+
+            try:
+                plt.close('all')
+            except ValueError:
+                pass
+
+            self.check_date(product, subproduct, date1)
+            self.check_date(product, subproduct, date2)
+            self.check_date(product, subproduct, date3)
+            self.check_date(product, subproduct, date4)
+            self.check(north, east, south, west, date1, date2)
+            self.check(north, east, south, west, date3, date4)
+
+            if north == south and east == west:
+
+                list_of_results1 = Data.get_data_from_datacube_latlon(
+                    self, product, subproduct, date1, date2, north, east)
+
+                y1 = list_of_results1
+
+                list_of_results2 = Data.get_data_from_datacube_latlon(
+                    self, product, subproduct, date3, date4, north, east)
+
+                y2 = list_of_results2
+
+                fig, axs = plt.subplots(1, 2, figsize=(16, 4))
+                
+                y1[subproduct].plot(ax=axs[0])
+                y2[subproduct].plot(ax=axs[1])
+
+                axs[0].set_aspect('equal')
+                axs[1].set_aspect('equal')
+
+                plt.tight_layout()
+                plt.show(block=False)
+
+                return y1[subproduct], y2[subproduct], fig
+
+            else:
+
+                list_of_results1 = Data.get_data_from_datacube_nesw(
+                    self, product, subproduct, north, east,
+                    south, west, date1, date2)
+
+                y1 = list_of_results1
+
+                list_of_results2 = Data.get_data_from_datacube_nesw(
+                    self, product, subproduct, north, east,
+                    south, west, date3, date4)
+
+                y2 = list_of_results2
+
+                # Share axis to allow zooming on both plots simultaneously
+                fig, axs = plt.subplots(1, 2, figsize=(16, 4),
+                                        sharex=True, sharey=True)
+
+                y1[subproduct].mean('time').plot.imshow(ax=axs[0])
+                y2[subproduct].mean('time').plot.imshow(ax=axs[1])
+
+                # Set aspect to equal to avoid any deformation
+                axs[0].set_aspect('equal')
+                axs[1].set_aspect('equal')
+
+                axs[0].set_title(date1)
+                axs[1].set_title(date2)
+
+                plt.tight_layout()
+                plt.show(block=False)
+
+                return y1[subproduct].mean('time'), y2[subproduct].mean('time'), fig
+
+
     def color_map_identifying_change(self, product, subproduct, north, east,
                                      south, west, dates):
         """
@@ -313,15 +498,13 @@ Lat/Lon:    {north}/{east}
                 plt.tight_layout()
                 plt.show(block=True)
 
-                return results_arr, fig
+                return results_arr, fig   
 
-    def trend_analysis(self, product, subproduct, north, east,
-                       south, west, date1, date2, date3, date4):
+            
+    def color_map_nesw(self, product, subproduct, north, east, south, west,
+                       date, hour):
         """
-        Plot a timeseries of points if a point location is given and a
-        colour map if an area is given, identifying trends in subproducts
-        over 2 defined periods.
-
+        Plot a colour map of the subproduct over a bounding box.
 
         :param product:     the name of the datacube product
         :param subproduct:  the name of the datacube subproduct
@@ -329,208 +512,28 @@ Lat/Lon:    {north}/{east}
         :param east:        eatern longitude
         :param south:       southern latitude
         :param west:        western latitude
-        :param date1:       the start of the first analysis period
-        :param date2:       the end of the first analysis period
-        :param date3:       the start of the second analysis period
-        :param date4:       the end of the second analysis period
+        :param date:        the date of the analysis
+        :param hour:        the hour of the analysis
 
-        :return fig: figure object for the plot
+        :return:
         """
-
         with self.out:
             clear_output()
+            print("Getting data...")
 
-            try:
-                plt.close('all')
-            except ValueError:
-                pass
+            start = Data.combine_date_hour(self, date, hour)
+            end = Data.combine_date_hour(self, date, hour)
 
-            self.check_date(product, subproduct, date1)
-            self.check_date(product, subproduct, date2)
-            self.check_date(product, subproduct, date3)
-            self.check_date(product, subproduct, date4)
-            self.check(north, east, south, west, date1, date2)
-            self.check(north, east, south, west, date3, date4)
+            Data.check(self, north, east, south, west, start, end)
 
-            if north == south and east == west:
-                fig, axs = plt.subplots(1, 2, figsize=(9, 4),
-                                        sharex=True, sharey=True)
-
-                list_of_results1 = Data.get_data_from_datacube_latlon(
-                    self, product, subproduct, date1, date2, north, east)
-
-                y1 = list_of_results1
-
-                list_of_results2 = Data.get_data_from_datacube_latlon(
-                    self, product, subproduct, date3, date4, north, east)
-
-                y2 = list_of_results2
-
-                y1[subproduct].plot(ax=axs[0])
-                y2[subproduct].plot(ax=axs[1])
-
-                axs[0].set_aspect('equal')
-                axs[1].set_aspect('equal')
-
-                plt.savefig('trend.png')
-                plt.tight_layout()
-                plt.show()
-
-                print('done')
-                return y1[subproduct], y2[subproduct], fig
-
-            else:
-
-                list_of_results1 = Data.get_data_from_datacube_nesw(
-                    self, product, subproduct, north, east,
-                    south, west, date1, date2)
-
-                y1 = list_of_results1
-
-                list_of_results2 = Data.get_data_from_datacube_nesw(
-                    self, product, subproduct, north, east,
-                    south, west, date3, date4)
-
-                y2 = list_of_results2
-
-                # Share axis to allow zooming on both plots simultaneously
-                fig, axs = plt.subplots(1, 2, figsize=(16, 4),
-                                        sharex=True, sharey=True)
-
-                y1[subproduct].mean('time').plot.imshow(ax=axs[0])
-                y2[subproduct].mean('time').plot.imshow(ax=axs[1])
-
-                # Set aspect to equal to avoid any deformation
-                axs[0].set_aspect('equal')
-                axs[1].set_aspect('equal')
-                
-                axs[0].set_title(date1)
-                axs[1].set_title(date2)
-                
-                plt.tight_layout()
-                plt.show(block=False)
-
-                return y1[subproduct].mean('time'), y2[subproduct].mean('time'), fig
-
-    def average_subproduct(self, product, subproduct, frequency, average, north,
-                           east, south, west, date1, date2):
-        """
-        Find the average of a subproduct over an area or point over 2 given dates.
-        Averaging done by area or by pixel with an averaging frequency of days/
-        months/years.
-
-        :param product:     the name of the datacube product
-        :param subproduct:  the name of the datacube subproduct
-        :param frequency:   the time period over which to average 
-        :param north:       northern latitude
-        :param east:        eatern longitude
-        :param south:       southern latitude
-        :param west:        western latitude
-        :param date1:       the start of the analysis period
-        :param date2:       the end of the analysis period
-
-        :return fig: figure object for the plot
-        """      
-        
-        def by_pixel(freq):
-            """
-            Average the subproduct by pixel using resampling (up and down) to find 
-            the average per specified time increment ['1D', '1MS', '1YS'].
-            """
-            if north == south and east == west:
-                pixel_average = y[subproduct].resample(time=freq).mean('time').mean('time')
-                print(f"""
-==================================================
-Product:    {product}
-Subproduct: {subproduct}
-Lat/Lon:    {north}/{east}
-================================================== 
-Average = {pixel_average.data}
-""")
-                return pixel_average
-                    
-            else:
-                fig, axs = plt.subplots(figsize=(9, 4),
-                                        sharex=True, sharey=True)
-
-                y[subproduct].resample(time=freq).mean('time').mean('time').plot.imshow(ax=axs)
-                axs.set_aspect('equal')
-                if freq == '1D':
-                    plt.title(f'average: days')
-                elif freq == '1MS':
-                    plt.title(f'average: months')
-                elif freq == '1YS':
-                    plt.title(f'average: years')
-                plt.tight_layout()
-                plt.show(block=False)
-
-                return y[subproduct].resample(time=freq).mean('time').mean('time'), fig 
-            
-        def by_area(freq):
-            """
-            Average the subproduct by area using resampling (up and down) to find 
-            the average per specified time increment ['1D', '1MS', '1YS'].
-            """
-            area_average = y[subproduct].resample(time=freq).mean('time').mean(['longitude', 'latitude']).mean('time')
-            print(f"""
-==================================================
-Product:    {product}
-Subproduct: {subproduct}
-Lat/Lon:    {north}/{east}
-================================================== 
-Average = {area_average.data}
-""")
-            return area_average
-            
-        with self.out:
-            clear_output()
-
-            try:
-                plt.close('all')
-            except ValueError:
-                pass
-
-            self.check_date(product, subproduct, date1)
-            self.check_date(product, subproduct, date2)
-
-            self.check(north, east, south, west, date1, date2)
-
-            if north == south and east == west:
-
-                list_of_results = Data.get_data_from_datacube_latlon(
-                    self, product, subproduct, date1, date2, north, east)
-
-            else:
-                list_of_results = Data.get_data_from_datacube_nesw(
-                    self, product, subproduct, north, east,
-                    south, west, date1, date2)
+            list_of_results = Data.get_data_from_datacube_nesw(
+                self, product, subproduct, north, east, south, west, start, end)
 
             y = list_of_results
+            y.__getitem__(subproduct).plot()
+            plt.show()
             
-            if frequency == 'days':
-                freq='1D'
-                if average == 'by pixel':
-                    return by_pixel(freq)
-                
-                elif average == 'by area':
-                    return by_area(freq)
-
-            elif frequency == 'months':
-                freq='1MS'
-                if average == 'by pixel':
-                    return by_pixel(freq)
-                    
-                elif average == 'by area':
-                    return by_area(freq)
-
-            elif frequency == 'years':
-                freq='1YS'
-                if average == 'by pixel':
-                    return by_pixel(freq)
-                    
-                elif average == 'by area':
-                    return by_area(freq)
-
+            
     def color_map_nesw_compare(self, product, subproduct, north, east, south,
                                west, date1, hour1, date2, hour2):
 
