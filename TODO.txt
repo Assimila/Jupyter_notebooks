@@ -1,3 +1,7 @@
+Peatlands Demonstrator: TODO List 
+Ross Carmichael, 6/8/21
+==================================
+
 1. Timeseries plots for 'Trend analysis' (point location) save as .png 
    figures but won't appear on display.
 
@@ -18,7 +22,7 @@
    as ipyleaflet 'add_image()' doesn't seem to support local paths.
 
 7. When a user enters manual coordinates into the float boxes the resulting
-   marker/rectangle cannot be cleared with the DrawControl() class. Same 
+   marker/rectangle isn't cleared with the DrawControl() class. Same 
    applies to when a shapefile location is displayed.
 
 8. When a user enters manual coordinates into the float boxes, previous layers

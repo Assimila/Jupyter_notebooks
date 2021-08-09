@@ -1199,7 +1199,7 @@ Average = {area_average.data}
             return north, east, south, west
 
         if projection == 'BNG':
-            x1, y1 = self.coord_transform(x=east, y=P{north, conv='latlon_to_bng')
+            x1, y1 = self.coord_transform(x=east, y=north, conv='latlon_to_bng')
             x2, y2 = self.coord_transform(x=west, y=south, conv='latlon_to_bng')
             north, east, south, west = y1, x1, y2, x2
             return north, east, south, west
