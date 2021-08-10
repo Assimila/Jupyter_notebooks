@@ -220,11 +220,11 @@ class APIRequest(object):
 
                     # this code replaces the line breaks(\n) mix with the \\ to
                     # normal line breaks which fixes the issue of the exception
-                    # not displaying properly when raised, altough it does not
+                    # not displaying properly when raised, although it does not
                     # fix the log, also removes brackets at start and end of
                     # error message
 
-                    # Another possible solution when the only thing that doesnt
+                    # Another possible solution when the only thing that doesn't
                     # need to be fixed is the error heading:
                     # keys = resp.headers.keys()
                     # for i in resp.headers:
@@ -255,15 +255,12 @@ class APIRequest(object):
                     tgt.write(resp_unpacked)
 
             elif self.service == "GET_DATA":
-                # use the switch in the request to control gzip/pickle for DASK
-                if req.get('params').get('use_dask'):
-                    try:
-                        self.dqif.authenticate(self.login, self.pwd, req)
+                # use the switch in the request to control DASK wiring
+                if 'use_dask' in req['params'] \
+                        and req['params']['use_dask']:
+                    self.dqif.authenticate(self.login, self.pwd, req)
+                    return self.dqif.get_address()
 
-                        return self.dqif.get_address()
-                    except Exception as e:
-                        # pass #TODO requires error message
-                        print(e)
                 else:
                     resp_unpacked = gzip.decompress(resp.content)
                     # use pickle to de-serialize xarray data
