@@ -10,6 +10,7 @@ import datetime
 import pandas as pd
 import osr
 import sys
+import pickle
 sys.path.append("../../")
 from IPython.display import display, clear_output
 from IPython.lib.display import FileLink
@@ -121,19 +122,6 @@ class Data:
         if north and south and north < south:
             raise ValueError('North value should be greater than south')
 
-    @staticmethod
-    def pickle_data(filename, your_content):
-        # REMOVE AFTER TESTING
-        import pickle
-        with open(filename, 'wb') as f:
-            pickle.dump(your_content, f)
-
-    @staticmethod
-    def load_pickle(filename):
-        import pickle
-        with open(filename, 'rb') as f:
-            data = pickle.load(f)
-        return data
     
     def average_subproduct(self, product, subproduct, frequency, average, north,
                                east, south, west, date1, date2):
@@ -588,7 +576,6 @@ Lat/Lon:    {north}/{east}
     def color_map_nesw_compare_reduced(self, product, subproduct, north, east, south,
                                        west, date1, date2):
 
-        # TODO 3.9: option to display or save results for UI
         with self.out:
             clear_output()
 
@@ -1006,14 +993,17 @@ Lat/Lon:    {north}/{east}
             plt.show()
 
     def calculate_timesteps(self, years, period=16):
-        """For Modis products, There is always a time step on 1st Jan each year
+        """
+        For Modis products, There is always a time step on 1st Jan each year
         Returns a list of all possible product dates in the years requested
         prepended with the last date in the previous year and the first date in
         the following year to allow for looking for nearest dates at the start or
         end of a year.
 
-        years:  A list of years
-        period: period of product in days
+        :param years:             A list of years
+        :param period [optional]: period of product in days
+        
+        :return dates:            A list of dates
         """
 
         n = 366//period
@@ -1032,6 +1022,7 @@ Lat/Lon:    {north}/{east}
         return dates
 
     def get_dates(self, dataset, start, end):
+        
         first_date = dataset.first_timestep
         last_date = dataset.last_timestep
         if end < start:
@@ -1229,6 +1220,19 @@ Lat/Lon:    {north}/{east}
             x2, y2 = self.coord_transform(x=west, y=south, conv='latlon_to_sinu')
             north, east, south, west = y1, x1, y2, x2
             return north, east, south, west
+        
+    @staticmethod
+    def get_gdalogr2ogr_path():
+        """
+        Method to return the conda path for the gdalogr2ogr bin given the
+        activated environment for the current python run.
+        
+        :return: Full path of ogr2ogr bin
+        """
+        conda_prefix = os.environ['CONDA_PREFIX']
+        gdal_bin_path = os.path.join(conda_prefix, 'bin')
+        return os.path.join(gdal_bin_path, 'ogr2ogr')
+
 
     @staticmethod
     def shape_to_geojson(input_shp, output_geoJson):
@@ -1240,7 +1244,8 @@ Lat/Lon:    {north}/{east}
 
         :return:
         """
-        cmd = "ogr2ogr -f GeoJSON -t_srs crs:84 " + output_geoJson + " " + input_shp
+        path = Data.get_gdalogr2ogr_path()
+        cmd = path + " -f GeoJSON -t_srs crs:84 " + output_geoJson + " " + input_shp
         subprocess.call(cmd, shell=True)
         
         
@@ -1250,6 +1255,33 @@ Lat/Lon:    {north}/{east}
         subprocess.call(cmd, shell=True)
     
     
-    
+    @staticmethod
+    def pickle_data(filename, your_content):
+        """
+        Convert the a dataset into a pickle file which is
+        saved an allows fast access to predefined DataCube data.
+        
+        :param filename:     name of pickle file to be saved
+        :param your_content: DataCube dataset to be pickled.
+        
+        :return:
+        """
+
+        with open(filename, 'wb') as f:
+            pickle.dump(your_content, f)
+
+    @staticmethod
+    def load_pickle(filename):
+        """
+        Load a pickle file and return the contents to be used.
+        
+        :param filename: filename/path of .pickle file to be read
+        
+        :return data:    unpickled file back to it's original format
+        """
+        
+        with open(filename, 'rb') as f:
+            data = pickle.load(f)
+        return data
     
     

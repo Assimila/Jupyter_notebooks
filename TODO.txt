@@ -4,15 +4,13 @@ Ross Carmichael, 6/8/21
 
 1. [Fixed]
 
-2. Saving files as .csv not implemented yet. NetCDF save fails for 
-   'Identifying Change'and 'Trend Analysis : timeseries' modes.
+2.  NetCDF save fails for 'Identifying Change'and 'Trend Analysis : timeseries' modes.
+    For operations where a signle number is output unsure if save method required.
 
 3. 'Save Map' feature raises error as this method comes from a newer
     version of ipyleaflet.
 
-4. ogr2ogr command has stopped converting .shp to .geojson when run from
-   the notebook but still works on command line? Reccently new issue was
-   working fine before.
+4. [Fixed]
 
 5. [Fixed]
 
@@ -35,4 +33,6 @@ Ross Carmichael, 6/8/21
 
 11. OAuth2 could be used the handle the OS API key/secret key.
 
-12. Add functionality to save rectangle and a .shp file.
+12. Add functionality to save rectangle layer as a .shp file.
+
+13. Remove files saved to server once downloaded to client.

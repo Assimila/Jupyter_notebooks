@@ -26,7 +26,7 @@ class Widgets:
         Initialise the DQTools Search class and different layout styles
         for different types of widgets.
 
-        :param width [optional]: user-defined widget width
+        :param width [optional]:  user-defined widget width
         :param height [optional]: user-defined widget height
 
         :return:
@@ -120,7 +120,7 @@ class Widgets:
         """
         Return a dropdown list of products for the user to choose from.
 
-        :param description: description to be displayed next to widget.
+        :param description:     description to be displayed next to widget.
         :param peat [optional]: if True [default], peatland products are returned,
                                 else, all products are returned.
 
@@ -146,7 +146,7 @@ class Widgets:
         choose subproducts from it.
 
         :param description: description to be displayed next to widget.
-        :param layout: the layout to be specified to each subproduct list.
+        :param layout:      the layout to be specified to each subproduct list.
 
         :return widgets.Dropdown: Dropdown object widget.
         """
@@ -310,7 +310,7 @@ class Widgets:
         """
         Return a date selector widget to allow interactive date selection.
 
-        :param value: the initial date displayed on the selector.
+        :param value:       the initial date displayed on the selector.
         :param description: the description displayed next to the selector.
 
         :return widgets.DatePicker: date selection object
@@ -325,7 +325,7 @@ class Widgets:
         Return an integer slider selector widget to allow
         interactive hour selection.
 
-        :param value: the initial hour displayed on the selector.
+        :param value:       the initial hour displayed on the selector.
         :param description: the description displayed next to the selector.
 
         :return widgets.IntSlider: hour selector object.
@@ -360,8 +360,9 @@ class Widgets:
         """
         Sets up buttons who's value traits can be accessed.
         
-        :param method: the function exectuted when the button is pressed.
-        :param description: description displayed on button.
+        :param method:            the function exectuted when the button 
+                                  is pressed.
+        :param description:       description displayed on button.
         :param layout [optional]: indicates if a button is a save-related
                                   so that it's layout can be hidden as req.
         
@@ -509,26 +510,45 @@ class Widgets:
 
     def get_date_widgets(self):
         """
+        Reutrns the start and end date methods.
         
+        :return start_date(), end_date(): DatePicker widget
         """
 
         return self.start_date(), self.end_date()
 
     def start_date(self):
-
+        """
+        Return a DatePicker widget to allow the user to interactivley
+        select dates.
+        
+        :return widgets.Datepicker: widget
+        """
         return widgets.DatePicker(description='Start Date: ',
                                   layout=self.item_layout,
                                   value=datetime.datetime(2000, 1, 1),
                                   disabled=False)
 
     def end_date(self):
+        """
+        Return a DatePicker widget to allow the user to interactivley
+        select dates.
+        
+        :return widgets.Datepicker: widget
+        """
         return widgets.DatePicker(description='EndDate: ',
                                   layout=self.item_layout,
                                   value=datetime.datetime(2000, 2, 1),
                                   disabled=False)
 
     def get_x_attributes(self, projection):
-
+        """
+        Depending on the projection, set the relevant widget x-attributes.
+        
+        :param projection: the CRS projection
+        
+        :return sttributes: dictionary containing widget attributes
+        """
         if projection == "British National Grid":
             attributes = {"min": -9999999, "max": 9999999, "description": "Easting (x)"}
         else:
@@ -536,7 +556,13 @@ class Widgets:
         return attributes
 
     def get_y_attributes(self, projection):
-
+        """
+        Depending on the projection, set the relevant widget y-attributes.
+        
+        :param projection: the CRS projection
+        
+        :return sttributes: dictionary containing widget attributes
+        """
         if projection == "British National Grid":
             attributes = {"min": -9999999, "max": 9999999, "description": "Northing (y)"}
         else:
