@@ -438,13 +438,16 @@ Change was {difference.data} from {date1} to {date2}.""")
                 return y1[subproduct].mean('time'), y2[subproduct].mean('time'), fig
 
 
-    def color_map_identifying_change(self, product, subproduct, north, east,
-                                     south, west, dates):
+    def color_map_identifying_change(self, product1, subproduct1, product2, subproduct2, 
+                                     north, east, south, west, dates):
+        
         """
         Plot a colour maps of a subproduct comparing different dates.
 
-        :param product:     the name of the datacube product
-        :param subproduct:  the name of the datacube subproduct
+        :param product1:     the name of the datacube product1
+        :param subproduct1:  the name of the datacube subproduct1
+        :param
+        :param
         :param north:       northern latitude
         :param east:        eatern longitude
         :param south:       southern latitude
@@ -462,48 +465,77 @@ Change was {difference.data} from {date1} to {date2}.""")
             except ValueError:
                 pass
 
-            results_arr = []
+            results_arr1 = []
+            results_arr2 = []
 
             for count, date in enumerate(dates):
-                self.check_date(product, subproduct, date)
-
+                self.check_date(product1, subproduct1, date)
+                self.check_date(product2, subproduct2, date)
+                
                 if north == south and east == west:
-                    results = Data.get_data_from_datacube_latlon(
-                        self, product, subproduct, dates[count], dates[count], north, east)
+                    results1 = Data.get_data_from_datacube_latlon(
+                        self, product1, subproduct1, dates[count], dates[count], north, east)
+                    
+                    results2 = Data.get_data_from_datacube_latlon(
+                        self, product2, subproduct2, dates[count], dates[count], north, east)
 
                 else:
-                    results = Data.get_data_from_datacube_nesw(
-                        self, product, subproduct, north, east,
+                    results1 = Data.get_data_from_datacube_nesw(
+                        self, product1, subproduct1, north, east,
+                        south, west, dates[count], dates[count])
+                    
+                    results2 = Data.get_data_from_datacube_nesw(
+                        self, product2, subproduct2, north, east,
                         south, west, dates[count], dates[count])
 
-                results_arr.append(results)
+                results_arr1.append(results1)
+                results_arr2.append(results2)
 
             if north == south and east == west:
                 print(f"""
 ==================================================
-Product:    {product}
-Subproduct: {subproduct}
+Product:    {product1}
+Subproduct: {subproduct1}
 Lat/Lon:    {north}/{east}
 ================================================== """)
                 for count, date in enumerate(dates):
                     print(f"""
-{results_arr[count][subproduct][0].data} for {date}""")
+{results_arr1[count][subproduct1][0].data} for {date}""")
             
-                return results_arr 
+                print(f"""
+==================================================
+Product:    {product2}
+Subproduct: {subproduct2}
+Lat/Lon:    {north}/{east}
+================================================== """)
+                for count, date in enumerate(dates):
+                    print(f"""
+{results_arr2[count][subproduct2][0].data} for {date}""")
+                
+                return results_arr1, results_arr2 
             
             else:
 
-                fig, axs = plt.subplots(1, len(dates), figsize=(16, 4),
+                fig1, axs1 = plt.subplots(1, len(dates), figsize=(16, 4),
+                                        sharex=True, sharey=True)
+                
+                fig2, axs2 = plt.subplots(1, len(dates), figsize=(16, 4),
                                         sharex=True, sharey=True)
 
                 for i in range(len(dates)):
-                    axs[i].set_aspect('equal')
-                    results_arr[i][subproduct][0].plot.imshow(ax=axs[i])
+                    axs1[i].set_aspect('equal')
+                    results_arr1[i][subproduct1][0].plot.imshow(ax=axs1[i])
 
-                plt.tight_layout()
-                plt.show(block=True)
+                    axs2[i].set_aspect('equal')
+                    results_arr2[i][subproduct2][0].plot.imshow(ax=axs2[i])
 
-                return results_arr, fig   
+                fig1.tight_layout()
+                fig1.show()
+                
+                fig2.tight_layout()
+                fig2.show()
+
+                return results_arr1, fig1, results_arr2, fig2   
 
             
     def color_map_nesw(self, product, subproduct, north, east, south, west,
