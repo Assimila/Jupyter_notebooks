@@ -4,12 +4,18 @@ import warnings
 import os
 import datetime
 import ipywidgets as widgets
+import matplotlib.pyplot as plt
 from ipyleaflet import (
     Map, Marker, basemaps, basemap_to_tiles,
     TileLayer, ImageOverlay, Polyline, Polygon, Rectangle,
     GeoJSON, WidgetControl, DrawControl, LayerGroup, FullScreenControl,
     interactive)
 from IPython.display import display, clear_output
+from ipyleaflet import LayersControl, WidgetControl
+from ipywidgets import FloatSlider
+import rioxarray
+import xarray_leaflet
+import subprocess
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -246,7 +252,37 @@ class MapTools:
         :return:
         """
         self.map.save('map.html', title='My Map')
+    
+    def data_overlay(self, ds):
+        """
+        Plots a data layer on the map to allow for better visualisation.
+        Sliding widget allows user to change opacity of image.  
+        Plot image is the first timestep in the xarray.
+        
+        :param ds: dataset to be overlaid
+        
+        :return:
+        """
+        def set_opacity(*args):
+            l.opacity = args[0]['new']
+            
+        ds.to_netcdf('tmp.nc')
+        ds = rioxarray.open_rasterio('tmp.nc')
+        ds_to_plot = ds[0]
+        ds_to_plot = ds_to_plot.rename({'x': 'longitude','y': 'latitude'})
+        l = ds_to_plot.leaflet.plot(self.map, colormap=plt.cm.viridis, )
 
+        # Insert slider and layer control
+        layers_control = LayersControl(position='topright')
+        self.map.add_control(layers_control)
+
+        opacity_slider = FloatSlider(description='Opacity:', min=0, max=1, value=1)
+        opacity_slider.observe(set_opacity, names='value')
+        slider_control = WidgetControl(widget=opacity_slider, position='bottomleft')
+        self.map.add_control(slider_control)
+        
+        subprocess.call('rm tmp.nc', shell = True)
+        
     @staticmethod
     def update_nesw(x):
         """

@@ -7,8 +7,7 @@ Ross Carmichael, 6/8/21
 2.  NetCDF save fails for 'Identifying Change'and 'Trend Analysis : timeseries' modes.
     For operations where a signle number is output unsure if save method required.
 
-3. 'Save Map' feature raises error as this method comes from a newer
-    version of ipyleaflet.
+3. [Fixed]
 
 4. [Fixed]
 
@@ -36,3 +35,5 @@ Ross Carmichael, 6/8/21
 12. Add functionality to save rectangle layer as a .shp file.
 
 13. Remove files saved to server once downloaded to client.
+
+14. New environment file

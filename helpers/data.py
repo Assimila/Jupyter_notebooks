@@ -165,7 +165,7 @@ class Data:
                                             sharex=True, sharey=True)
 
                     y[subproduct].resample(time=freq).mean('time').mean('time').plot.imshow(ax=axs)
-                    axs.set_aspect('equal')
+                    #axs.set_aspect('equal')
                     if freq == '1D':
                         plt.title(f'average: days')
                     elif freq == '1MS':
