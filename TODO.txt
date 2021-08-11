@@ -13,8 +13,8 @@ Ross Carmichael, 6/8/21
 
 5. [Fixed]
 
-6. Gerardo has a method to overlay data on the map which needs implemented 
-   as ipyleaflet 'ImageOverlay()' doesn't seem to support local paths.
+6. Method for overlaying data on the map produces big black boxes around the edges
+   and distorts when zooming in and out.
 
 7. When a user enters manual coordinates into the float boxes the resulting
    marker/rectangle isn't cleared with the DrawControl() class. Same 
