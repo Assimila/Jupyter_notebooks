@@ -248,6 +248,7 @@ Data:
         self.description = all_meta['description']
 
     def get_data(self, start, stop,
+                 use_dask=False,
                  region=None, tile=None, res=None, latlon=None,
                  country=None, projection=None):
         """
@@ -256,6 +257,9 @@ Data:
         :param start:   Start datetime for dataset
 
         :param stop:    Stop datetime for dataset
+
+        :param use_dask: optional - set to True to obtain pointer to vrt file
+                        on the server, default False to return data in xarray.
 
         :param region:  optional - geographic region, do not use tile too
 
@@ -285,11 +289,12 @@ Data:
 
         :return: xarray of data
         """
-        self.logger.info("Dataset get_data args: start %s, stop %s,"
+        self.logger.info("Dataset get_data args: start %s, stop %s, DASK %s,"
                          "region %s, tile %s, resolution %s, latlon %s, "
                          "country %s, projection %s"
-                         % (start, stop, region, tile, res, latlon, country,
-                            projection))
+                         % (start, stop, use_dask,
+                            region, tile, res, latlon,
+                            country, projection))
 
         try:
             # Extract the bounds information
@@ -318,6 +323,7 @@ Data:
                                                  subproduct=self.subproduct,
                                                  start=start,
                                                  stop=stop,
+                                                 use_dask=use_dask,
                                                  bounds=bounds,
                                                  res=res,
                                                  tile=tile,
@@ -328,10 +334,16 @@ Data:
             self.data = data[0]
 
         except Exception as e:
-            self.logger.error("Failed to retrieve Dataset sub-product data.\n"
-                              "%s" % e)
-            print("Failed to retrieve Dataset sub-product data, "
-                  "please see logfile for details.")
+            if not use_dask:
+                self.logger.error("Failed to retrieve Dataset sub-product data.\n"
+                                  "%s" % e)
+                print("Failed to retrieve Dataset sub-product data, "
+                      "please see logfile for details.")
+            else:
+                self.logger.error("Failed to retrieve Dataset sub-product DASK "
+                                  "pointer.\n%s" % e)
+                print("Failed to retrieve Dataset sub-product DASK pointer, "
+                      "please see logfile for details.")
 
     def put(self):
         """
