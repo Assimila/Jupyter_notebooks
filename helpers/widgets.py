@@ -31,15 +31,26 @@ class Widgets:
 
         :return:
         """
+        
+        # Lots of Layout objects must be defined to allow dynamic control
+        # over the visibility of widgets when certain operations are selected.
+        
         self.search = Search()
         self.item_layout_user = widgets.Layout(height=height, width=width)
 
         self.item_layout = widgets.Layout(width='auto', height='auto')
+        self.item_layout_date12 = widgets.Layout(width='auto', height='auto')
+        self.item_layout_date34 = widgets.Layout(width='auto', height='auto')
         self.item_layout_subproduct1 = widgets.Layout(width='auto', height='auto')
         self.item_layout_subproduct2 = widgets.Layout(width='auto', height='auto')
+        self.item_layout_product1 = widgets.Layout(width='auto', height='auto')
+        self.item_layout_product2 = widgets.Layout(width='auto', height='auto')
         self.item_layout_radio = widgets.Layout(width='auto', height='auto')
         self.item_layout_loc = widgets.Layout(width='auto', height='auto')
         self.item_layout_coords = widgets.Layout(width='60%', height='auto')
+        self.item_layout_trends = widgets.Layout(width='60%', height='auto')
+        self.item_layout_average = widgets.Layout(width='60%', height='auto')
+        self.item_layout_frequency = widgets.Layout(width='60%', height='auto')
         self.carousel_layout = widgets.Layout(overflow='scroll hidden',
                                               width='500px',
                                               height='60px',
@@ -116,7 +127,7 @@ class Widgets:
                                         readout=False,
                                         readout_format='d')
 
-    def product(self, description, peat=True):
+    def product(self, description, layout, peat=True):
         """
         Return a dropdown list of products for the user to choose from.
 
@@ -128,11 +139,21 @@ class Widgets:
         """
         if peat:
             projection_list = [' ', 'MOD11A1', 'MOD13A2', 'MCD43A3', 'era5']
-            return widgets.Dropdown(
-                options=projection_list,
-                description=description,
-                layout=self.item_layout,
-                disabled=False, )
+            
+            if layout == 'product1':
+                return widgets.Dropdown(
+                    options=projection_list,
+                    description=description,
+                    layout=self.item_layout_product1,
+                    disabled=False, )
+            
+            elif layout == 'product2':
+                return widgets.Dropdown(
+                    options=projection_list,
+                    description=description,
+                    layout=self.item_layout_product2,
+                    disabled=False, )
+            
         else:
             return widgets.Dropdown(
                 options=self.search.products().name.tolist(),
@@ -215,7 +236,8 @@ class Widgets:
         return widgets.Dropdown(options=[' ', 'by pixel', 'by area'],
                                 description="Average",
                                 placeholder='Select averaging method',
-                                disabled=True)
+                                disabled=True,
+                                layout=self.item_layout_average)
 
     def trends(self):
         """
@@ -227,7 +249,8 @@ class Widgets:
         return widgets.Dropdown(options=['side-by-side', 'overlaid'],
                                 description="Trends",
                                 placeholder='Select plot type',
-                                disabled=True)
+                                disabled=True,
+                                layout=self.item_layout_trends)
 
     def frequency(self):
         """
@@ -239,7 +262,8 @@ class Widgets:
         return widgets.Dropdown(options=[' ', 2, 3, 4, 5],
                                 description="Frequency",
                                 placeholder='Select analysis frequency',
-                                disabled=True)
+                                disabled=True,
+                                layout=self.item_layout_frequency)
 
     def date_carousel(self):
         """
@@ -306,7 +330,7 @@ class Widgets:
 
         return y1, y2
 
-    def get_date(self, value, description):
+    def get_date(self, value, description, layout):
         """
         Return a date selector widget to allow interactive date selection.
 
@@ -315,10 +339,21 @@ class Widgets:
 
         :return widgets.DatePicker: date selection object
         """
-        return widgets.DatePicker(description=description,
-                                  layout=self.item_layout,
-                                  value=value,
-                                  disabled=False)
+        if layout == 'date12':
+            return widgets.DatePicker(description=description,
+                                      layout=self.item_layout_date12,
+                                      value=value,
+                                      disabled=False)
+        elif layout == 'date34':
+            return widgets.DatePicker(description=description,
+                                      layout=self.item_layout_date34,
+                                      value=value,
+                                      disabled=False)
+        else:
+            return widgets.DatePicker(description=description,
+                                      layout=self.item_layout,
+                                      value=value,
+                                      disabled=False)          
 
     def get_hour(self, value, description):
         """
