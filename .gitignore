@@ -131,3 +131,6 @@ dmypy.json
 # DQTools log files
 **/*.log.*
 
+# Images and NetCDF's
+**/*.png
+**/*.nc
