@@ -1,3 +1,7 @@
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+# <env>: jupyter_1.2
+# platform: linux-64
 affine==2.3.0
 asn1crypto==0.24.0
 attrs==19.3.0
