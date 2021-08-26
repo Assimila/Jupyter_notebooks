@@ -140,24 +140,26 @@ class Widgets:
         """
         if peat:
             projection_list = [' ', 'MOD11A1', 'MOD13A2', 'MCD43A3', 'era5']
+        else:
+            projection_list = self.search.products().name.tolist()
             
-            if layout == 'product1':
-                return widgets.Dropdown(
-                    options=projection_list,
-                    description=description,
-                    layout=self.item_layout_product1,
-                    disabled=False, )
-            
-            elif layout == 'product2':
-                return widgets.Dropdown(
-                    options=projection_list,
-                    description=description,
-                    layout=self.item_layout_product2,
-                    disabled=False, )
+        if layout == 'product1':
+            return widgets.Dropdown(
+                options=projection_list,
+                description=description,
+                layout=self.item_layout_product1,
+                disabled=False, )
+
+        elif layout == 'product2':
+            return widgets.Dropdown(
+                options=projection_list,
+                description=description,
+                layout=self.item_layout_product2,
+                disabled=False, )
             
         else:
             return widgets.Dropdown(
-                options=self.search.products().name.tolist(),
+                options=projection_list,
                 description="Product:",
                 layout=self.item_layout,
                 disabled=False, )
@@ -293,6 +295,20 @@ class Widgets:
         return widgets.Dropdown(description='Save Format',
                                 disabled=False,
                                 layout=self.save_layout)
+    
+    def number_of_products(self, options):
+        """
+        Return radio button options to allow the user to select how many 
+        products/subproducts they would like to visuslise.
+        
+        :return widgets.RadioButtons: 
+        """
+        return widgets.RadioButtons(
+                    options=options,
+                    description='Number of Products:',
+                    layout=self.item_layout_radio,
+                    disabled=False)
+
 
     def rainfall_products(self):
         """
@@ -421,18 +437,50 @@ class Widgets:
 
         return button
     
+    @ staticmethod
+    def display_widget(widget_list):
+        """
+        Display a generic list of widgets
+        
+        :param widget_list: list of widgets
+        """
+
+        for w in widget_list:
+            display(w)
+    
     
     @staticmethod
     def display_widgets(product, subproduct, north, east, south,
                         west, date, hour, button, m):
         """
-        Display simple widgets.
+        Display widgets for request_bounding_box_for_time_step.ipynb.
         """
         
         from ipywidgets import HBox, VBox
 
         box1 = VBox([product, subproduct, north, east, south,
                      west, date, hour, button])
+
+        box2 = HBox([box1, m])
+        box_layout = widgets.Layout(
+            display='flex',
+            flex_flow='row',
+            align_items='stretch',
+            width='100%')
+        display(box2)
+    
+    
+    @staticmethod
+    def display_widgets_csv(num_prods, product1, subproduct1, product2, subproduct2, 
+                            latitude, longitude, start, end, button, m):
+        """
+        Display widgets for extract_csv_from_datacube.ipynb.
+        """
+        
+        from ipywidgets import HBox, VBox
+
+        box1 = VBox([num_prods, product1, subproduct1, product2, subproduct2, 
+                     latitude, longitude, start, end, button])
 
         box2 = HBox([box1, m])
         box_layout = widgets.Layout(

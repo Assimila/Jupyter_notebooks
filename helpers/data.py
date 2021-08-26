@@ -39,6 +39,31 @@ class Data:
                                         '.assimila_dq.txt')
         else:
             self.keyfile = keyfile
+    
+    
+#     def get_data_from_datacube(self, product, subproduct, start, end,
+#                                latitude, longitude):
+#         """
+#         Get a datacube dataset to be exported as a csv.
+        
+#         :param product:     the name of the datacube product
+#         :param subproduct:  the name of the datacube subproduct
+#         :param start:       the start date of the period
+#         :param end:         the end date of the period
+#         :param latitude     the latitude of the point location
+#         :param longitude    the longitude of the point location
+
+#         :return: xarray of datacube dataset data
+#         """
+
+#         ds = Dataset(product=product,
+#                      subproduct=subproduct,
+#                      identfile=self.keyfile)
+
+#         ds.get_data(start=start, stop=end,
+#                     latlon=[latitude, longitude])
+
+#         return ds.data
 
     def get_data_from_datacube_latlon(self, product, subproduct, start, end,
                                       latitude, longitude):
@@ -826,36 +851,72 @@ Lat/Lon:    {north}/{east}
             plt.legend()
             plt.show()
 
-    def data_to_csv(self, product, subproduct,
-                    latitude, longitude, start, end):
+    def data_to_csv(self, product1, subproduct1,
+                    latitude, longitude, start, end, product2=None, subproduct2=None):
         """
-        TODO: REMOVE REPEATED CODE
+        Extract a timeseries for a product/subproduct with start/end.
+        
+        :param product:     the name of the datacube product
+        :param subproduct:  the name of the datacube subproduct
+        :param latitude     the latitude of the point location
+        :param longitude    the longitude of the point location
+        :param start:       the start date of the period
+        :param end:         the end date of the period
+
+        :return:
         """
         with self.out:
-
             clear_output()
-            print("Getting data...")
-
-            data = self.get_data_from_datacube(product,
-                                               subproduct,
-                                               pd.to_datetime(start),
-                                               pd.to_datetime(end),
-                                               latitude,
-                                               longitude)
-
+            
+            self.check_date(product1, subproduct1, start)
+            self.check_date(product1, subproduct1, end)
+            data = self.get_data_from_datacube_latlon(product1,
+                                                       subproduct1,
+                                                       pd.to_datetime(start),
+                                                       pd.to_datetime(end),
+                                                       latitude,
+                                                       longitude)
+            
             st = pd.to_datetime(start)
             en = pd.to_datetime(end)
-            filename = f"{product}_{subproduct}_{latitude}_{longitude}" \
+            
+            filename1 = f"{product1}_{subproduct1}_{latitude}_{longitude}" \
                        f"_{st.date()}_{en.date()}.csv"
-            data.to_dataframe().to_csv(filename)
-            localfile = FileLink(filename)
-            display(localfile)
+            data.to_dataframe().to_csv(filename1)
+            localfile1 = FileLink(filename1)
+            
+            fig, ax1 = plt.subplots(figsize=(18, 8))
+            ln1 = data.__getitem__(subproduct1).plot(ax=ax1, label=subproduct1)
+            
+            if product2 is not None and subproduct2 is not None:
+                self.check_date(product2, subproduct2, start)
+                self.check_date(product2, subproduct2, end)
+                data = self.get_data_from_datacube_latlon(product2,
+                                                           subproduct2,
+                                                           pd.to_datetime(start),
+                                                           pd.to_datetime(end),
+                                                           latitude,
+                                                           longitude)
+                
+                filename2 = f"{product2}_{subproduct2}_{latitude}_{longitude}" \
+                           f"_{st.date()}_{en.date()}.csv"
+                data.to_dataframe().to_csv(filename2)
+                localfile2 = FileLink(filename2)
+                display(localfile2) 
+                
+                ax2 = ax1.twinx()
+                ln2 = data.__getitem__(subproduct2).plot(ax=ax2, color='red', label=subproduct2) 
+            
+                lns = ln1 + ln2
+            
+                labs = [l.get_label() for l in lns]
+                ax1.legend(lns, labs, loc=0)
 
-            plt.figure(figsize=(8, 6))
-            data.__getitem__(subproduct).plot()
+            display(localfile1)
+
             plt.show()
-
-    def data_to_csv(self, product, subproduct,
+            
+    def data_to_csv_reprojected(self, product, subproduct,
                     projection, y, x, start, end):
 
         with self.out:

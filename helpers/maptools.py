@@ -66,15 +66,15 @@ class MapTools:
 
         return os_maps_api
 
-    def prepare_map(self):
+    def prepare_map(self, rect=True):
         """
         Set up map properties and define options for rectangle and
         marker drawing.
 
         :return:
         """
-
-        self.dc.rectangle = {'shapeOptions': {'color': '#FF0000'}}
+        if rect:
+            self.dc.rectangle = {'shapeOptions': {'color': '#FF0000'}}
         self.dc.marker = {"shapeOptions": {"fillColor": "#fca45d",
                                            "color": "#fca45d", "fillOpacity": 1.0}}
         self.dc.polyline = {}
