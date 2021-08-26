@@ -136,10 +136,11 @@ class Widgets:
         :param peat [optional]: if True [default], peatland products are returned,
                                 else, all products are returned.
 
-        :return widgets.Dropdown: Dropdown widegt object.
+        :return widgets.Dropdown: Dropdown widget object.
         """
         if peat:
             projection_list = [' ', 'MOD11A1', 'MOD13A2', 'MCD43A3', 'era5']
+            projection_list2 = [' ', 'Surface temperature', 'Vegetation indices', 'Albedo', 'Temperature 2.0?']
         else:
             projection_list = self.search.products().name.tolist()
             
@@ -193,10 +194,10 @@ class Widgets:
 
         :return widgets.Dropdown: WGS84, BNG, Sinusoidal radio button options.
         """
-        projection_list = ['WGS84', 'BNG', 'Sinusoidal']
+        projection_list = ['Lat/Lon', 'National Grid', 'Sinusoidal']
         return widgets.RadioButtons(
             options=projection_list,
-            description='CRS:',
+            description='Coordinates:',
             layout=self.item_layout_radio,
             disabled=False)
 
@@ -483,6 +484,24 @@ class Widgets:
                      latitude, longitude, start, end, button])
 
         box2 = HBox([box1, m])
+        box_layout = widgets.Layout(
+            display='flex',
+            flex_flow='row',
+            align_items='stretch',
+            width='100%')
+        display(box2)
+  
+    @staticmethod
+    def display_widget_comparison(product, subproduct, north, east, south,
+                                  west, date1, hour1, date2, hour2, button, m):
+        """
+        Display widgets for compare_bounding_box_2_timesteps.ipynb
+        """
+        from ipywidgets import HBox, VBox
+
+        box1 = VBox([product, subproduct, north, east, south,
+                     west, date1, hour1, date2, hour2, button])
+        box2 = HBox([m, box1])
         box_layout = widgets.Layout(
             display='flex',
             flex_flow='row',

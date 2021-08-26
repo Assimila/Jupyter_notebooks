@@ -600,6 +600,9 @@ Lat/Lon:    {north}/{east}
             
     def color_map_nesw_compare(self, product, subproduct, north, east, south,
                                west, date1, hour1, date2, hour2):
+        """
+        Data function for notebook compare_bounding_box_for_2_time_steps.ipynb
+        """
 
         with self.out:
             clear_output()
@@ -611,6 +614,8 @@ Lat/Lon:    {north}/{east}
 
             Data.check(self, north, east, south, west, start1, end1)
             Data.check(self, north, east, south, west, start2, end2)
+            self.check_date(product, subproduct, date1)
+            self.check_date(product, subproduct, date2)
 
             list_of_results1 = Data.get_data_from_datacube_nesw(
                 self, product, subproduct, north, east,
