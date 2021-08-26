@@ -25,7 +25,7 @@ class MapTools:
     Set of tools to manipulate ipyleaflet.Map object.
     """
 
-    def __init__(self, center, zoom, width, height):
+    def __init__(self, center, zoom, width, height, os_api=False):
         """
         Initialise parameters and create Map object.
 
@@ -42,9 +42,14 @@ class MapTools:
         self.height = height
         self.key = 'k49EE9jmNlTQtGq6rGMXKgeQ2BYYADJG'
         self.dc = DrawControl()
-        self.basemap = self.os_map_api()
-        self.map = Map(basemap=self.basemap, center=self.center, zoom=self.zoom,
-                       layout=dict(width=self.width, height=self.height))
+        
+        if os_api:
+            self.basemap = self.os_map_api()
+            self.map = Map(basemap=self.basemap, center=self.center, zoom=self.zoom,
+                           layout=dict(width=self.width, height=self.height))
+        else:
+            self.map = Map(center=self.center, zoom=self.zoom,
+                           layout=dict(width=self.width, height=self.height))
 
     def os_map_api(self):
         """

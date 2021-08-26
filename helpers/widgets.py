@@ -127,9 +127,10 @@ class Widgets:
                                         readout=False,
                                         readout_format='d')
 
-    def product(self, description, layout, peat=True):
+    def product(self, description=None, layout=None, peat=False):
         """
         Return a dropdown list of products for the user to choose from.
+        Optional params used for COP26 demo, default None for generic.
 
         :param description:     description to be displayed next to widget.
         :param peat [optional]: if True [default], peatland products are returned,
@@ -161,23 +162,28 @@ class Widgets:
                 layout=self.item_layout,
                 disabled=False, )
 
-    def subproduct(self, description, layout):
+    def subproduct(self, description=None, layout=None):
         """
         Return an empty dropdown subproduct list. Once populated the user can
-        choose subproducts from it.
+        choose subproducts from it. Optional params used for COP26 demo, 
+        default None for generic.
 
         :param description: description to be displayed next to widget.
         :param layout:      the layout to be specified to each subproduct list.
 
         :return widgets.Dropdown: Dropdown object widget.
         """
-        if layout == 'subproduct1':
-            return widgets.Dropdown(description=description,
-                                    layout=self.item_layout_subproduct1)
-        elif layout == 'subproduct2':
-            return widgets.Dropdown(description=description,
-                                    layout=self.item_layout_subproduct2)
-
+        if description and layout:
+            if layout == 'subproduct1':
+                return widgets.Dropdown(description=description,
+                                        layout=self.item_layout_subproduct1)
+            elif layout == 'subproduct2':
+                return widgets.Dropdown(description=description,
+                                        layout=self.item_layout_subproduct2)
+        else:
+            return widgets.Dropdown(description='Subproduct:',
+                                        layout=self.item_layout)
+            
     def projection(self):
         """
         Return radio buttons defining different CRS projections for the
@@ -330,12 +336,13 @@ class Widgets:
 
         return y1, y2
 
-    def get_date(self, value, description, layout):
+    def get_date(self, value, description, layout=None):
         """
         Return a date selector widget to allow interactive date selection.
 
         :param value:       the initial date displayed on the selector.
         :param description: the description displayed next to the selector.
+        :param layout:      [optional] to allow dynamic displaying widgets in COP26 demo.
 
         :return widgets.DatePicker: date selection object
         """
@@ -413,6 +420,27 @@ class Widgets:
         button.button_style = 'primary'
 
         return button
+    
+    
+    @staticmethod
+    def display_widgets(product, subproduct, north, east, south,
+                        west, date, hour, button, m):
+        """
+        Display simple widgets.
+        """
+        
+        from ipywidgets import HBox, VBox
+
+        box1 = VBox([product, subproduct, north, east, south,
+                     west, date, hour, button])
+
+        box2 = HBox([box1, m])
+        box_layout = widgets.Layout(
+            display='flex',
+            flex_flow='row',
+            align_items='stretch',
+            width='100%')
+        display(box2)
 
     @staticmethod
     def display_widget_comparison_reduced(operation, product1, subproduct1, product2, subproduct2,

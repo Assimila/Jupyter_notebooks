@@ -560,9 +560,11 @@ Lat/Lon:    {north}/{east}
 
             start = Data.combine_date_hour(self, date, hour)
             end = Data.combine_date_hour(self, date, hour)
-
+            
+            
             Data.check(self, north, east, south, west, start, end)
-
+            self.check_date(product, subproduct, date)
+            
             list_of_results = Data.get_data_from_datacube_nesw(
                 self, product, subproduct, north, east, south, west, start, end)
 
@@ -1108,13 +1110,29 @@ Lat/Lon:    {north}/{east}
         first_date = ds.first_timestep
         last_date = ds.last_timestep
         available = True
-        if np.datetime64(date) < first_date:
-            print(f'{date} not available. First available date {first_date}')
-            available = False
-        elif np.datetime64(date) > last_date:
-            print(f'{date} not available. Last available date {last_date}')
-            available = False
-        elif product == 'MOD13A2':
+        val = True
+        
+        try:
+            if np.datetime64(date) < first_date:
+                print(f'{date} not available. First available date {first_date}')
+                available = False
+        except:
+            if np.datetime64(date.value) < first_date:
+                print(f'{date.value} not available. First available date {first_date}')
+                available = False
+                val = False
+        
+        try:
+            if np.datetime64(date) > last_date:
+                print(f'{date} not available. Last available date {last_date}')
+                available = False
+        except:
+            if np.datetime64(date.value) > last_date:
+                print(f'{date.value} not available. Last available date {last_date}')
+                available = False
+                val = False
+                
+        if product == 'MOD13A2':
             year = date.year
             timesteps = self.calculate_timesteps([year], period=16)
             available = date in timesteps
@@ -1125,8 +1143,12 @@ Lat/Lon:    {north}/{east}
                 print(f'{date} not available. Nearest available dates: {date1} and {date2}')
 
         if not available:
-            raise ValueError(f'{date} not available.')
-
+            if val:
+                raise ValueError(f'{date} not available.')
+            else:
+                
+                raise ValueError(f'{date.value} not available.')
+                
         return available
 
     def reproject_coords(self, x, y, projection):
