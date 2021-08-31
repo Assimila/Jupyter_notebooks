@@ -57,6 +57,12 @@ class Widgets:
                                               flex_flow='row',
                                               display='flex')
         self.save_layout = widgets.Layout(width='auto', height='auto')
+        
+        self.projection_list = {" "       : " ",
+                                "MOD11A1" : "Surface temperature",
+                                "MOD13A2" : "Vegetation indices",
+                                "MCD43A3" : "Albedo",
+                                "era5"    : "Temperature"}
 
     def get_lat_lon_widgets(self):
         """
@@ -139,24 +145,27 @@ class Widgets:
         :return widgets.Dropdown: Dropdown widget object.
         """
         if peat:
-            projection_list = [' ', 'MOD11A1', 'MOD13A2', 'MCD43A3', 'era5']
-            projection_list2 = [' ', 'Surface temperature', 'Vegetation indices', 'Albedo', 'Temperature 2.0?']
+            #projection_list1 = [' ', 'MOD11A1', 'MOD13A2', 'MCD43A3', 'era5']
+           
+            projection_list = list(self.projection_list.values())
         else:
             projection_list = self.search.products().name.tolist()
             
         if layout == 'product1':
             return widgets.Dropdown(
-                options=projection_list,
+                options=list(projection_list),
                 description=description,
                 layout=self.item_layout_product1,
-                disabled=False, )
+                disabled=False, 
+                tooltip='Select the satellite data option required')
 
         elif layout == 'product2':
             return widgets.Dropdown(
-                options=projection_list,
+                options=list(projection_list),
                 description=description,
                 layout=self.item_layout_product2,
-                disabled=False, )
+                disabled=False, 
+                tooltip='Select the satellite data option required')
             
         else:
             return widgets.Dropdown(
@@ -199,7 +208,8 @@ class Widgets:
             options=projection_list,
             description='Coordinates:',
             layout=self.item_layout_radio,
-            disabled=False)
+            disabled=False,
+            tooltip='Select a coordinate reference system to be displayed on the map')
 
     def operation(self):
         """
@@ -214,6 +224,7 @@ class Widgets:
                                          "Trend analysis for one sub-product",
                                          "Identifying change"],
                                 description="Operation:",
+                                tooltip='Select which operation mode you would like to use',
                                 layout=self.item_layout)
 
     def get_projection_widgets(self):
@@ -367,7 +378,8 @@ class Widgets:
             return widgets.DatePicker(description=description,
                                       layout=self.item_layout_date12,
                                       value=value,
-                                      disabled=False)
+                                      disabled=False,
+                                      tooltip='Select a start and end date')
         elif layout == 'date34':
             return widgets.DatePicker(description=description,
                                       layout=self.item_layout_date34,
@@ -377,7 +389,8 @@ class Widgets:
             return widgets.DatePicker(description=description,
                                       layout=self.item_layout,
                                       value=value,
-                                      disabled=False)          
+                                      disabled=False,
+                                      tooltip='Select a start and end date')          
 
     def get_hour(self, value, description):
         """
@@ -606,20 +619,28 @@ class Widgets:
         save_format.layout.visibility = 'hidden'
         save_data.layout.visibility = 'hidden'
 
-    def get_subproduct_list(self, product):
+    def get_subproduct_list(self, product, peat=False):
         """
         Finds the list of availible subproducts for a given product.
         Used to populate the dropdown subproduct widget.
         
         :param product: name of the product 
+        :param peat: [optional] set True for peatlands project.
         
         :return: list of availible subproducts
         """
-
-        if product == 'era5':
-            return['skt']
+        if peat:
+            if product == 'Temperature':
+                return ['skt']
+            else:
+                for key, value in self.projection_list.items():
+                    if value == product:
+                        return self.search.get_subproduct_list_of_product(key)
         else:
-            return self.search.get_subproduct_list_of_product(product)
+            if product == 'era5':
+                return['skt']
+            else:
+                return self.search.get_subproduct_list_of_product(product)
 
     def get_subproduct_trend_analysis(self, product):
         """
@@ -632,11 +653,11 @@ class Widgets:
         :return: list of availible subproducts
         """
 
-        if product == 'MOD13A2':
+        if product == 'Vegetation indices':
             return ['1_km_16_days_EVI']
 
         else:
-            return self.get_subproduct_list(product)
+            return self.get_subproduct_list(product, peat=True)
 
     def get_date_widgets(self):
         """
