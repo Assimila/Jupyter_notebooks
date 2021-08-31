@@ -594,7 +594,7 @@ Lat/Lon:    {north}/{east}
                 self, product, subproduct, north, east, south, west, start, end)
 
             y = list_of_results
-            y.__getitem__(subproduct).plot()
+            y.__getitem__(subproduct).plot(figsize=(10,8))
             plt.show()
             
             
@@ -629,7 +629,7 @@ Lat/Lon:    {north}/{east}
 
             y2 = list_of_results2
 
-            fig, axs = plt.subplots(1, 2, figsize=(9, 4))
+            fig, axs = plt.subplots(1, 2, figsize=(16, 8))
             y1.__getitem__(subproduct).plot(ax=axs[0])
             y2.__getitem__(subproduct).plot(ax=axs[1])
             plt.tight_layout()
@@ -695,18 +695,18 @@ Lat/Lon:    {north}/{east}
             print("Getting data...")
 
             # temperature
-            list_of_results = self.get_data_from_datacube('era5', 'skt',
+            list_of_results = self.get_data_from_datacube_latlon('era5', 'skt',
                                                           start, end,
                                                           latitude, longitude)
             x = list_of_results.skt - 273.15
 
             # rainfall
-            list_of_results = self.get_data_from_datacube('tamsat', 'rfe',
+            list_of_results = self.get_data_from_datacube_latlon('tamsat', 'rfe',
                                                           start, end,
                                                           latitude, longitude)
             y = list_of_results.rfe
 
-            fig, ax1 = plt.subplots()
+            fig, ax1 = plt.subplots(figsize=(16, 8))
 
             color = 'tab:red'
             ax1.set_xlabel('time')
@@ -737,27 +737,40 @@ Lat/Lon:    {north}/{east}
             clear_output()
             print("Getting data...")
 
-            p1 = self.get_data_from_datacube('tamsat',
-                                             'rfe',
-                                             np.datetime64(start),
-                                             np.datetime64(end),
-                                             latitude,
-                                             longitude)
+            data1 = self.get_data_from_datacube_latlon('tamsat',
+                                                     'rfe',
+                                                     np.datetime64(start),
+                                                     np.datetime64(end),
+                                                     latitude,
+                                                     longitude)
 
-            p2 = self.get_data_from_datacube('chirps',
-                                             'rfe',
-                                             np.datetime64(start),
-                                             np.datetime64(end),
-                                             latitude,
-                                             longitude)
+            data2 = self.get_data_from_datacube_latlon('chirps',
+                                                     'rfe',
+                                                     np.datetime64(start),
+                                                     np.datetime64(end),
+                                                     latitude,
+                                                     longitude)
 
-            plt.figure(figsize=(8, 6))
+            plt.figure(figsize=(16, 8))
 
-            p1.rfe.plot(label='TAMSAT')
-            p2.rfe.plot(label='CHIRPS')
-
+            data1.rfe.plot(label='TAMSAT')
+            data2.rfe.plot(label='CHIRPS')
+            
+            plt.tight_layout()
             plt.legend()
             plt.show()
+            
+            filename1 = f"tamsat_rfe_{latitude}_{longitude}" \
+                       f"_{start}_{end}.csv"
+            
+            filename2 = f"chirps_rfe_{latitude}_{longitude}" \
+                       f"_{start}_{end}.csv"
+            
+            data1.to_dataframe().to_csv(filename1)
+            data2.to_dataframe().to_csv(filename2)
+            
+            display(FileLink(filename1))
+            display(FileLink(filename2))
 
     def compare_temperature_subproducts(self, latitude, longitude, start, end):
 
@@ -798,7 +811,7 @@ Lat/Lon:    {north}/{east}
 
             product_name = product.lower()
 
-            y1 = self.get_data_from_datacube(
+            y1 = self.get_data_from_datacube_latlon(
                 product_name,
                 'rfe',
                 np.datetime64(f"{int(year1)}-01-01"),
@@ -806,7 +819,7 @@ Lat/Lon:    {north}/{east}
                 latitude,
                 longitude).groupby('time.dayofyear').mean()
 
-            y2 = self.get_data_from_datacube(
+            y2 = self.get_data_from_datacube_latlon(
                 product_name,
                 'rfe',
                 np.datetime64(f"{int(year2)}-01-01"),
@@ -814,7 +827,7 @@ Lat/Lon:    {north}/{east}
                 latitude,
                 longitude).groupby('time.dayofyear').mean()
 
-            plt.figure(figsize=(8, 6))
+            plt.figure(figsize=(16, 10))
 
             y1.rfe.plot(label=int(year1))
             y2.rfe.plot(label=int(year2))
@@ -958,7 +971,7 @@ Lat/Lon:    {north}/{east}
 
             product_name = product.lower()
 
-            y1 = self.get_data_from_datacube(
+            y1 = self.get_data_from_datacube_latlon(
                 product_name,
                 'rfe',
                 np.datetime64(start),
@@ -968,7 +981,7 @@ Lat/Lon:    {north}/{east}
 
             print("2/3 Calculating climatology...")
 
-            clim = self.get_data_from_datacube(
+            clim = self.get_data_from_datacube_latlon(
                 product_name,
                 'rfe',
                 np.datetime64(f"2000-01-01"),
@@ -990,7 +1003,7 @@ Lat/Lon:    {north}/{east}
             std_min = mean - std
             std_min.rfe.values[std_min.rfe.values < 0] = 0
 
-            plt.figure(figsize=(8, 6))
+            plt.figure(figsize=(18, 8))
 
             y1.rfe.plot(label="2018")
 
@@ -1004,14 +1017,14 @@ Lat/Lon:    {north}/{east}
             plt.show()
 
     def calculate_degree_days(self, latitude, longitude, start, end, lower,
-                              upper):
+                              upper, cutoff):
 
         with self.out:
 
             clear_output()
             print("1/3 Getting data...")
 
-            temp = self.get_data_from_datacube(
+            temp = self.get_data_from_datacube_latlon(
                 'era5',
                 'skt',
                 np.datetime64(start),
@@ -1020,13 +1033,30 @@ Lat/Lon:    {north}/{east}
                 longitude).skt - 273.15
 
             print("2/3 Calculating degree days...")
-
-            temp.values[temp.values > upper] = lower
-            temp.values[temp.values < lower] = lower
+            
+            if cutoff == 'Vertical':
+            # Set temperatures higher than upper threshold to lower threshold
+            # to address pest mortality
+                temp.values[temp.values > upper] = lower
+                temp.values[temp.values < lower] = lower
+                
+            if cutoff == 'Horizontal':
+            # Set temperatures higher than upper threshold to upper threshold
+            # to address pest mortality
+                temp.values[temp.values > upper] = upper
+                temp.values[temp.values < lower] = lower
+                
+            # Calculate degree day hours
             temp.values = (temp.values - lower) / 24
+            
+            # Take daily sum 
             temp = temp.resample(time="1D").sum()
-
-            temp.plot()
+            
+            temp.plot(figsize=(16, 8))
+            plt.axhline(upper, color='red', linestyle='--')
+            plt.axhline(lower, color='blue', linestyle='--')
+            plt.ylabel('degree days')
+            plt.tight_layout()
             plt.show()
 
     def combine_date_hour(self, date, hour):

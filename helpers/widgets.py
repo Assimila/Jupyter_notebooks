@@ -427,6 +427,19 @@ class Widgets:
                                         description=string,
                                         disabled=False,
                                         layout=self.item_layout)
+    
+    def cutoff_type(self):
+        """
+        Return RadioButtons to allow user to select degree day 
+        calculation cut-off type
+        
+        :return widgets.RadioButtons.
+        """
+        return widgets.RadioButtons(
+            options=['Vertical', 'Horizontal'],
+            description='Cut-off type:',
+            layout=self.item_layout,
+            disabled=False)
 
     def set_up_button(self, method, description, layout='default'):
         """
@@ -687,7 +700,7 @@ class Widgets:
         
         :return widgets.Datepicker: widget
         """
-        return widgets.DatePicker(description='EndDate: ',
+        return widgets.DatePicker(description='End Date: ',
                                   layout=self.item_layout,
                                   value=datetime.datetime(2000, 2, 1),
                                   disabled=False)
