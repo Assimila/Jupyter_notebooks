@@ -186,7 +186,7 @@ class Data:
                     return pixel_average
 
                 else:
-                    fig, axs = plt.subplots(figsize=(9, 4),
+                    fig, axs = plt.subplots(figsize=(9, 6),
                                             sharex=True, sharey=True)
 
                     y[subproduct].resample(time=freq).mean('time').mean('time').plot.imshow(ax=axs)
@@ -334,7 +334,7 @@ Change was {difference.data} from {date1} to {date2}.""")
 
                 difference = y2[subproduct][0] - y1[subproduct][0]
 
-                fig, axs = plt.subplots(figsize=(7, 4))
+                fig, axs = plt.subplots(figsize=(9, 6))
 
                 difference.plot.imshow(ax=axs)
 
@@ -420,9 +420,9 @@ Change was {difference.data} from {date1} to {date2}.""")
                     y1[subproduct].plot(ax=axs[0])
                     y2[subproduct].plot(ax=axs[1])
 
-                    axs[0].set_aspect('equal')
-                    axs[1].set_aspect('equal')
-
+#                     axs[0].set_aspect('equal')
+#                     axs[1].set_aspect('equal')
+                    
                     plt.tight_layout()
                     plt.show(block=False)
 
@@ -1297,17 +1297,17 @@ Lat/Lon:    {north}/{east}
         if conv == 'bng_to_latlon':
             transform = osr.CoordinateTransformation(bng, latlon)
             x, y, z = transform.TransformPoint(x, y)
-            return x, y
+            return round(x, 6), round(y, 6)
 
         elif conv == 'latlon_to_bng':
             transform = osr.CoordinateTransformation(latlon, bng)
             x, y, z = transform.TransformPoint(x, y)
-            return x, y
+            return round(x, 6), round(y, 6)
 
         elif conv == 'bng_to_sinu':
             transform = osr.CoordinateTransformation(bng, sinu)
             x, y, z = transform.TransformPoint(x, y)
-            return x, y
+            return round(x, 6), round(y, 6)
 
         elif conv == 'sinu_to_bng':
             transform = osr.CoordinateTransformation(sinu, bng)
@@ -1317,12 +1317,12 @@ Lat/Lon:    {north}/{east}
         elif conv == 'latlon_to_sinu':
             transform = osr.CoordinateTransformation(latlon, sinu)
             x, y, z = transform.TransformPoint(x, y)
-            return x, y
+            return round(x, 6), round(y, 6)
 
         elif conv == 'sinu_to_latlon':
             transform = osr.CoordinateTransformation(sinu, latlon)
             x, y, z = transform.TransformPoint(x, y)
-            return x, y
+            return round(x, 6), round(y, 6)
 
     def check_coords(self, north, east, south, west, projection):
         """
