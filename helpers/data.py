@@ -226,8 +226,8 @@ class Data:
                 except ValueError:
                     pass
 
-                self.check_date(product, subproduct, date1)
-                self.check_date(product, subproduct, date2)
+#                 self.check_date(product, subproduct, date1)
+#                 self.check_date(product, subproduct, date2)
 
                 self.check(north, east, south, west, date1, date2)
 
@@ -1206,28 +1206,15 @@ Lat/Lon:    {north}/{east}
         first_date = ds.first_timestep
         last_date = ds.last_timestep
         available = True
-        val = True
-        
-        try:
-            if np.datetime64(date) < first_date:
-                print(f'{date} not available. First available date {first_date}')
-                available = False
-        except:
-            if np.datetime64(date.value) < first_date:
-                print(f'{date.value} not available. First available date {first_date}')
-                available = False
-                val = False
-        
-        try:
-            if np.datetime64(date) > last_date:
-                print(f'{date} not available. Last available date {last_date}')
-                available = False
-        except:
-            if np.datetime64(date.value) > last_date:
-                print(f'{date.value} not available. Last available date {last_date}')
-                available = False
-                val = False
-                
+
+        if np.datetime64(date) < first_date:
+            print(f'{date} not available. First available date {first_date}')
+            available = False
+
+        if np.datetime64(date) > last_date:
+            print(f'{date} not available. Last available date {last_date}')
+            available = False
+  
         if product == 'MOD13A2':
             year = date.year
             timesteps = self.calculate_timesteps([year], period=16)
@@ -1239,11 +1226,8 @@ Lat/Lon:    {north}/{east}
                 print(f'{date} not available. Nearest available dates: {date1} and {date2}')
 
         if not available:
-            if val:
-                raise ValueError(f'{date} not available.')
-            else:
-                
-                raise ValueError(f'{date.value} not available.')
+            raise ValueError(f'{date} not available.')
+
                 
         return available
 
@@ -1257,10 +1241,10 @@ Lat/Lon:    {north}/{east}
 
         :return x, y:       reprojected x, y coordinates in WGS84 base
         """
-        if projection == "WGS84":
+        if projection == "Lat/Lon":
             return x, y
 
-        elif projection == "BNG":
+        elif projection == "National Grid":
             x, y = self.coord_transform(x, y, conv='bng_to_latlon')
             return x, y
 
@@ -1356,10 +1340,10 @@ Lat/Lon:    {north}/{east}
                 south, west: coordinates after reprojection to
                                           required CRS.
         """
-        if projection == 'WGS84':
+        if projection == 'Lat/Lon':
             return north, east, south, west
 
-        if projection == 'BNG':
+        if projection == 'National Grid':
             x1, y1 = self.coord_transform(x=east, y=north, conv='latlon_to_bng')
             x2, y2 = self.coord_transform(x=west, y=south, conv='latlon_to_bng')
             north, east, south, west = y1, x1, y2, x2
