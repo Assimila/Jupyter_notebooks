@@ -25,7 +25,7 @@ class MapTools:
     Set of tools to manipulate ipyleaflet.Map object.
     """
 
-    def __init__(self, center, zoom, width, height, os_api=False):
+    def __init__(self, center, zoom, width, height):
         """
         Initialise parameters and create Map object.
 
@@ -42,14 +42,9 @@ class MapTools:
         self.height = height
         self.key = 'k49EE9jmNlTQtGq6rGMXKgeQ2BYYADJG'
         self.dc = DrawControl()
-        
-        if os_api:
-            self.basemap = self.os_map_api()
-            self.map = Map(basemap=self.basemap, center=self.center, zoom=self.zoom,
-                           layout=dict(width=self.width, height=self.height))
-        else:
-            self.map = Map(center=self.center, zoom=self.zoom,
-                           layout=dict(width=self.width, height=self.height))
+        self.basemap = self.os_map_api()
+        self.map = Map(basemap=self.basemap, center=self.center, zoom=self.zoom,
+                       layout=dict(width=self.width, height=self.height))
 
     def os_map_api(self):
         """
@@ -66,15 +61,15 @@ class MapTools:
 
         return os_maps_api
 
-    def prepare_map(self, rect=True):
+    def prepare_map(self):
         """
         Set up map properties and define options for rectangle and
         marker drawing.
 
         :return:
         """
-        if rect:
-            self.dc.rectangle = {'shapeOptions': {'color': '#FF0000'}}
+
+        self.dc.rectangle = {'shapeOptions': {'color': '#FF0000'}}
         self.dc.marker = {"shapeOptions": {"fillColor": "#fca45d",
                                            "color": "#fca45d", "fillOpacity": 1.0}}
         self.dc.polyline = {}

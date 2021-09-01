@@ -39,31 +39,6 @@ class Data:
                                         '.assimila_dq.txt')
         else:
             self.keyfile = keyfile
-    
-    
-#     def get_data_from_datacube(self, product, subproduct, start, end,
-#                                latitude, longitude):
-#         """
-#         Get a datacube dataset to be exported as a csv.
-        
-#         :param product:     the name of the datacube product
-#         :param subproduct:  the name of the datacube subproduct
-#         :param start:       the start date of the period
-#         :param end:         the end date of the period
-#         :param latitude     the latitude of the point location
-#         :param longitude    the longitude of the point location
-
-#         :return: xarray of datacube dataset data
-#         """
-
-#         ds = Dataset(product=product,
-#                      subproduct=subproduct,
-#                      identfile=self.keyfile)
-
-#         ds.get_data(start=start, stop=end,
-#                     latlon=[latitude, longitude])
-
-#         return ds.data
 
     def get_data_from_datacube_latlon(self, product, subproduct, start, end,
                                       latitude, longitude):
@@ -226,8 +201,8 @@ class Data:
                 except ValueError:
                     pass
 
-#                 self.check_date(product, subproduct, date1)
-#                 self.check_date(product, subproduct, date2)
+                self.check_date(product, subproduct, date1)
+                self.check_date(product, subproduct, date2)
 
                 self.check(north, east, south, west, date1, date2)
 
@@ -585,24 +560,19 @@ Lat/Lon:    {north}/{east}
 
             start = Data.combine_date_hour(self, date, hour)
             end = Data.combine_date_hour(self, date, hour)
-            
-            
+
             Data.check(self, north, east, south, west, start, end)
-            self.check_date(product, subproduct, date)
-            
+
             list_of_results = Data.get_data_from_datacube_nesw(
                 self, product, subproduct, north, east, south, west, start, end)
 
             y = list_of_results
-            y.__getitem__(subproduct).plot(figsize=(10,8))
+            y.__getitem__(subproduct).plot()
             plt.show()
             
             
     def color_map_nesw_compare(self, product, subproduct, north, east, south,
                                west, date1, hour1, date2, hour2):
-        """
-        Data function for notebook compare_bounding_box_for_2_time_steps.ipynb
-        """
 
         with self.out:
             clear_output()
@@ -614,8 +584,6 @@ Lat/Lon:    {north}/{east}
 
             Data.check(self, north, east, south, west, start1, end1)
             Data.check(self, north, east, south, west, start2, end2)
-            self.check_date(product, subproduct, date1)
-            self.check_date(product, subproduct, date2)
 
             list_of_results1 = Data.get_data_from_datacube_nesw(
                 self, product, subproduct, north, east,
@@ -629,7 +597,7 @@ Lat/Lon:    {north}/{east}
 
             y2 = list_of_results2
 
-            fig, axs = plt.subplots(1, 2, figsize=(16, 8))
+            fig, axs = plt.subplots(1, 2, figsize=(9, 4))
             y1.__getitem__(subproduct).plot(ax=axs[0])
             y2.__getitem__(subproduct).plot(ax=axs[1])
             plt.tight_layout()
@@ -695,18 +663,18 @@ Lat/Lon:    {north}/{east}
             print("Getting data...")
 
             # temperature
-            list_of_results = self.get_data_from_datacube_latlon('era5', 'skt',
+            list_of_results = self.get_data_from_datacube('era5', 'skt',
                                                           start, end,
                                                           latitude, longitude)
             x = list_of_results.skt - 273.15
 
             # rainfall
-            list_of_results = self.get_data_from_datacube_latlon('tamsat', 'rfe',
+            list_of_results = self.get_data_from_datacube('tamsat', 'rfe',
                                                           start, end,
                                                           latitude, longitude)
             y = list_of_results.rfe
 
-            fig, ax1 = plt.subplots(figsize=(16, 8))
+            fig, ax1 = plt.subplots()
 
             color = 'tab:red'
             ax1.set_xlabel('time')
@@ -737,40 +705,27 @@ Lat/Lon:    {north}/{east}
             clear_output()
             print("Getting data...")
 
-            data1 = self.get_data_from_datacube_latlon('tamsat',
-                                                     'rfe',
-                                                     np.datetime64(start),
-                                                     np.datetime64(end),
-                                                     latitude,
-                                                     longitude)
+            p1 = self.get_data_from_datacube('tamsat',
+                                             'rfe',
+                                             np.datetime64(start),
+                                             np.datetime64(end),
+                                             latitude,
+                                             longitude)
 
-            data2 = self.get_data_from_datacube_latlon('chirps',
-                                                     'rfe',
-                                                     np.datetime64(start),
-                                                     np.datetime64(end),
-                                                     latitude,
-                                                     longitude)
+            p2 = self.get_data_from_datacube('chirps',
+                                             'rfe',
+                                             np.datetime64(start),
+                                             np.datetime64(end),
+                                             latitude,
+                                             longitude)
 
-            plt.figure(figsize=(16, 8))
+            plt.figure(figsize=(8, 6))
 
-            data1.rfe.plot(label='TAMSAT')
-            data2.rfe.plot(label='CHIRPS')
-            
-            plt.tight_layout()
+            p1.rfe.plot(label='TAMSAT')
+            p2.rfe.plot(label='CHIRPS')
+
             plt.legend()
             plt.show()
-            
-            filename1 = f"tamsat_rfe_{latitude}_{longitude}" \
-                       f"_{start}_{end}.csv"
-            
-            filename2 = f"chirps_rfe_{latitude}_{longitude}" \
-                       f"_{start}_{end}.csv"
-            
-            data1.to_dataframe().to_csv(filename1)
-            data2.to_dataframe().to_csv(filename2)
-            
-            display(FileLink(filename1))
-            display(FileLink(filename2))
 
     def compare_temperature_subproducts(self, latitude, longitude, start, end):
 
@@ -811,7 +766,7 @@ Lat/Lon:    {north}/{east}
 
             product_name = product.lower()
 
-            y1 = self.get_data_from_datacube_latlon(
+            y1 = self.get_data_from_datacube(
                 product_name,
                 'rfe',
                 np.datetime64(f"{int(year1)}-01-01"),
@@ -819,7 +774,7 @@ Lat/Lon:    {north}/{east}
                 latitude,
                 longitude).groupby('time.dayofyear').mean()
 
-            y2 = self.get_data_from_datacube_latlon(
+            y2 = self.get_data_from_datacube(
                 product_name,
                 'rfe',
                 np.datetime64(f"{int(year2)}-01-01"),
@@ -827,7 +782,7 @@ Lat/Lon:    {north}/{east}
                 latitude,
                 longitude).groupby('time.dayofyear').mean()
 
-            plt.figure(figsize=(16, 10))
+            plt.figure(figsize=(8, 6))
 
             y1.rfe.plot(label=int(year1))
             y2.rfe.plot(label=int(year2))
@@ -869,72 +824,36 @@ Lat/Lon:    {north}/{east}
             plt.legend()
             plt.show()
 
-    def data_to_csv(self, product1, subproduct1,
-                    latitude, longitude, start, end, product2=None, subproduct2=None):
+    def data_to_csv(self, product, subproduct,
+                    latitude, longitude, start, end):
         """
-        Extract a timeseries for a product/subproduct with start/end.
-        
-        :param product:     the name of the datacube product
-        :param subproduct:  the name of the datacube subproduct
-        :param latitude     the latitude of the point location
-        :param longitude    the longitude of the point location
-        :param start:       the start date of the period
-        :param end:         the end date of the period
-
-        :return:
+        TODO: REMOVE REPEATED CODE
         """
         with self.out:
+
             clear_output()
-            
-            self.check_date(product1, subproduct1, start)
-            self.check_date(product1, subproduct1, end)
-            data = self.get_data_from_datacube_latlon(product1,
-                                                       subproduct1,
-                                                       pd.to_datetime(start),
-                                                       pd.to_datetime(end),
-                                                       latitude,
-                                                       longitude)
-            
+            print("Getting data...")
+
+            data = self.get_data_from_datacube(product,
+                                               subproduct,
+                                               pd.to_datetime(start),
+                                               pd.to_datetime(end),
+                                               latitude,
+                                               longitude)
+
             st = pd.to_datetime(start)
             en = pd.to_datetime(end)
-            
-            filename1 = f"{product1}_{subproduct1}_{latitude}_{longitude}" \
+            filename = f"{product}_{subproduct}_{latitude}_{longitude}" \
                        f"_{st.date()}_{en.date()}.csv"
-            data.to_dataframe().to_csv(filename1)
-            localfile1 = FileLink(filename1)
-            
-            fig, ax1 = plt.subplots(figsize=(18, 8))
-            ln1 = data.__getitem__(subproduct1).plot(ax=ax1, label=subproduct1)
-            
-            if product2 is not None and subproduct2 is not None:
-                self.check_date(product2, subproduct2, start)
-                self.check_date(product2, subproduct2, end)
-                data = self.get_data_from_datacube_latlon(product2,
-                                                           subproduct2,
-                                                           pd.to_datetime(start),
-                                                           pd.to_datetime(end),
-                                                           latitude,
-                                                           longitude)
-                
-                filename2 = f"{product2}_{subproduct2}_{latitude}_{longitude}" \
-                           f"_{st.date()}_{en.date()}.csv"
-                data.to_dataframe().to_csv(filename2)
-                localfile2 = FileLink(filename2)
-                display(localfile2) 
-                
-                ax2 = ax1.twinx()
-                ln2 = data.__getitem__(subproduct2).plot(ax=ax2, color='red', label=subproduct2) 
-            
-                lns = ln1 + ln2
-            
-                labs = [l.get_label() for l in lns]
-                ax1.legend(lns, labs, loc=0)
+            data.to_dataframe().to_csv(filename)
+            localfile = FileLink(filename)
+            display(localfile)
 
-            display(localfile1)
-
+            plt.figure(figsize=(8, 6))
+            data.__getitem__(subproduct).plot()
             plt.show()
-            
-    def data_to_csv_reprojected(self, product, subproduct,
+
+    def data_to_csv(self, product, subproduct,
                     projection, y, x, start, end):
 
         with self.out:
@@ -971,7 +890,7 @@ Lat/Lon:    {north}/{east}
 
             product_name = product.lower()
 
-            y1 = self.get_data_from_datacube_latlon(
+            y1 = self.get_data_from_datacube(
                 product_name,
                 'rfe',
                 np.datetime64(start),
@@ -981,7 +900,7 @@ Lat/Lon:    {north}/{east}
 
             print("2/3 Calculating climatology...")
 
-            clim = self.get_data_from_datacube_latlon(
+            clim = self.get_data_from_datacube(
                 product_name,
                 'rfe',
                 np.datetime64(f"2000-01-01"),
@@ -1003,7 +922,7 @@ Lat/Lon:    {north}/{east}
             std_min = mean - std
             std_min.rfe.values[std_min.rfe.values < 0] = 0
 
-            plt.figure(figsize=(18, 8))
+            plt.figure(figsize=(8, 6))
 
             y1.rfe.plot(label="2018")
 
@@ -1017,14 +936,14 @@ Lat/Lon:    {north}/{east}
             plt.show()
 
     def calculate_degree_days(self, latitude, longitude, start, end, lower,
-                              upper, cutoff):
+                              upper):
 
         with self.out:
 
             clear_output()
             print("1/3 Getting data...")
 
-            temp = self.get_data_from_datacube_latlon(
+            temp = self.get_data_from_datacube(
                 'era5',
                 'skt',
                 np.datetime64(start),
@@ -1033,30 +952,13 @@ Lat/Lon:    {north}/{east}
                 longitude).skt - 273.15
 
             print("2/3 Calculating degree days...")
-            
-            if cutoff == 'Vertical':
-            # Set temperatures higher than upper threshold to lower threshold
-            # to address pest mortality
-                temp.values[temp.values > upper] = lower
-                temp.values[temp.values < lower] = lower
-                
-            if cutoff == 'Horizontal':
-            # Set temperatures higher than upper threshold to upper threshold
-            # to address pest mortality
-                temp.values[temp.values > upper] = upper
-                temp.values[temp.values < lower] = lower
-                
-            # Calculate degree day hours
+
+            temp.values[temp.values > upper] = lower
+            temp.values[temp.values < lower] = lower
             temp.values = (temp.values - lower) / 24
-            
-            # Take daily sum 
             temp = temp.resample(time="1D").sum()
-            
-            temp.plot(figsize=(16, 8))
-            plt.axhline(upper, color='red', linestyle='--')
-            plt.axhline(lower, color='blue', linestyle='--')
-            plt.ylabel('degree days')
-            plt.tight_layout()
+
+            temp.plot()
             plt.show()
 
     def combine_date_hour(self, date, hour):
@@ -1206,16 +1108,13 @@ Lat/Lon:    {north}/{east}
         first_date = ds.first_timestep
         last_date = ds.last_timestep
         available = True
-
         if np.datetime64(date) < first_date:
             print(f'{date} not available. First available date {first_date}')
             available = False
-
-        if np.datetime64(date) > last_date:
+        elif np.datetime64(date) > last_date:
             print(f'{date} not available. Last available date {last_date}')
             available = False
-  
-        if product == 'MOD13A2':
+        elif product == 'MOD13A2':
             year = date.year
             timesteps = self.calculate_timesteps([year], period=16)
             available = date in timesteps
@@ -1228,7 +1127,6 @@ Lat/Lon:    {north}/{east}
         if not available:
             raise ValueError(f'{date} not available.')
 
-                
         return available
 
     def reproject_coords(self, x, y, projection):
@@ -1241,10 +1139,10 @@ Lat/Lon:    {north}/{east}
 
         :return x, y:       reprojected x, y coordinates in WGS84 base
         """
-        if projection == "Lat/Lon":
+        if projection == "WGS84":
             return x, y
 
-        elif projection == "National Grid":
+        elif projection == "BNG":
             x, y = self.coord_transform(x, y, conv='bng_to_latlon')
             return x, y
 
@@ -1340,10 +1238,10 @@ Lat/Lon:    {north}/{east}
                 south, west: coordinates after reprojection to
                                           required CRS.
         """
-        if projection == 'Lat/Lon':
+        if projection == 'WGS84':
             return north, east, south, west
 
-        if projection == 'National Grid':
+        if projection == 'BNG':
             x1, y1 = self.coord_transform(x=east, y=north, conv='latlon_to_bng')
             x2, y2 = self.coord_transform(x=west, y=south, conv='latlon_to_bng')
             north, east, south, west = y1, x1, y2, x2
