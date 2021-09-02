@@ -1014,22 +1014,46 @@ Lat/Lon:    {north}/{east}
 
             plt.legend()
             plt.show()
+     
+    @staticmethod
+    def complete_days_idx(timeseries):
+        """
+        Use the time dimension of an array to return the indices of all days
+        with 24 timesteps.
 
+        :param timeseries:
+        :return:
+        """
+        # Resample the time series and count how many time steps in each day
+        timesteps_daily = timeseries.resample(time='1D').count().values
+
+        # Use this to generate a list which is equal in length to
+        # timeseries, and where each value is the number of hours in the
+        # day for that particular index
+        day_hours = np.concatenate([np.ones(t) * t for t in timesteps_daily])
+
+        # Return all indices where number of hours in the day == 24
+        return np.where(day_hours == 24)[0]
+    
+    
     def calculate_degree_days(self, latitude, longitude, start, end, lower,
                               upper, cutoff):
 
         with self.out:
-
+            up, low = None, None
+            days = end-start
             clear_output()
             print("1/3 Getting data...")
 
             temp = self.get_data_from_datacube_latlon(
-                'era5',
-                'skt',
-                np.datetime64(start),
-                np.datetime64(end+datetime.timedelta(hours=23)),
-                latitude,
-                longitude).skt - 273.15
+                    'era5',
+                    'skt',
+                    np.datetime64(start),
+                    np.datetime64(end+datetime.timedelta(hours=23)),
+                    latitude,
+                    longitude).skt - 273.15
+            
+            temp_orig = temp.copy(deep=True)
 
             print("2/3 Calculating degree days...")
             
@@ -1048,15 +1072,48 @@ Lat/Lon:    {north}/{east}
             # Calculate degree day hours
             temp.values = (temp.values - lower) / 24
             
+            # Remove any days with fewer than 24 time steps
+            temp = temp.isel(time=self.complete_days_idx(temp.time))
+            
             # Take daily sum 
             temp = temp.resample(time="1D").sum()
+
+            # Plot
+            fig, axs = plt.subplots(2, 1, figsize=(16, 10))
             
-            temp.plot(figsize=(16, 8))
-            plt.axhline(upper, color='red', linestyle='--')
-            plt.axhline(lower, color='blue', linestyle='--')
-            plt.ylabel('degree days')
+            temp.plot(ax=axs[0], label='degree days')
+            
+            temp_orig.plot(ax=axs[1], label='temperature')
+            
+            if cutoff == 'Vertical':
+                axs[1].fill_between(temp_orig.time.data, lower, temp_orig.data, 
+                                    where=(temp_orig.data>=lower)&(temp_orig.data<=upper), 
+                                    facecolor='green', interpolate=True, alpha=0.3)
+                
+            elif cutoff == 'Horizontal':
+                axs[1].fill_between(temp_orig.time.data, lower, temp_orig.data, 
+                                    where=temp_orig.data>=lower, 
+                                    facecolor='green', interpolate=True, alpha=0.3)
+
+                axs[1].fill_between(temp_orig.time.data, upper, temp_orig.data, 
+                        where=temp_orig.data>=upper, 
+                        facecolor='white', interpolate=True, alpha=1)
+            
+            axs[1].axhline(upper, color='red', linestyle='--', label='upper threshold')
+            axs[1].axhline(lower, color='blue', linestyle='--', label='lower threshold')
+
+            
+            axs[0].set_ylabel('degree days')
+            axs[1].set_ylabel('skt ($^\circ$C)')
+            
+            plt.legend()
             plt.tight_layout()
             plt.show()
+            print("""
+=========================================
+{:.2f} degree days occurred over {} days
+=========================================
+""".format(temp.data.sum(), days.days))
 
     def combine_date_hour(self, date, hour):
 
