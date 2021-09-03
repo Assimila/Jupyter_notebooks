@@ -180,6 +180,8 @@ class Data:
     Product:    {product}
     Subproduct: {subproduct}
     Lat/Lon:    {north}/{east}
+    Date 1:     {date1}
+    Date 2:     {date2}
     ================================================== 
     Average = {pixel_average.data}
     """)
@@ -213,6 +215,8 @@ class Data:
     Product:    {product}
     Subproduct: {subproduct}
     Lat/Lon:    {north}/{east}
+    Date 1:     {date1}
+    Date 2:     {date2}
     ================================================== 
     Average = {area_average.data}
     """)
@@ -317,7 +321,7 @@ Lat/Lon:    {north}/{east}
 ===========================================================
 Change was {difference.data} from {date1} to {date2}.""")
                 
-                return y2[subproduct][0] - y1[subproduct][0]
+                return difference
                 
             else:
                 list_of_results1 = Data.get_data_from_datacube_nesw(
@@ -1021,7 +1025,9 @@ Lat/Lon:    {north}/{east}
         Use the time dimension of an array to return the indices of all days
         with 24 timesteps.
 
-        :param timeseries:
+        :param timeseries: xarray of time data.
+        
+        :return timeseries of data with days which contain a full 24 hours.
         :return:
         """
         # Resample the time series and count how many time steps in each day
@@ -1038,12 +1044,25 @@ Lat/Lon:    {north}/{east}
     
     def calculate_degree_days(self, latitude, longitude, start, end, lower,
                               upper, cutoff):
+        """
+        Calculate the number of degree days at a location between 2 dates with
+        a user specified cut-off type and temperature thresholds.
+        
+        :param latitude     the latitude of the point location
+        :param longitude    the longitude of the point location
+        :param start:       the start date of the period
+        :param end:         the end date of the period
+        :param upper:       the upper temperature threshold
+        :param lower:       the lower temperature threshold
+        :param cutoff:      the calculation cutoff type [vertical/horizontal]
+        
+        :return:
+        """
 
         with self.out:
-            up, low = None, None
+            # Number of days 
             days = end-start
             clear_output()
-            print("1/3 Getting data...")
 
             temp = self.get_data_from_datacube_latlon(
                     'era5',
@@ -1054,8 +1073,6 @@ Lat/Lon:    {north}/{east}
                     longitude).skt - 273.15
             
             temp_orig = temp.copy(deep=True)
-
-            print("2/3 Calculating degree days...")
             
             if cutoff == 'Vertical':
             # Set temperatures higher than upper threshold to lower threshold
@@ -1144,7 +1161,11 @@ Lat/Lon:    {north}/{east}
         with self.out:
             clear_output()
             print("Getting data...")
-
+            
+            # check if dates availible # TODO: include hour check
+            self.check_date(product, subproduct, start_date)
+            self.check_date(product, subproduct, end_date)
+            
             # to get start date and hour
             start = Data.combine_date_hour(self, start_date, start_hour)
 
@@ -1262,6 +1283,10 @@ Lat/Lon:    {north}/{east}
         first_date = ds.first_timestep
         last_date = ds.last_timestep
         available = True
+        
+        
+        if not isinstance(date, datetime.date):
+            date = date.value
 
         if np.datetime64(date) < first_date:
             print(f'{date} not available. First available date {first_date}')
