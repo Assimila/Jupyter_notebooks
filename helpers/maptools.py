@@ -161,7 +161,8 @@ class MapTools:
         self.map.add_layer(rectangle)
         self.layers_list.append(rectangle)
 
-    def get_coords_point(self, geo_json):
+    @staticmethod
+    def get_coords_point(geo_json):
         """
         Find the coordinates of a point drawn on the map with DrawControl().
 
@@ -180,7 +181,8 @@ class MapTools:
         west = x
         return north, east, south, west
 
-    def get_coords_polygon(self, geo_json):
+    @staticmethod
+    def get_coords_polygon(geo_json):
         """
         Find the coordinates of a rectangle drawn on the map with DrawControl().
 

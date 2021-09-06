@@ -16,6 +16,7 @@ from IPython.display import display, clear_output
 from IPython.lib.display import FileLink
 from DQTools.DQTools.dataset import Dataset
 from DQTools.DQTools.search import Search
+from DQTools.DQTools.connect import connect
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -171,7 +172,25 @@ class Data:
         y["longitude"] = [self.coord_transform(i, 0, conv)[0] for i in y["longitude"].data]
         
         return y
+    
+    @staticmethod
+    def get_units(product, subproduct):
+        """
+        Get the units of a specified product/subproduct.
         
+        :param product:    the name of the product
+        :param subproduct: the name of the subproduct
+        
+        :return units:     the required unit
+        """
+        conn = connect.Connect(identfile='../../DQTools/DQTools/connect/.assimila_dq')
+        _product = conn.get_all_table_data(tablename='product')
+        product_id = _product[_product.name==product].idproduct.values[0]
+        _subproduct = conn.get_all_table_data(tablename='subproduct')
+        units = _subproduct[_subproduct.idproduct==product_id][_subproduct.name==subproduct].units.values[0]
+        
+        return units
+
     def average_subproduct(self, product, subproduct, frequency, average, north,
                                east, south, west, date1, date2, proj):
             """
@@ -215,8 +234,8 @@ class Data:
                     #y_reproj = self.coord_transform_plot(y, subproduct, proj)
                     fig, axs = plt.subplots(figsize=(9, 6),
                                             sharex=True, sharey=True)
-
-                    y_reproj[subproduct].resample(time=freq).mean('time').mean('time').plot.imshow(ax=axs)
+                    units = Data.get_units(product, subproduct)
+                    y[subproduct].resample(time=freq).mean('time').mean('time').plot.imshow(ax=axs)
                     #axs.set_aspect('equal')
                     if freq == '1D':
                         plt.title(f'average: days')
@@ -227,7 +246,7 @@ class Data:
                     plt.tight_layout()
                     plt.show(block=False)
 
-                    return y_reproj[subproduct].resample(time=freq).mean('time').mean('time'), fig 
+                    return y[subproduct].resample(time=freq).mean('time').mean('time'), fig 
 
             def by_area(freq):
                 """
@@ -634,12 +653,12 @@ Lat/Lon:    {north}/{east}
 
         with self.out:
             clear_output()
-
+            FORMAT = '%Y-%m-%d %H:%M:%S'
             start1 = Data.combine_date_hour(self, date1, hour1)
             end1 = Data.combine_date_hour(self, date1, hour1)
             start2 = Data.combine_date_hour(self, date2, hour2)
             end2 = Data.combine_date_hour(self, date2, hour2)
-
+     
             Data.check(self, north, east, south, west, start1, end1)
             Data.check(self, north, east, south, west, start2, end2)
             self.check_date(product, subproduct, date1)
@@ -656,7 +675,7 @@ Lat/Lon:    {north}/{east}
                 south, west, start2, end2)
 
             y2 = list_of_results2
-
+            
             fig, axs = plt.subplots(1, 2, figsize=(16, 8))
             y1.__getitem__(subproduct).plot(ax=axs[0])
             y2.__getitem__(subproduct).plot(ax=axs[1])
@@ -1068,7 +1087,7 @@ Lat/Lon:    {north}/{east}
     
     
     def calculate_degree_days(self, latitude, longitude, start, end, lower,
-                              upper, cutoff):
+                              upper, temp_metric, cutoff):
         """
         Calculate the number of degree days at a location between 2 dates with
         a user specified cut-off type and temperature thresholds.
@@ -1079,26 +1098,48 @@ Lat/Lon:    {north}/{east}
         :param end:         the end date of the period
         :param upper:       the upper temperature threshold
         :param lower:       the lower temperature threshold
+        :param temp_metric: the temperature measurement to use [subproduct]
         :param cutoff:      the calculation cutoff type [vertical/horizontal]
         
         :return:
         """
 
         with self.out:
+            # Convert datetime to date unless already date.
+            try:
+                start_date = start.date()
+            except:
+                start_date = start
+            
+            try: 
+                end_date = end.date()
+            except: 
+                end_date = end
+            
             # Number of days 
-            days = end-start
+            days = end_date-start_date
+            
             clear_output()
-
-            temp = self.get_data_from_datacube_latlon(
-                    'era5',
-                    'skt',
-                    np.datetime64(start),
-                    np.datetime64(end+datetime.timedelta(hours=23)),
-                    latitude,
-                    longitude).skt - 273.15
+            
+            if temp_metric == 'skt':
+                temp = self.get_data_from_datacube_latlon(
+                            product='era5',
+                            subproduct='skt',
+                            start=np.datetime64(start),
+                            end=np.datetime64(end+datetime.timedelta(hours=23)),
+                            latitude=latitude,
+                            longitude=longitude).skt - 273.15
+            
+            elif temp_metric == 't2m':
+                temp = self.get_data_from_datacube_latlon(
+                            product='era5',
+                            subproduct='t2m',
+                            start=np.datetime64(start),
+                            end=np.datetime64(end+datetime.timedelta(hours=23)),
+                            latitude=latitude,
+                            longitude=longitude).t2m - 273.15
             
             temp_orig = temp.copy(deep=True)
-            
             if cutoff == 'Vertical':
             # Set temperatures higher than upper threshold to lower threshold
             # to address pest mortality
@@ -1122,7 +1163,6 @@ Lat/Lon:    {north}/{east}
 
             # Plot
             fig, axs = plt.subplots(2, 1, figsize=(16, 10))
-            
             temp.plot(ax=axs[0], label='degree days')
             
             temp_orig.plot(ax=axs[1], label='temperature')
@@ -1146,8 +1186,11 @@ Lat/Lon:    {north}/{east}
 
             
             axs[0].set_ylabel('degree days')
-            axs[1].set_ylabel('skt ($^\circ$C)')
             
+            if temp_metric == 'skt':
+                axs[1].set_ylabel('skt ($^\circ$C)')
+            elif temp_metric == 't2m':
+                axs[1].set_ylabel('t2m ($^\circ$C)')
             plt.legend()
             plt.tight_layout()
             plt.show()
@@ -1156,6 +1199,11 @@ Lat/Lon:    {north}/{east}
 {:.2f} degree days occurred over {} days
 =========================================
 """.format(temp.data.sum(), days.days))
+            temp.rename("degree days")
+            filename = f"degree_day_{latitude}_{longitude}" \
+                       f"_{start}_{end}_{lower}_{upper}.csv"
+            temp.to_dataframe().to_csv(filename)
+            display(FileLink(filename))
 
     def combine_date_hour(self, date, hour):
 

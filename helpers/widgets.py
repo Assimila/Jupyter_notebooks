@@ -428,6 +428,18 @@ class Widgets:
                                         disabled=False,
                                         layout=self.item_layout)
     
+    def degree_day_temp(self):
+        """
+        Return a dropdown which contains different temperature products for the
+        user to select from.
+
+        :return widgets.Dropdown: dropdown list of options.
+        """
+        return widgets.Dropdown(options=['skt', 't2m'],
+                                description='Temperature:',
+                                layout=self.item_layout,
+                                disabled=False, )
+    
     def cutoff_type(self):
         """
         Return RadioButtons to allow user to select degree day 
