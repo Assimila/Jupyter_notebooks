@@ -39,31 +39,6 @@ class Data:
                                         '.assimila_dq.txt')
         else:
             self.keyfile = keyfile
-    
-    
-#     def get_data_from_datacube(self, product, subproduct, start, end,
-#                                latitude, longitude):
-#         """
-#         Get a datacube dataset to be exported as a csv.
-        
-#         :param product:     the name of the datacube product
-#         :param subproduct:  the name of the datacube subproduct
-#         :param start:       the start date of the period
-#         :param end:         the end date of the period
-#         :param latitude     the latitude of the point location
-#         :param longitude    the longitude of the point location
-
-#         :return: xarray of datacube dataset data
-#         """
-
-#         ds = Dataset(product=product,
-#                      subproduct=subproduct,
-#                      identfile=self.keyfile)
-
-#         ds.get_data(start=start, stop=end,
-#                     latlon=[latitude, longitude])
-
-#         return ds.data
 
     def get_data_from_datacube_latlon(self, product, subproduct, start, end,
                                       latitude, longitude):
@@ -90,7 +65,7 @@ class Data:
 
             ds.get_data(start=start, stop=end,
                         latlon=[latitude, longitude])
-
+            
             return ds.data
 
     def get_data_from_datacube_nesw(self, product, subproduct, north, east,
@@ -120,7 +95,7 @@ class Data:
 
             ds.get_data(start=start, stop=end,
                         region=[north, east, south, west])
-
+            print(ds)
             return ds.data
 
     def check(self, north, east, south, west, start, end):
@@ -147,9 +122,58 @@ class Data:
         if north and south and north < south:
             raise ValueError('North value should be greater than south')
 
-    
+    def coord_transform_plot(self, y, subproduct, proj):
+        """
+        Reproject the cell coordinates so that the plot seen by the user
+        has coordinate units which match their selection choice.
+        
+        :param y:          the DataArray who's coordinates are being transformed 
+        :param subproduct: the name of the subproduct being investigated
+        :proj:             the user selected projection
+        
+        :return y:         the reprojected DataArray
+        """
+        #######################
+        # No conversion cases #
+        #######################
+        if y[subproduct].crs == "+init=epsg:4326" and proj == 'Lat/Lon':
+            return y
+        
+        elif y[subproduct].crs[:11] == "+proj:tmerc" and proj == 'National Grid':
+            return y
+            
+        elif y[subproduct].crs[:10] == "+proj=sinu" and proj == 'Sinusoidal':
+            return y
+        
+        ####################
+        # Conversion cases #
+        ####################
+        if y[subproduct].crs == "+init=epsg:4326" and proj == 'National Grid':
+            conv = "latlon_to_bng"
+        
+        elif y[subproduct].crs[:11] == "+proj:tmerc" and proj == 'Lat/Lon':
+            conv='bng_to_latlon'
+        
+        elif y[subproduct].crs[:10] == "+proj=sinu" and proj == 'National Grid':
+            conv='sinu_to_bng'
+        
+        elif y[subproduct].crs[:11] == "+proj:tmerc" and proj == 'Sinusoidal':
+            conv='sinu_to_bng'
+            
+        elif y[subproduct].crs[:10] == "+proj=sinu" and proj == 'Lat/Lon':
+            conv='sinu_to_latlon'
+            
+        elif y[subproduct].crs == "+init=epsg:4326" and proj == 'Sinusoidal':
+            conv='latlon_to_sinu'
+            
+            
+        y["latitude"] = [self.coord_transform(0, i, conv)[1] for i in y["latitude"].data]
+        y["longitude"] = [self.coord_transform(i, 0, conv)[0] for i in y["longitude"].data]
+        
+        return y
+        
     def average_subproduct(self, product, subproduct, frequency, average, north,
-                               east, south, west, date1, date2):
+                               east, south, west, date1, date2, proj):
             """
             Find the average of a subproduct over an area or point over 2 given dates.
             Averaging done by area or by pixel with an averaging frequency of days/
@@ -188,10 +212,11 @@ class Data:
                     return pixel_average
 
                 else:
+                    #y_reproj = self.coord_transform_plot(y, subproduct, proj)
                     fig, axs = plt.subplots(figsize=(9, 6),
                                             sharex=True, sharey=True)
 
-                    y[subproduct].resample(time=freq).mean('time').mean('time').plot.imshow(ax=axs)
+                    y_reproj[subproduct].resample(time=freq).mean('time').mean('time').plot.imshow(ax=axs)
                     #axs.set_aspect('equal')
                     if freq == '1D':
                         plt.title(f'average: days')
@@ -202,7 +227,7 @@ class Data:
                     plt.tight_layout()
                     plt.show(block=False)
 
-                    return y[subproduct].resample(time=freq).mean('time').mean('time'), fig 
+                    return y_reproj[subproduct].resample(time=freq).mean('time').mean('time'), fig 
 
             def by_area(freq):
                 """
@@ -403,7 +428,7 @@ Change was {difference.data} from {date1} to {date2}.""")
                 y2 = list_of_results2
                 
                 if trends == 'overlaid':
-                    fig = plt.figure(figsize=(16, 4))
+                    fig = plt.figure(figsize=(15, 4))
                     
                     axs0 = fig.add_subplot(111)
                     axs1 = axs0.twiny()
@@ -419,7 +444,7 @@ Change was {difference.data} from {date1} to {date2}.""")
                     plt.show(block=False)
                     
                 elif trends == 'side-by-side':
-                    fig, axs = plt.subplots(1, 2, figsize=(16, 4))
+                    fig, axs = plt.subplots(1, 2, figsize=(15, 4))
 
                     y1[subproduct].plot(ax=axs[0])
                     y2[subproduct].plot(ax=axs[1])
@@ -447,7 +472,7 @@ Change was {difference.data} from {date1} to {date2}.""")
                 y2 = list_of_results2
 
                 # Share axis to allow zooming on both plots simultaneously
-                fig, axs = plt.subplots(1, 2, figsize=(16, 4),
+                fig, axs = plt.subplots(1, 2, figsize=(15, 4),
                                         sharex=True, sharey=True)
 
                 y1[subproduct].mean('time').plot.imshow(ax=axs[0])
@@ -544,10 +569,10 @@ Lat/Lon:    {north}/{east}
             
             else:
 
-                fig1, axs1 = plt.subplots(1, len(dates), figsize=(16, 4),
+                fig1, axs1 = plt.subplots(1, len(dates), figsize=(15, 4),
                                         sharex=True, sharey=True)
                 
-                fig2, axs2 = plt.subplots(1, len(dates), figsize=(16, 4),
+                fig2, axs2 = plt.subplots(1, len(dates), figsize=(15, 4),
                                         sharex=True, sharey=True)
 
                 for i in range(len(dates)):
@@ -1375,8 +1400,11 @@ Lat/Lon:    {north}/{east}
         # lat/lon spatial reference system
         latlon = osr.SpatialReference()
         latlon.ImportFromEPSG(4326)
+        
+        if conv is None:
+            return x, y
 
-        if conv == 'bng_to_latlon':
+        elif conv == 'bng_to_latlon':
             transform = osr.CoordinateTransformation(bng, latlon)
             x, y, z = transform.TransformPoint(x, y)
             return round(x, 6), round(y, 6)
@@ -1405,6 +1433,7 @@ Lat/Lon:    {north}/{east}
             transform = osr.CoordinateTransformation(sinu, latlon)
             x, y, z = transform.TransformPoint(x, y)
             return round(x, 6), round(y, 6)
+        
 
     def check_coords(self, north, east, south, west, projection):
         """
@@ -1481,7 +1510,6 @@ Lat/Lon:    {north}/{east}
         
         :return:
         """
-
         with open(filename, 'wb') as f:
             pickle.dump(your_content, f)
 
@@ -1494,7 +1522,6 @@ Lat/Lon:    {north}/{east}
         
         :return data:    unpickled file back to it's original format
         """
-        
         with open(filename, 'rb') as f:
             data = pickle.load(f)
         return data

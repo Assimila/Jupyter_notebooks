@@ -42,6 +42,7 @@ class MapTools:
         self.height = height
         self.key = 'k49EE9jmNlTQtGq6rGMXKgeQ2BYYADJG'
         self.dc = DrawControl()
+        self.layers_list = []
         
         if os_api:
             self.basemap = self.os_map_api()
@@ -50,7 +51,7 @@ class MapTools:
         else:
             self.map = Map(center=self.center, zoom=self.zoom,
                            layout=dict(width=self.width, height=self.height))
-
+    
     def os_map_api(self):
         """
         Retrieve the OS basemap used in the displayed map.
@@ -135,8 +136,12 @@ class MapTools:
 
         :return:
         """
+        if len(self.layers_list) != 0:
+            self.map.remove_layer(self.layers_list.pop(0))
+            
         marker = Marker(location=(lat, lon), draggable=True, )
         self.map.add_layer(marker)
+        self.layers_list.append(marker)
 
     def add_map_rect(self, north, east, south, west):
         """
@@ -149,11 +154,14 @@ class MapTools:
 
         :return:
         """
+        if len(self.layers_list) != 0:
+            self.map.remove_layer(self.layers_list.pop(0))
+        
         rectangle = Rectangle(bounds=((south, west), (north, east)), color='#FF0000')
         self.map.add_layer(rectangle)
+        self.layers_list.append(rectangle)
 
-    @staticmethod
-    def get_coords_point(geo_json):
+    def get_coords_point(self, geo_json):
         """
         Find the coordinates of a point drawn on the map with DrawControl().
 
@@ -161,6 +169,8 @@ class MapTools:
 
         :return north, east, south, west: lat/long coords of map point
         """
+        #self.layers_list.append(geo_json)
+        
         coords = (geo_json.get('geometry', 'Point'))
         x = coords.get('coordinates')[0]
         y = coords.get('coordinates')[1]
@@ -170,8 +180,7 @@ class MapTools:
         west = x
         return north, east, south, west
 
-    @staticmethod
-    def get_coords_polygon(geo_json):
+    def get_coords_polygon(self, geo_json):
         """
         Find the coordinates of a rectangle drawn on the map with DrawControl().
 
@@ -179,6 +188,8 @@ class MapTools:
 
         :return north, east, south, west: lat/long coords of map point
         """
+        #self.layers_list.append(geo_json)
+        
         poly = (geo_json.get('geometry', 'Polygon'))
         coords = poly.get('coordinates')[0]
         SW = coords[0]
@@ -200,6 +211,9 @@ class MapTools:
 
         :return north, east, south, west: lat/long coords of map point
         """
+        if len(self.layers_list) != 0:
+            self.map.remove_layer(self.layers_list.pop(0))
+            
         with open(fname, 'r') as f:
             data = json.load(f)
 
@@ -209,6 +223,7 @@ class MapTools:
                 'shapeOptions': {'color': '#FF0000'}
             }
         )
+        self.layers_list.append(geo_json)
         self.map.add_layer(geo_json)
         coords = data["features"][0]["geometry"]["coordinates"][0]
 
@@ -239,24 +254,6 @@ class MapTools:
         )
 
         self.map.add_layer(image)
-
-    def remove_layer(self, layer):
-        """
-        Remove a layer from the map.
-
-        :param layer: name of the layer to be removed from the map.
-
-        :return:
-        """
-        self.map.remove_layer(layer)
-
-    def save_map(self):
-        """
-        Save the map and layers as a static HTML.
-
-        :return:
-        """
-        self.map.save('map.html', title='My Map')
     
     def data_overlay(self, ds):
         """
