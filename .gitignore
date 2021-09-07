@@ -134,3 +134,6 @@ dmypy.json
 # Images and NetCDF's
 **/*.png
 **/*.nc
+
+# CSV files
+**/*.csv

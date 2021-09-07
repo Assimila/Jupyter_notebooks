@@ -96,7 +96,7 @@ class Data:
 
             ds.get_data(start=start, stop=end,
                         region=[north, east, south, west])
-            print(ds)
+            
             return ds.data
 
     def check(self, north, east, south, west, start, end):
@@ -189,7 +189,10 @@ class Data:
         _subproduct = conn.get_all_table_data(tablename='subproduct')
         units = _subproduct[_subproduct.idproduct==product_id][_subproduct.name==subproduct].units.values[0]
         
-        return units
+        if units == "Kelvin":
+            return "K"
+        else:
+            return units
 
     def average_subproduct(self, product, subproduct, frequency, average, north,
                                east, south, west, date1, date2, proj):
@@ -226,7 +229,7 @@ class Data:
     Date 1:     {date1}
     Date 2:     {date2}
     ================================================== 
-    Average = {pixel_average.data}
+    Average = {pixel_average.data} {units}
     """)
                     return pixel_average
 
@@ -234,9 +237,10 @@ class Data:
                     #y_reproj = self.coord_transform_plot(y, subproduct, proj)
                     fig, axs = plt.subplots(figsize=(9, 6),
                                             sharex=True, sharey=True)
-                    units = Data.get_units(product, subproduct)
-                    y[subproduct].resample(time=freq).mean('time').mean('time').plot.imshow(ax=axs)
-                    #axs.set_aspect('equal')
+                    
+                    y[subproduct].resample(time=freq).mean('time').mean('time').plot.imshow(ax=axs, cbar_kwargs={"label" : str(subproduct) + " (" + str(units) + ")"})
+                    
+                    axs.set_aspect('equal')
                     if freq == '1D':
                         plt.title(f'average: days')
                     elif freq == '1MS':
@@ -262,7 +266,7 @@ class Data:
     Date 1:     {date1}
     Date 2:     {date2}
     ================================================== 
-    Average = {area_average.data}
+    Average = {area_average.data} {units}
     """)
                 return area_average
 
@@ -278,7 +282,10 @@ class Data:
                 self.check_date(product, subproduct, date2)
 
                 self.check(north, east, south, west, date1, date2)
-
+                
+                # Get the units of the subproduct
+                units = Data.get_units(product, subproduct)
+                
                 if north == south and east == west:
 
                     list_of_results = Data.get_data_from_datacube_latlon(
@@ -343,7 +350,10 @@ class Data:
             self.check_date(product, subproduct, date1)
             self.check_date(product, subproduct, date2)
             self.check(north, east, south, west, date1, date2)
-
+            
+            # Get the units of the subproduct
+            units = Data.get_units(product, subproduct)
+                
             if north == south and east == west:
                 list_of_results1 = Data.get_data_from_datacube_latlon(
                     self, product, subproduct, date1, date1, north, east)
@@ -362,8 +372,8 @@ class Data:
 Product:    {product}
 Subproduct: {subproduct}
 Lat/Lon:    {north}/{east}
-===========================================================
-Change was {difference.data} from {date1} to {date2}.""")
+==========================================================
+Change was {difference.data} {units} from {date1} to {date2}.""")
                 
                 return difference
                 
@@ -383,8 +393,8 @@ Change was {difference.data} from {date1} to {date2}.""")
                 difference = y2[subproduct][0] - y1[subproduct][0]
 
                 fig, axs = plt.subplots(figsize=(9, 6))
-
-                difference.plot.imshow(ax=axs)
+             
+                difference.plot.imshow(ax=axs, cbar_kwargs={"label" : str(subproduct) + " (" + str(units) + ")"})
 
                 # Set aspect to equal to avoid any deformation
                 axs.set_aspect('equal')
@@ -433,7 +443,10 @@ Change was {difference.data} from {date1} to {date2}.""")
             self.check_date(product, subproduct, date4)
             self.check(north, east, south, west, date1, date2)
             self.check(north, east, south, west, date3, date4)
-
+            
+            # Get the units of the subproduct to display on the colorbar
+            units = Data.get_units(product, subproduct)
+            
             if north == south and east == west:
 
                 list_of_results1 = Data.get_data_from_datacube_latlon(
@@ -458,6 +471,8 @@ Change was {difference.data} from {date1} to {date2}.""")
                     axs0.set_xlabel('Period 1')
                     axs1.set_xlabel('Period 2')
                     
+                    axs0.set_ylabel(str(subproduct) + ' (' + str(units) + ')')
+                    
                     fig.legend()
                     plt.tight_layout()
                     plt.show(block=False)
@@ -468,8 +483,8 @@ Change was {difference.data} from {date1} to {date2}.""")
                     y1[subproduct].plot(ax=axs[0])
                     y2[subproduct].plot(ax=axs[1])
 
-#                     axs[0].set_aspect('equal')
-#                     axs[1].set_aspect('equal')
+                    axs[0].set_ylabel(str(subproduct) + ' (' + str(units) + ')')
+                    axs[1].set_ylabel(str(subproduct) + ' (' + str(units) + ')')
                     
                     plt.tight_layout()
                     plt.show(block=False)
@@ -494,8 +509,8 @@ Change was {difference.data} from {date1} to {date2}.""")
                 fig, axs = plt.subplots(1, 2, figsize=(15, 4),
                                         sharex=True, sharey=True)
 
-                y1[subproduct].mean('time').plot.imshow(ax=axs[0])
-                y2[subproduct].mean('time').plot.imshow(ax=axs[1])
+                y1[subproduct].mean('time').plot.imshow(ax=axs[0], cbar_kwargs={"label" : str(subproduct) + " (" + str(units) + ")"})
+                y2[subproduct].mean('time').plot.imshow(ax=axs[1], cbar_kwargs={"label" : str(subproduct) + " (" + str(units) + ")"})
 
                 # Set aspect to equal to avoid any deformation
                 axs[0].set_aspect('equal')
@@ -540,6 +555,10 @@ Change was {difference.data} from {date1} to {date2}.""")
             results_arr1 = []
             results_arr2 = []
 
+            # Get the units of the subproduct to display on the colorbar
+            units1 = Data.get_units(product1, subproduct1)
+            units2 = Data.get_units(product2, subproduct2)
+            
             for count, date in enumerate(dates):
                 self.check_date(product1, subproduct1, date)
                 self.check_date(product2, subproduct2, date)
@@ -572,7 +591,7 @@ Lat/Lon:    {north}/{east}
 ================================================== """)
                 for count, date in enumerate(dates):
                     print(f"""
-{results_arr1[count][subproduct1][0].data} for {date}""")
+{results_arr1[count][subproduct1][0].data} {units1} for {date}""")
             
                 print(f"""
 ==================================================
@@ -582,7 +601,7 @@ Lat/Lon:    {north}/{east}
 ================================================== """)
                 for count, date in enumerate(dates):
                     print(f"""
-{results_arr2[count][subproduct2][0].data} for {date}""")
+{results_arr2[count][subproduct2][0].data} {units2} for {date}""")
                 
                 return results_arr1, results_arr2 
             
@@ -596,10 +615,10 @@ Lat/Lon:    {north}/{east}
 
                 for i in range(len(dates)):
                     axs1[i].set_aspect('equal')
-                    results_arr1[i][subproduct1][0].plot.imshow(ax=axs1[i])
+                    results_arr1[i][subproduct1][0].plot.imshow(ax=axs1[i], cbar_kwargs={"label" : str(subproduct1) + " (" + str(units1) + ")"})
 
                     axs2[i].set_aspect('equal')
-                    results_arr2[i][subproduct2][0].plot.imshow(ax=axs2[i])
+                    results_arr2[i][subproduct2][0].plot.imshow(ax=axs2[i], cbar_kwargs={"label" : str(subproduct1) + " (" + str(units2) + ")"})
 
                 fig1.tight_layout()
                 fig1.show()
