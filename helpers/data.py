@@ -66,7 +66,7 @@ class Data:
 
             ds.get_data(start=start, stop=end,
                         latlon=[latitude, longitude])
-            
+           
             return ds.data
 
     def get_data_from_datacube_nesw(self, product, subproduct, north, east,
@@ -96,7 +96,7 @@ class Data:
 
             ds.get_data(start=start, stop=end,
                         region=[north, east, south, west])
-            
+
             return ds.data
 
     def check(self, north, east, south, west, start, end):
@@ -677,11 +677,12 @@ Lat/Lon:    {north}/{east}
             end1 = Data.combine_date_hour(self, date1, hour1)
             start2 = Data.combine_date_hour(self, date2, hour2)
             end2 = Data.combine_date_hour(self, date2, hour2)
-     
+            
             Data.check(self, north, east, south, west, start1, end1)
             Data.check(self, north, east, south, west, start2, end2)
-            self.check_date(product, subproduct, date1)
-            self.check_date(product, subproduct, date2)
+            
+            self.check_date(product, subproduct, datetime.datetime.strptime(start1, "%Y-%m-%d %H:%M:%S"))
+            self.check_date(product, subproduct, datetime.datetime.strptime(start2, "%Y-%m-%d %H:%M:%S"))
 
             list_of_results1 = Data.get_data_from_datacube_nesw(
                 self, product, subproduct, north, east,
@@ -744,11 +745,7 @@ Lat/Lon:    {north}/{east}
             axs[1].set_aspect('equal')
 
             plt.tight_layout()
-
-            plt.show(block=False)
-            plt.imsave(fname='../helpers/files/fig.png', arr=y1[subproduct][0])
-#             extent = axs[0].get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-#             plt.savefig('../helpers/files/fig.png', bbox_inches=extent.expanded(1.1, 1.2))
+            plt.show()
 
             return fig
 
@@ -1000,24 +997,21 @@ Lat/Lon:    {north}/{east}
 
             plt.show()
             
-    def data_to_csv_reprojected(self, product, subproduct,
+    def data_to_csv(self, product, subproduct,
                     projection, y, x, start, end):
 
         with self.out:
             clear_output()
             print("Getting data...")
-
-            lat, lon = self.reproject_coords(y, x, projection)
-            data = self.get_data_from_datacube(product,
+            data = self.get_data_from_datacube_latlon(product,
                                                subproduct,
-                                               start,  # pd.to_datetime(start),
-                                               end,  # pd.to_datetime(end),
-                                               lat,
-                                               lon,
-                                               projection)
+                                               start,
+                                               end, 
+                                               y,
+                                               x)
             st = pd.to_datetime(start)
             en = pd.to_datetime(end)
-            filename = f"{product}_{subproduct}_{projection}_{y}_{x}" \
+            filename = f"{product}_{subproduct}_{y}_{x}" \
                        f"_{st.date()}_{en.date()}.csv"
             data.to_dataframe().to_csv(filename)
             localfile = FileLink(filename)
@@ -1073,7 +1067,7 @@ Lat/Lon:    {north}/{east}
 
             y1.rfe.plot(label="2018")
 
-            mean.rfe.plot(label="Climatology", color='gray', alpha=0.6)
+            mean.rfe.plot(label="20 year climatology", color='gray', alpha=0.6)
             plt.fill_between(mean.dayofyear.values,
                              (mean + std).rfe.values,
                              std_min.rfe.values,
@@ -1182,6 +1176,7 @@ Lat/Lon:    {north}/{east}
 
             # Plot
             fig, axs = plt.subplots(2, 1, figsize=(16, 10))
+            
             temp.plot(ax=axs[0], label='degree days')
             
             temp_orig.plot(ax=axs[1], label='temperature')
@@ -1218,6 +1213,7 @@ Lat/Lon:    {north}/{east}
 {:.2f} degree days occurred over {} days
 =========================================
 """.format(temp.data.sum(), days.days))
+            
             temp.rename("degree days")
             filename = f"degree_day_{latitude}_{longitude}" \
                        f"_{start}_{end}_{lower}_{upper}.csv"
@@ -1244,7 +1240,8 @@ Lat/Lon:    {north}/{east}
             y = ("0" + str(h) + ":00:00")
         else:
             y = (str(h) + ":00:00")
-        return "\"" + x + y + "\""
+        return str(x) + str(y)
+        #return "\"" + x + y + "\""
 
     def compare_two_locations(self, product, subproduct, lat1, lon1,
                               lat2, lon2, start_date, start_hour,
@@ -1367,6 +1364,15 @@ Lat/Lon:    {north}/{east}
         return closest
 
     def check_date(self, product, subproduct, date):
+        """
+        Check whether the requested subproduct date is available. If so, return 
+        True, if not, return False and display the closest earlier and later datetimes.
+        
+        :param product:    the name of the requested product
+        :param subproduct: the name of the requested subproduct
+        
+        :return available: True/False if the requested date is available or not.
+        """
 
         ds = Dataset(product=product,
                      subproduct=subproduct,
@@ -1375,7 +1381,6 @@ Lat/Lon:    {north}/{east}
         first_date = ds.first_timestep
         last_date = ds.last_timestep
         available = True
-        
         
         if not isinstance(date, datetime.date):
             date = date.value
@@ -1397,10 +1402,29 @@ Lat/Lon:    {north}/{east}
                 date1 = self.closest_earlier_date(timesteps, date)
                 date2 = self.closest_later_date(timesteps, date)
                 print(f'{date} not available. Nearest available dates: {date1} and {date2}')
-
+        
+#         # If date not available (wrong frequency), try to find a date before and after.
+#         if ds.get_data(start=date, stop=date) is None:
+#             for i in range(400):
+#                 if ds.get_data(start=date+datetime.timedelta(hours=i),
+#                                stop=date+datetime.timedelta(hours=i)) is None:
+#                     continue
+#                 else:
+#                     date1 = date+datetime.timedelta(hours=i)
+#                     break
+#             for i in range(400):
+#                 if ds.get_data(start=date-datetime.timedelta(hours=i),
+#                                stop=date-datetime.timedelta(hours=i)) is None:
+#                     continue
+#                 else:
+#                     date2 = date+datetime.timedelta(hours=i)
+#                     break
+            
+#             print(f'{date} not available. Nearest available dates {date1} and {date2}')
+#             available = False
+        
         if not available:
             raise ValueError(f'{date} not available.')
-
                 
         return available
 
