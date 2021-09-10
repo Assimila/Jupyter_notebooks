@@ -167,8 +167,7 @@ class Data:
         elif y[subproduct].crs == "+init=epsg:4326" and proj == 'Sinusoidal':
             conv='latlon_to_sinu'
             
-            
-        y["latitude"] = [self.coord_transform(0, i, conv)[1] for i in y["latitude"].data]
+        y["latitude"]  = [self.coord_transform(0, i, conv)[1] for i in y["latitude"].data]
         y["longitude"] = [self.coord_transform(i, 0, conv)[0] for i in y["longitude"].data]
         
         return y
@@ -210,6 +209,7 @@ class Data:
             :param west:        western latitude
             :param date1:       the start of the analysis period
             :param date2:       the end of the analysis period
+            :param proj:        the user specified crs projection
 
             :return fig: figure object for the plot
             """      
@@ -220,12 +220,13 @@ class Data:
                 the average per specified time increment ['1D', '1MS', '1YS'].
                 """
                 if north == south and east == west:
+                    #y = self.coord_transform_plot(_y, subproduct, proj)
                     pixel_average = y[subproduct].resample(time=freq).mean('time').mean('time')
                     print(f"""
     ==================================================
     Product:    {product}
     Subproduct: {subproduct}
-    Lat/Lon:    {north}/{east}
+    Lat/Lon:    {y.lattitude}/{y.longitude}
     Date 1:     {date1}
     Date 2:     {date2}
     ================================================== 
@@ -234,13 +235,12 @@ class Data:
                     return pixel_average
 
                 else:
-                    #y_reproj = self.coord_transform_plot(y, subproduct, proj)
+                    #y = self.coord_transform_plot(_y, subproduct, proj)
                     fig, axs = plt.subplots(figsize=(9, 6),
                                             sharex=True, sharey=True)
                     
                     y[subproduct].resample(time=freq).mean('time').mean('time').plot.imshow(ax=axs, cbar_kwargs={"label" : str(subproduct) + " (" + str(units) + ")"})
-                    
-                    axs.set_aspect('equal')
+                    axs.set_aspect("equal")
                     if freq == '1D':
                         plt.title(f'average: days')
                     elif freq == '1MS':
