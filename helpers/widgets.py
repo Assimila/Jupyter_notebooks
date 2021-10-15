@@ -569,7 +569,7 @@ class Widgets:
         :param date3:         date 3 selection widget
         :param date4:         date 4 selection widget
         :param upload_file:   file upload widget
-        :param button:        get data selection weidget
+        :param button:        get data selection widget
         :param m:             ipywidget Map object 
         :param average:       averaging method dropdown widget
         :param trends:        trend display dropdown widget

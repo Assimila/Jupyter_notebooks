@@ -29,7 +29,7 @@ class Data:
     def __init__(self, out, keyfile=None):
         """
         :param out:                 Output() widget to capture generated output.
-        :param keyfile [optional]:  user crediential file.
+        :param keyfile [optional]:  user credential file.
 
         :return:
         """
@@ -37,7 +37,7 @@ class Data:
         self.out = out
         if keyfile is None:
             self.keyfile = os.path.join(os.path.expanduser("~"),
-                                        '.assimila_dq.txt')
+                                        'assimila_dq.txt')
         else:
             self.keyfile = keyfile
 
@@ -125,11 +125,11 @@ class Data:
 
     def coord_transform_plot(self, y, subproduct, proj):
         """
-        Reproject the cell coordinates so that the plot seen by the user
+        Re-project the cell coordinates so that the plot seen by the user
         has coordinate units which match their selection choice.
         
         :param y:          the DataArray who's coordinates are being transformed 
-        :param subproduct: the name of the subproduct being investigated
+        :param subproduct: the name of the sub-product being investigated
         :proj:             the user selected projection
         
         :return y:         the reprojected DataArray
@@ -153,21 +153,21 @@ class Data:
             conv = "latlon_to_bng"
         
         elif y[subproduct].crs[:11] == "+proj:tmerc" and proj == 'Lat/Lon':
-            conv='bng_to_latlon'
+            conv = 'bng_to_latlon'
         
         elif y[subproduct].crs[:10] == "+proj=sinu" and proj == 'National Grid':
-            conv='sinu_to_bng'
+            conv = 'sinu_to_bng'
         
         elif y[subproduct].crs[:11] == "+proj:tmerc" and proj == 'Sinusoidal':
-            conv='sinu_to_bng'
+            conv = 'sinu_to_bng'
             
         elif y[subproduct].crs[:10] == "+proj=sinu" and proj == 'Lat/Lon':
-            conv='sinu_to_latlon'
+            conv = 'sinu_to_latlon'
             
         elif y[subproduct].crs == "+init=epsg:4326" and proj == 'Sinusoidal':
-            conv='latlon_to_sinu'
+            conv = 'latlon_to_sinu'
             
-        y["latitude"]  = [self.coord_transform(0, i, conv)[1] for i in y["latitude"].data]
+        y["latitude"] = [self.coord_transform(0, i, conv)[1] for i in y["latitude"].data]
         y["longitude"] = [self.coord_transform(i, 0, conv)[0] for i in y["longitude"].data]
         
         return y
@@ -175,18 +175,18 @@ class Data:
     @staticmethod
     def get_units(product, subproduct):
         """
-        Get the units of a specified product/subproduct.
+        Get the units of a specified product/sub-product.
         
         :param product:    the name of the product
-        :param subproduct: the name of the subproduct
+        :param subproduct: the name of the sub-product
         
         :return units:     the required unit
         """
         conn = connect.Connect(identfile='../../DQTools/DQTools/connect/.assimila_dq')
         _product = conn.get_all_table_data(tablename='product')
-        product_id = _product[_product.name==product].idproduct.values[0]
+        product_id = _product[_product.name == product].idproduct.values[0]
         _subproduct = conn.get_all_table_data(tablename='subproduct')
-        units = _subproduct[_subproduct.idproduct==product_id][_subproduct.name==subproduct].units.values[0]
+        units = _subproduct[_subproduct.idproduct == product_id][_subproduct.name == subproduct].units.values[0]
         
         if units == "Kelvin":
             return "K"
@@ -196,15 +196,15 @@ class Data:
     def average_subproduct(self, product, subproduct, frequency, average, north,
                                east, south, west, date1, date2, proj):
             """
-            Find the average of a subproduct over an area or point over 2 given dates.
+            Find the average of a sub product over an area or point over 2 given dates.
             Averaging done by area or by pixel with an averaging frequency of days/
             months/years.
 
             :param product:     the name of the datacube product
-            :param subproduct:  the name of the datacube subproduct
+            :param subproduct:  the name of the datacube sub-product
             :param frequency:   the time period over which to average 
             :param north:       northern latitude
-            :param east:        eatern longitude
+            :param east:        eastern longitude
             :param south:       southern latitude
             :param west:        western latitude
             :param date1:       the start of the analysis period
@@ -216,11 +216,11 @@ class Data:
 
             def by_pixel(freq):
                 """
-                Average the subproduct by pixel using resampling (up and down) to find 
+                Average the sub-product by pixel using resampling (up and down) to find
                 the average per specified time increment ['1D', '1MS', '1YS'].
                 """
                 if north == south and east == west:
-                    #y = self.coord_transform_plot(_y, subproduct, proj)
+                    # y = self.coord_transform_plot(_y, subproduct, proj)
                     pixel_average = y[subproduct].resample(time=freq).mean('time').mean('time')
                     print(f"""
     ==================================================
@@ -235,7 +235,7 @@ class Data:
                     return pixel_average
 
                 else:
-                    #y = self.coord_transform_plot(_y, subproduct, proj)
+                    # y = self.coord_transform_plot(_y, subproduct, proj)
                     fig, axs = plt.subplots(figsize=(9, 6),
                                             sharex=True, sharey=True)
                     
@@ -254,7 +254,7 @@ class Data:
 
             def by_area(freq):
                 """
-                Average the subproduct by area using resampling (up and down) to find 
+                Average the sub-product by area using resampling (up and down) to find
                 the average per specified time increment ['1D', '1MS', '1YS'].
                 """
                 area_average = y[subproduct].resample(time=freq).mean('time').mean(['longitude', 'latitude']).mean('time')
@@ -283,7 +283,7 @@ class Data:
 
                 self.check(north, east, south, west, date1, date2)
                 
-                # Get the units of the subproduct
+                # Get the units of the sub-product
                 units = Data.get_units(product, subproduct)
                 
                 if north == south and east == west:
@@ -325,10 +325,10 @@ class Data:
     def color_map_subtraction(self, product, subproduct, north, east, south,
                               west, date1, date2):
         """
-        Plot a colour map of a subproduct subtraction over 2 dates.
+        Plot a colour map of a sub-product subtraction over 2 dates.
 
         :param product:     the name of the datacube product
-        :param subproduct:  the name of the datacube subproduct
+        :param subproduct:  the name of the datacube sub-product
         :param north:       northern latitude
         :param east:        eatern longitude
         :param south:       southern latitude
@@ -351,7 +351,7 @@ class Data:
             self.check_date(product, subproduct, date2)
             self.check(north, east, south, west, date1, date2)
             
-            # Get the units of the subproduct
+            # Get the units of the sub-product
             units = Data.get_units(product, subproduct)
                 
             if north == south and east == west:
@@ -411,12 +411,12 @@ Change was {difference.data} {units} from {date1} to {date2}.""")
                        south, west, date1, date2, date3, date4, trends):
         """
         Plot a timeseries of points if a point location is given and a
-        colour map if an area is given, identifying trends in subproducts
+        colour map if an area is given, identifying trends in sub-products
         over 2 defined periods.
 
 
         :param product:     the name of the datacube product
-        :param subproduct:  the name of the datacube subproduct
+        :param subproduct:  the name of the datacube sub-product
         :param north:       northern latitude
         :param east:        eatern longitude
         :param south:       southern latitude
@@ -444,7 +444,7 @@ Change was {difference.data} {units} from {date1} to {date2}.""")
             self.check(north, east, south, west, date1, date2)
             self.check(north, east, south, west, date3, date4)
             
-            # Get the units of the subproduct to display on the colorbar
+            # Get the units of the sub-product to display on the colourbar
             units = Data.get_units(product, subproduct)
             
             if north == south and east == west:
@@ -529,14 +529,14 @@ Change was {difference.data} {units} from {date1} to {date2}.""")
                                      north, east, south, west, dates):
         
         """
-        Plot a colour maps of a subproduct comparing different dates.
+        Plot a colour maps of a sub-product comparing different dates.
 
         :param product1:     the name of the datacube product1
-        :param subproduct1:  the name of the datacube subproduct1
+        :param subproduct1:  the name of the datacube sub-product1
         :param
         :param
         :param north:       northern latitude
-        :param east:        eatern longitude
+        :param east:        eastern longitude
         :param south:       southern latitude
         :param west:        western latitude
         :param dates:       list of dates which will be displayed
@@ -555,7 +555,7 @@ Change was {difference.data} {units} from {date1} to {date2}.""")
             results_arr1 = []
             results_arr2 = []
 
-            # Get the units of the subproduct to display on the colorbar
+            # Get the units of the sub-product to display on the colourbar
             units1 = Data.get_units(product1, subproduct1)
             units2 = Data.get_units(product2, subproduct2)
             
@@ -632,10 +632,10 @@ Lat/Lon:    {north}/{east}
     def color_map_nesw(self, product, subproduct, north, east, south, west,
                        date, hour):
         """
-        Plot a colour map of the subproduct over a bounding box.
+        Plot a colour map of the sub-product over a bounding box.
 
         :param product:     the name of the datacube product
-        :param subproduct:  the name of the datacube subproduct
+        :param subproduct:  the name of the datacube sub-product
         :param north:       northern latitude
         :param east:        eatern longitude
         :param south:       southern latitude
@@ -933,12 +933,14 @@ Lat/Lon:    {north}/{east}
             plt.show()
 
     def data_to_csv(self, product1, subproduct1,
-                    latitude, longitude, start, end, product2=None, subproduct2=None):
+                    latitude, longitude,
+                    start, end,
+                    product2=None, subproduct2=None):
         """
-        Extract a timeseries for a product/subproduct with start/end.
+        Extract a time series for a product/sub-product with start/end.
         
         :param product:     the name of the datacube product
-        :param subproduct:  the name of the datacube subproduct
+        :param subproduct:  the name of the datacube sub-product
         :param latitude     the latitude of the point location
         :param longitude    the longitude of the point location
         :param start:       the start date of the period
@@ -1365,11 +1367,11 @@ Lat/Lon:    {north}/{east}
 
     def check_date(self, product, subproduct, date):
         """
-        Check whether the requested subproduct date is available. If so, return 
+        Check whether the requested sub-product date is available. If so, return
         True, if not, return False and display the closest earlier and later datetimes.
         
         :param product:    the name of the requested product
-        :param subproduct: the name of the requested subproduct
+        :param subproduct: the name of the requested sub-product
         
         :return available: True/False if the requested date is available or not.
         """
