@@ -66,10 +66,10 @@ class Widgets:
 
     def get_lat_lon_widgets(self):
         """
-        Calls the latitude and longitde methods which display the
+        Calls the latitude and longitude methods which display the
         relevant widgets to the UI.
 
-        :return lattitude(), longitude(): methods which display widgets.
+        :return latitude(), longitude(): methods which display widgets.
         """
         return self.latitude(), self.longitude()
 
@@ -100,9 +100,9 @@ class Widgets:
     def latitude(self):
         """
         Call the BoundedFloatText method from widgets to display a
-        lattitude text box.
+        latitude text box.
 
-        :return widgets.BoundedFloatText: bounded lattitude text box.
+        :return widgets.BoundedFloatText: bounded latitude text box.
         """
         return widgets.BoundedFloatText(value=7.5,
                                         min=-90.0,

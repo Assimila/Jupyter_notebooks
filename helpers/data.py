@@ -47,7 +47,7 @@ class Data:
         Get a datacube dataset for a point location request.
 
         :param product:     the name of the datacube product
-        :param subproduct:  the name of the datacube subproduct
+        :param subproduct:  the name of the datacube sub-product
         :param start:       the start date of the period
         :param end:         the end date of the period
         :param latitude     the latitude of the point location
@@ -226,7 +226,7 @@ class Data:
     ==================================================
     Product:    {product}
     Subproduct: {subproduct}
-    Lat/Lon:    {y.lattitude}/{y.longitude}
+    Lat/Lon:    {y.latitude}/{y.longitude}
     Date 1:     {date1}
     Date 2:     {date2}
     ================================================== 
