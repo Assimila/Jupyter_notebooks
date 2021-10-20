@@ -37,6 +37,7 @@ JupyterHub is deployed to **Jasmin:jupyter_web_test** where user login identitie
 
 ### JupyterHub environment ###
 Please read the notes in the env/ sub-directory. The environment required for deployment is not the same as that for development.
+Of course, you will need to copy the required environment file across from the repository. This is most easily done via scp from another VM which has an up to date working copy.
 The default port for listening is 80, but apache may be using it, in which case it is possible to change the Hub listening port on your server:
 
 &nbsp;&nbsp;&nbsp;&nbsp;```sudo tljh-config set http.port <new_port>```
