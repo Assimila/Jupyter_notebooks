@@ -9,7 +9,7 @@ import signal
 wkspace_root = op.normpath(op.join(__file__, '../../../'))
 sys.path.insert(0, op.join(wkspace_root,'datacube'))
 
-import src.datacube.dataserver.server as serv
+import src.datacube.dataserver.run_server as serv
 from src.datacube.archiver import Archiver
 from src.datacube.dq_database.registration_manager import RegistrationManager
 from test.datacube_tests.test_dataset.register_test_dataset import Dummy
