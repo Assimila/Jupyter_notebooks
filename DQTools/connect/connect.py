@@ -95,9 +95,9 @@ class Connect:
         except Exception as e:
             raise e
 
-    def get_subproduct_data(self, product, subproduct, start, stop,
-                            bounds, res, tile, country, latlon,
-                            projection):
+    def get_subproduct_data(self, product, subproduct,
+                            start, stop, use_dask,
+                            bounds, res, tile, country, latlon, projection):
         """
         Extract and return an xarray of data from the datacube
 
@@ -105,6 +105,8 @@ class Connect:
         :param subproduct: The name of the sub-product
         :param start: The starting time for extracting data
         :param stop: The ending time for extracting data
+        :param use_dask: if True, obtains pointer to vrt file on the server,
+        otherwise returns data in xarray.
         :param bounds: The bounds for the data (dictionary of n-s-e-w bounds)
         :param res: The required resolution of the data. If this is provided
         then the DataCube will enact a gdal Warp to return an array of the
@@ -122,7 +124,8 @@ class Connect:
                 'subproduct': [subproduct],
                 'start_date': start,
                 'end_date': stop,
-            }
+                'use_dask': use_dask
+                }
 
             # If a resolution or projection has been provided then warp
             if res or projection:
@@ -139,6 +142,8 @@ class Connect:
                     action = 'get_zonal_data'
                     get_request_params['tile'] = tile
                     get_request_params["zonal_stats"] = country
+                    # we don't need the DASK option for this method
+                    get_request_params.pop('use_dask', None)
                 else:
                     # One cannot expect zonal stats without having a tile
                     # TODO Support bounds for zonal stats in future
