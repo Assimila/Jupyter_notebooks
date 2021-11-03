@@ -57,7 +57,7 @@ class TestDQToolExceptions(object):
         # Set up a test server
         # =================================================================== #
         # comment out the following four lines to allow independent
-        # server start, also edit teardown_class() and server.py
+        # server start, also edit teardown_class() and run_server.py
         p = Process(target=cls.start_server)
         p.start()
         cls.server_pid = p.pid
