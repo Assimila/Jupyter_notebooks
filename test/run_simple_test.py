@@ -30,7 +30,8 @@ era5 = Dataset(product='era5', subproduct='t2m')
 era5.get_data(start=dt.datetime(2020, 10, 1),
               stop=dt.datetime(2020, 10, 10),
               tile="ken_prise",
-              country="Kenya"
+              country="Kenya",
+              res=0.01
               )
 
 print(era5.data)
