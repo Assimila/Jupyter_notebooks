@@ -470,7 +470,8 @@ Data:
         """
         if not self.last_gold:
             # convert whatever we've been given into a datetime
-            last_gold = Datetime_checker(date_time)
+            dtg = Datetime_checker(date_time)
+            last_gold = dtg.c_and_c()
             self.data[self.subproduct].attrs['last_gold'] = last_gold
         else:
             self.logger.warning("Last gold already exists and will be used, "
