@@ -459,3 +459,20 @@ Data:
             self.logger.error("Unable to calculate timesteps.\n"
                               "%s" % e)
             raise RuntimeError("Unable to calculate timesteps.")
+
+    def set_last_gold(self, date_time):
+        """
+        When adding data to a newly registered product/sub-product, there will
+        be no extant last_gold information and thus it needs to be set by the
+        user.
+        :param date_time:
+        :return: N/A
+        """
+        if not self.last_gold:
+            # convert whatever we've been given into a datetime
+            dtg = Datetime_checker(date_time)
+            last_gold = dtg.c_and_c()
+            self.data[self.subproduct].attrs['last_gold'] = last_gold
+        else:
+            self.logger.warning("Last gold already exists and will be used, "
+                                "your setting has been ignored.")
