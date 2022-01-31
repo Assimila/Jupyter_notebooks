@@ -6,10 +6,11 @@ import logging
 import datetime
 import os.path as op
 import sys
+from .check_datetime import Datetime_checker
 
 from .connect.connect import Connect
 from .regions import get_bounds
-from .connect.connect_log.setup_logger import SetUpLogger
+from .connect.log.setup_logger import SetUpLogger
 
 
 class Dataset:
@@ -89,7 +90,7 @@ class Dataset:
         self.timesteps = None
 
         try:
-            # base, extension = op.splitext('dataset.log')
+            # base, extension = op.splitext('./connect/log/dataset.log')
             # today = datetime.datetime.today()
             # log_filename = "{}{}{}".format(base,
             #                                today.strftime("_%Y_%m_%d"),
@@ -99,13 +100,13 @@ class Dataset:
             #     log_filename=op.abspath(op.join(op.dirname(__file__),
             #                                     log_filename)),
             #     default_config=op.abspath(op.join(op.dirname(__file__),
-            #                    "./connect/connect_log/logging_config.yml")))
+            #                    "./connect/log/logging_config.yml")))
             self.logger = logging.getLogger("__main__")
 
         except Exception:
             raise
 
-        self.logger.info("Dataset created with product %s, subproduct %s,"
+        self.logger.info("Dataset created with: product %s, subproduct %s,"
                          "region %s, tile %s, resolution %s,  credentials file %s"
                          % (product, subproduct, region, tile, res, identfile))
         try:
@@ -114,6 +115,7 @@ class Dataset:
                 bounds = get_bounds(self.region)._asdict()
             else:
                 bounds = None
+
         except RuntimeError as e:
             self.logger.error("Failed to initialise Dataset regions.\n"
                               "%s" % e)
@@ -133,6 +135,11 @@ class Dataset:
 
             # Extract relevant metadata as attributes.
             self._extract_metadata(result)
+
+            # self.logger.info(f"Dataset created and metadata available for "
+            #                  f"{self.product} : {self.subproduct}")
+            self.logger.info("Dataset created and metadata available for %s %s"
+                             % (self.product, self.subproduct))
 
         except Exception as e:
             self.logger.error("Failed to retrieve Dataset metadata.\n"
@@ -241,6 +248,7 @@ Data:
         self.description = all_meta['description']
 
     def get_data(self, start, stop,
+                 use_dask=False,
                  region=None, tile=None, res=None, latlon=None,
                  country=None, projection=None):
         """
@@ -249,6 +257,9 @@ Data:
         :param start:   Start datetime for dataset
 
         :param stop:    Stop datetime for dataset
+
+        :param use_dask: optional - set to True to obtain pointer to vrt file
+                        on the server, default False to return data in xarray.
 
         :param region:  optional - geographic region, do not use tile too
 
@@ -278,11 +289,12 @@ Data:
 
         :return: xarray of data
         """
-        self.logger.info("Dataset get_data args start %s, stop %s,"
+        self.logger.info("Dataset get_data args: start %s, stop %s, DASK %s,"
                          "region %s, tile %s, resolution %s, latlon %s, "
                          "country %s, projection %s"
-                         % (start, stop, region, tile, res, latlon, country,
-                            projection))
+                         % (start, stop, use_dask,
+                            region, tile, res, latlon,
+                            country, projection))
 
         try:
             # Extract the bounds information
@@ -301,11 +313,17 @@ Data:
             if not res and self.res:
                 res = self.res
 
+            new_start = Datetime_checker(time=start)
+            start = new_start.c_and_c()
+            new_stop = Datetime_checker(time=stop)
+            stop = new_stop.c_and_c()
+
             # Fetch the data from the datacube
             data = self.conn.get_subproduct_data(product=self.product,
                                                  subproduct=self.subproduct,
                                                  start=start,
                                                  stop=stop,
+                                                 use_dask=use_dask,
                                                  bounds=bounds,
                                                  res=res,
                                                  tile=tile,
@@ -316,10 +334,16 @@ Data:
             self.data = data[0]
 
         except Exception as e:
-            self.logger.error("Failed to retrieve Dataset subproduct data.\n"
-                              "%s" % e)
-            print("Failed to retrieve Dataset subproduct data, "
-                  "please see logfile for details.")
+            if not use_dask:
+                self.logger.error("Failed to retrieve Dataset sub-product data.\n"
+                                  "%s" % e)
+                print("Failed to retrieve Dataset sub-product data, "
+                      "please see logfile for details.")
+            else:
+                self.logger.error("Failed to retrieve Dataset sub-product DASK "
+                                  "pointer.\n%s" % e)
+                print("Failed to retrieve Dataset sub-product DASK pointer, "
+                      "please see logfile for details.")
 
     def put(self):
         """
@@ -435,3 +459,20 @@ Data:
             self.logger.error("Unable to calculate timesteps.\n"
                               "%s" % e)
             raise RuntimeError("Unable to calculate timesteps.")
+
+    def set_last_gold(self, date_time):
+        """
+        When adding data to a newly registered product/sub-product, there will
+        be no extant last_gold information and thus it needs to be set by the
+        user.
+        :param date_time:
+        :return: N/A
+        """
+        if not self.last_gold:
+            # convert whatever we've been given into a datetime
+            dtg = Datetime_checker(date_time)
+            last_gold = dtg.c_and_c()
+            self.data[self.subproduct].attrs['last_gold'] = last_gold
+        else:
+            self.logger.warning("Last gold already exists and will be used, "
+                                "your setting has been ignored.")

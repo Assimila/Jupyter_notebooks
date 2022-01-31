@@ -17,7 +17,7 @@ Version 2.0 which can be obtained at
 http://www.apache.org/licenses/LICENSE-2.0.
 
 """
-from .connect_log.setup_logger import SetUpLogger
+from .log.setup_logger import SetUpLogger
 
 import logging
 import os.path as op
@@ -27,9 +27,10 @@ import requests
 import pickle
 import gzip
 import datetime
-# ======================================================================
-# Methods and class to support login credentials.
+from sys import path as syspath
 
+# ======================================================================
+# Functions and class to support login credentials.
 
 # Exception class
 class DQIdentFetchError(Exception):
@@ -157,6 +158,19 @@ class APIRequest(object):
         self.login = login
         self.pwd = pwd
 
+        # Specifically for dask use
+        wkspace_root = op.join(__file__, '../../../../')
+        # make sure we can import the modules we need by adding them to the Python
+        # environment search path
+        syspath.append(op.normpath(os.path.join(wkspace_root, 'datacube')))
+        try:
+            from src.datacube.dq_interface import DatacubeInterface
+            self.dqif = DatacubeInterface()
+        except Exception as e:
+            print(e)
+        # except (ImportError, ModuleNotFoundError):
+        #     pass
+
         # try:
         #     # check credentials with simple connection. Header could
         #     # contain cookie for future use.
@@ -192,38 +206,45 @@ class APIRequest(object):
         :raise Exception: for any problems
         """
         try:
-            payload = pickle.dumps(req, protocol=-1)
-            resp = requests.post(self.url, auth=(self.login, self.pwd), data=payload)
+            # if not req['params']['use_dask']:
+            if not 'use_dask' in req['params'] or \
+                ('use_dask' in req['params'] and not req['params']['use_dask']):
+                # Unless we are using DASK, the message goes through the
+                # http server. It will be a GET_DATA message.
+                payload = pickle.dumps(req, protocol=-1)
+                resp = requests.post(self.url,
+                                     auth=(self.login, self.pwd),
+                                     data=payload)
 
-            if resp.status_code != 200:
+                if resp.status_code != 200:
 
-                # this code replaces the line breaks(\n) mix with the \\ to
-                # normal line breaks which fixes the issue of the exception
-                # not displaying properly when raised, altough it does not
-                # fix the log, also removes brackets at start and end of
-                # error message
+                    # this code replaces the line breaks(\n) mix with the \\ to
+                    # normal line breaks which fixes the issue of the exception
+                    # not displaying properly when raised, although it does not
+                    # fix the log, also removes brackets at start and end of
+                    # error message
 
-                # Another possible solution when the only thing that doesnt
-                # need to be fixed is the error heading:
-                # keys = resp.headers.keys()
-                # for i in resp.headers:
-                #   try:
-                #       resp.headers[keys[i]] = resp.headers[keys[i]].replace(
-                #       "\\n",\n").replace("\\", " ").replace("("
-                #       ,"").replace(")","")
-                #   except TypeError:
-                #       pass
+                    # Another possible solution when the only thing that doesn't
+                    # need to be fixed is the error heading:
+                    # keys = resp.headers.keys()
+                    # for i in resp.headers:
+                    #   try:
+                    #       resp.headers[keys[i]] = resp.headers[keys[i]].replace(
+                    #       "\\n",\n").replace("\\", " ").replace("("
+                    #       ,"").replace(")","")
+                    #   except TypeError:
+                    #       pass
 
-                formatted_str = resp.headers['error'].replace(
-                    "\\n", "\n").replace("\\", " ").replace("(", "")\
-                    .replace(")", "")
+                    formatted_str = resp.headers['error'].replace(
+                        "\\n", "\n").replace("\\", " ").replace("(", "")\
+                        .replace(")", "")
 
-                resp.headers.update({'error': formatted_str})
+                    resp.headers.update({'error': formatted_str})
 
-                if resp.status_code == 401:
-                    raise ConnectionRefusedError(resp.headers)
-                else:
-                    raise Exception(resp.headers['error'])
+                    if resp.status_code == 401:
+                        raise ConnectionRefusedError(resp.headers)
+                    else:
+                        raise Exception(resp.headers['error'])
 
             if self.service == "GET_FILE":
                 target = req.get("target")
@@ -234,9 +255,16 @@ class APIRequest(object):
                     tgt.write(resp_unpacked)
 
             elif self.service == "GET_DATA":
-                resp_unpacked = gzip.decompress(resp.content)
-                # use pickle to de-serialize xarray data
-                return pickle.loads(resp_unpacked)
+                # use the switch in the request to control DASK wiring
+                if 'use_dask' in req['params'] \
+                        and req['params']['use_dask']:
+                    self.dqif.authenticate(self.login, self.pwd, req)
+                    return self.dqif.get_address()
+
+                else:
+                    resp_unpacked = gzip.decompress(resp.content)
+                    # use pickle to de-serialize xarray data
+                    return pickle.loads(resp_unpacked)
 
             elif self.service == "GET_META":
                 return pickle.loads(resp.content)
@@ -353,7 +381,7 @@ class AssimilaData(object):
     command sent in the request determines the behaviour.
     """
     def __init__(self, url=None, port=None, pwd=None, login=None,
-                 identfile=None):
+                 identfile=None, test=False):
         """
         Create the DQ client API object.
         Connection information may be provided. If none, or some is
@@ -365,20 +393,29 @@ class AssimilaData(object):
         :param pwd: User's unique pwd (as provided by Assimila)
         :param login: User's unique login string with date, access and email
         :param identfile: optional location of user's credentials file
+        :param test: optional, to control creation of on-the-fly log filename
         """
         # set up the logging output filename here so that no changes are
-        # needed in its configuration file.
-        base, extension = os.path.splitext('./connect_log/DQClient.log')
-        today = datetime.datetime.today()
-        log_filename = "{}{}{}".format(base,
-                                       today.strftime("_%Y_%m_%d"),
-                                       extension)
+        # needed in its configuration file to account for where the code
+        # may be checked out.
+        if not test:
+            base, extension = os.path.splitext('./log/DQClient.log')
+            today = datetime.datetime.today()
+            log_filename = "{}{}{}".format(base,
+                                           today.strftime("_%Y_%m_%d"),
+                                           extension)
 
-        SetUpLogger.setup_logger(
-            log_filename=op.abspath(op.join(op.dirname(__file__),
-                                            log_filename)),
-            default_config=op.abspath(op.join(op.dirname(__file__),
-                                      "./connect_log/logging_config.yml")))
+            SetUpLogger.setup_logger(
+                log_filename=op.abspath(op.join(op.dirname(__file__),
+                                                log_filename)),
+                default_config=op.abspath(op.join(op.dirname(__file__),
+                                          "./log/logging_config.yml")))
+        else:
+            # for testing, the log filename is controlled by the test class.
+            SetUpLogger.setup_logger(
+                default_config=op.abspath(op.join(op.dirname(__file__),
+                                          "./log/logging_config.yml")))
+
         self.logger = logging.getLogger("__main__")
 
         if url is None or port is None or pwd is None or login is None:

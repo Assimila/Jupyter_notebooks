@@ -143,8 +143,9 @@ class SetUpLogger:
                     logger.removeHandler(handler)
                     logger.addHandler(h)
 
-        # If needed, change log file permissions to allow any user
-        # to write to it.
-        status = os.stat(log_filename)
-        if oct(status.st_mode)[-3:] != '777':
-            os.chmod(log_filename, 0o777)
+        if log_filename:
+            # If needed, change log file permissions to allow any user
+            # to write to it.
+            status = os.stat(log_filename)
+            if oct(status.st_mode)[-3:] != '777':
+                os.chmod(log_filename, 0o777)

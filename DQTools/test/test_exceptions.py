@@ -9,7 +9,7 @@ import signal
 wkspace_root = op.normpath(op.join(__file__, '../../../'))
 sys.path.insert(0, op.join(wkspace_root,'datacube'))
 
-import src.datacube.dataserver.server as serv
+import src.datacube.dataserver.run_server as serv
 from src.datacube.archiver import Archiver
 from src.datacube.dq_database.registration_manager import RegistrationManager
 from test.datacube_tests.test_dataset.register_test_dataset import Dummy
@@ -57,7 +57,7 @@ class TestDQToolExceptions(object):
         # Set up a test server
         # =================================================================== #
         # comment out the following four lines to allow independent
-        # server start, also edit teardown_class() and server.py
+        # server start, also edit teardown_class() and run_server.py
         p = Process(target=cls.start_server)
         p.start()
         cls.server_pid = p.pid
