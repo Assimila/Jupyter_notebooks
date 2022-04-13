@@ -49,12 +49,14 @@ The default port for listening is 80, but apache may be using it, in which case 
 ## Jupyter notebook information ##
 This is in Shared\Projects\2016-042 IPP PRISE\ then
 
-05/08/01_google_cloud_deployment
+_deprecated: 05/08/01_google_cloud_deployment
 * startup instructions
-* notebooks
+* notebooks_
 
-05/08/02_Deployment_Log_<latest>
-* section 19 - JupyterHub installation and setup (likely requires review/update)
+_was 05/08/02_Deployment_Log_<latest>
+* section 19 - JupyterHub installation and setup (likely requires review/update)_
+now http://192.168.11.230/hosts/jupyterhub/
 	
-05/07
-* 03_Using the Assimila Jupyter Notebook Hub (requires update)
+_was 05/07
+* 03_Using the Assimila Jupyter Notebook Hub (requires update)_
+now http://192.168.11.230/projects/notebooks
