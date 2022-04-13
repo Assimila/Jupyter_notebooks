@@ -30,8 +30,8 @@ access using\
 where __\<ip>__ is the address of the notebook server machine, and __<hex_code>__ is provided on the server's startup stdout.
 
 ## Jupyter deployment ##
-JupyterHub is deployed to **Jasmin:jupyter_web_test** where user login identities need to be created by the admin user (see Shared\Administration\IT\03_VMs_loging_servers.xlsx for current users). It is accessible using http://assimiladata.com
-<p>A Jupyter auto-spawn service is deployed on a Google VM at http://35.242.186.132:8000/. No authentication is required.</p>
+JupyterHub is deployed to **Jasmin:jupyter_web_test** on Jasmin/CEMS where user login identities need to be created by the admin user (see Shared\Administration\IT\03_VMs_loging_servers.xlsx for current users).
+<p>A Jupyter auto-spawn service is deployed on a Google VM at http://35.242.186.132:8000/. Authentication is required using a pre-defined login and a user selected password. It is accessible using http://assimiladata.com</p>
 <p>All notebooks require DQTools embedded in the repository - see the notes for how this is done and how to update. They also require an identity file for DQTools to use: this is stored as assimila_dq.txt in the user's home directory which will be called /home/jupyter_< user >. The user must be created by an admin and then sent their login name. Once they have logged in and set their password, the identity file is then uploaded from an email sent to the user using the interface's UPLOAD button. Finally, they will need to use the link sent to them to clone the code - this is all detailed in 05/07/03.<i>
 </i></p>
 
