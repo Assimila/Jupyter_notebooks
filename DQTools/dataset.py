@@ -19,7 +19,7 @@ class Dataset:
     """
 
     def __init__(self, product, subproduct, region=None, tile=None, res=None,
-                 identfile=None):
+                 identfile=None, sysfile=None):
         """
         Connect to the datacube and extract metadata for this particular
         product/sub-product.
@@ -63,6 +63,9 @@ class Dataset:
         :param identfile: Assimila DQ credentials file required to access the
                          HTTP server. Allows the file to be in a different
                          location as used by the QGIS Plugin.
+
+        :param sysfile: location of the deployed system's yaml file. Required
+                        for DASK use.
         """
 
         # write product & sub-product as attributes
@@ -125,7 +128,7 @@ class Dataset:
 
         try:
             # Instantiate the datacube connector
-            self.conn = Connect(identfile=identfile)
+            self.conn = Connect(identfile=identfile, sysfile=sysfile)
 
             # Download metadata for this product & sub-product & tile
             result = self.conn.get_subproduct_meta(product=self.product,

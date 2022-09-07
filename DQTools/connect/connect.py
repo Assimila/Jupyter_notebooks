@@ -9,18 +9,19 @@ class Connect:
 
     """
 
-    def __init__(self, identfile=None):
+    def __init__(self, identfile=None, sysfile=None):
         """
         Make connection to the DataCube.
 
         :param identfile: optional location of user's credentials file
+        :param sysfile: optional location of the deployed system's yaml file
 
         """
 
         if not identfile:
             identfile = op.join(op.dirname(__file__), ".assimila_dq")
 
-        self.http_client = AssimilaData(identfile=identfile)
+        self.http_client = AssimilaData(identfile=identfile, sysfile=None)
 
     def get_product_subproducts(self, product):
         """

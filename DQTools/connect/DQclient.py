@@ -138,7 +138,7 @@ class APIRequest(object):
     Note that the class is instantiated afresh on each connection so
     cannot keep any instance variables between connections.
     """
-    def __init__(self, logger, service, url, login=None, pwd=None):
+    def __init__(self, logger, service, url, login=None, pwd=None, sysfile=None):
         """
         Create DQ client http object.
         Ensure user has correct credentials.
@@ -148,6 +148,8 @@ class APIRequest(object):
         :param url: http connection address
         :param login: user login
         :param pwd: user encrypted password
+        :param sysfile: optionally provide the system yaml file (required for
+                DASK use)
         :raise ConnectionRefusedError: for any problem with login details
         :raise ConnectionError: for problems connecting to the server
         :raise Exception: anything else
@@ -164,12 +166,20 @@ class APIRequest(object):
         # environment search path
         syspath.append(op.normpath(os.path.join(wkspace_root, 'datacube')))
         try:
+            from src.datacube.system_settings import SysSettings
+            if sysfile:
+                # instantiate a SysSettings singleton for the DQinterface to pick up
+                sys_settings = SysSettings(sysfile)
+            else:
+                raise FileNotFoundError(
+                    "Unable to use dask without knowing which "
+                    "system we are on: please provide yaml file.")
             from src.datacube.dq_interface import DatacubeInterface
-            self.dqif = DatacubeInterface()
+            self.dqif = DatacubeInterface(sys_settings)
+        except (ImportError, ModuleNotFoundError):
+            pass
         except Exception as e:
             print(e)
-        # except (ImportError, ModuleNotFoundError):
-        #     pass
 
         # try:
         #     # check credentials with simple connection. Header could

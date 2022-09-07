@@ -12,12 +12,13 @@ class Register:
     Class for registering data to the DataCube
     """
 
-    def __init__(self, config_file_path):
+    def __init__(self, config_file_path, identfile=None):
         """
         Register a new product/sub-product or tile from a config.yaml file
         file.
 
         :param config_file_path: The full path to the config file
+        :param identfile: optionally provide specific identity file
         :return:
         """
         try:
@@ -43,7 +44,7 @@ class Register:
                 config_dict = yaml.load(file)
 
             # Connect to DQ
-            conn = Connect()
+            conn = Connect(identfile)
 
             # Send to the connector
             conn.register(config_dict)
