@@ -168,8 +168,12 @@ class APIRequest(object):
         try:
             from src.datacube.system_settings import SysSettings
             if sysfile:
-                # instantiate a SysSettings singleton for the DQinterface to pick up
-                sys_settings = SysSettings(sysfile)
+                if not SysSettings.instance:
+                    # instantiate a SysSettings singleton for the DQinterface to pick up
+                    sys_settings = SysSettings(sysfile)
+                else:
+                    # pick up the one already in this process scope
+                    sys_settings = SysSettings()
             else:
                 raise FileNotFoundError(
                     "Unable to use dask without knowing which "
