@@ -13,15 +13,15 @@ class Connect:
         """
         Make connection to the DataCube.
 
-        :param identfile: optional location of user's credentials file
-        :param sysfile: optional location of the deployed system's yaml file
+        :param identfile: optional; location of user's credentials file
+        :param sysfile: optional; location of the deployed system's yaml file for DASK use
 
         """
 
         if not identfile:
             identfile = op.join(op.dirname(__file__), ".assimila_dq")
 
-        self.http_client = AssimilaData(identfile=identfile, sysfile=None)
+        self.http_client = AssimilaData(identfile=identfile, sysfile=sysfile)
 
     def get_product_subproducts(self, product):
         """

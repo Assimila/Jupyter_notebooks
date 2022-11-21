@@ -391,7 +391,7 @@ class AssimilaData(object):
     command sent in the request determines the behaviour.
     """
     def __init__(self, url=None, port=None, pwd=None, login=None,
-                 identfile=None, test=False):
+                 identfile=None, sysfile=None, test=False):
         """
         Create the DQ client API object.
         Connection information may be provided. If none, or some is
@@ -402,8 +402,9 @@ class AssimilaData(object):
         :param port: DQ server port
         :param pwd: User's unique pwd (as provided by Assimila)
         :param login: User's unique login string with date, access and email
-        :param identfile: optional location of user's credentials file
-        :param test: optional, to control creation of on-the-fly log filename
+        :param identfile: optional; location of user's credentials file
+        :param sysfile: optional; location of the deployed system's yaml file for DASK use
+        :param test: optional; to control creation of on-the-fly log filename
         """
         # set up the logging output filename here so that no changes are
         # needed in its configuration file to account for where the code
@@ -436,6 +437,7 @@ class AssimilaData(object):
         self.login = login
         self.port = port
         self.full_url = self.url + ':' + self.port
+        self.sysfile = sysfile
 
         # self.logger.info(f"HTTP Client initialised with identification file: {identfile}")
         self.logger.info("HTTP Client initialised with identification file: %s"
@@ -457,7 +459,8 @@ class AssimilaData(object):
         """
         try:
             c = APIRequest(self.logger, req.get('command'),
-                           self.full_url, self.login, self.pwd)
+                           self.full_url, self.login, self.pwd,
+                           self.sysfile)
 
             if req.get('command') == 'GET_FILE':
                 c.get_from_dq(req)
@@ -487,7 +490,8 @@ class AssimilaData(object):
         """
         try:
             c = APIRequest(self.logger, req.get('command'),
-                           self.full_url, self.login, self.pwd)
+                           self.full_url, self.login, self.pwd,
+                           self.sysfile)
 
             if req.get('command') == 'PUT_DATA':
                 c.put_to_dq(req, data=data)
