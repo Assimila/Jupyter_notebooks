@@ -176,8 +176,9 @@ class APIRequest(object):
                     sys_settings = SysSettings()
             else:
                 raise FileNotFoundError(
-                    "Unable to use dask without knowing which "
-                    "system we are on: please provide yaml file.")
+                    "Datacube is available on this machine but the DQTools "
+                    "Dataset class is unable to use DASK without knowing which "
+                    "system we are on: please provide a settings yaml file.")
             from src.datacube.dq_interface import DatacubeInterface
             self.dqif = DatacubeInterface(sys_settings)
         except (ImportError, ModuleNotFoundError):
