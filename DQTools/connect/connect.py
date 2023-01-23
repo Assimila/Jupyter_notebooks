@@ -23,6 +23,20 @@ class Connect:
 
         self.http_client = AssimilaData(identfile=identfile, sysfile=sysfile)
 
+    def check_ident(self):
+        """
+        Check the identity of a user.
+
+        :return: True if all OK, false otherwise
+        """
+        try:
+            result = self.http_client.check({'command': 'GET_AUTH'})
+
+            return result
+
+        except Exception:
+            raise
+
     def get_product_subproducts(self, product):
         """
         Get the sub-products of this product.

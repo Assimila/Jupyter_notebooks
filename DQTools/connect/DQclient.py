@@ -207,6 +207,27 @@ class APIRequest(object):
         #     print("Other error : %s" % e.__repr__())
         #     raise
 
+    def check_auth(self, req):
+        """
+
+        :param req: is just {'command': 'GET_AUTH'}
+        :return: True if all OK, false otherwise
+        """
+        retval = False
+        try:
+            payload = pickle.dumps(req, protocol=-1)
+            resp = requests.post(self.url,
+                                 auth=(self.login, self.pwd),
+                                 data=payload)
+
+            if resp.status_code != 200:
+                retval = True
+
+            return retval
+
+        except Exception:
+            raise
+
     def get_from_dq(self, req):
         """
         Retrieve information or data from the datacube.
@@ -450,6 +471,33 @@ class AssimilaData(object):
 
     def __del__(self):
         logging.shutdown()
+
+    def check(self, req):
+        """
+        Confirm that the provided credentials are accepted by the server.
+
+        :param req: command to get the authentication
+        :return: True if all OK, false otherwise
+
+        :raise ConnectionRefusedError: if authentication fails
+        """
+        try:
+            c = APIRequest(self.logger, req,
+                           self.full_url, self.login, self.pwd,
+                           self.sysfile)
+
+            c.check_auth(req)
+            return True
+
+        except ConnectionRefusedError as e:
+            # print("User not authorised : %s" % e.args)
+            self.logger.warning("User not authorised : %s" % e.args)
+            return False
+        except Exception as e:
+            # print("Error in client get : %s" % e.__repr__())
+            self.logger.warning("Error in client get : %s" % e.__repr__())
+            raise
+
 
     def get(self, req):
         """
