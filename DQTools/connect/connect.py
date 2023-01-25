@@ -1,3 +1,4 @@
+import os.path
 import os.path as op
 
 from .DQclient import AssimilaData
@@ -276,5 +277,44 @@ class Connect:
 
         self.http_client.put(put_request)
 
-    # def register_with_file
-    #     use PUT_FILE
+    def put_file_contents(self, product, subproduct, tile, filepath):
+        """
+        Transfer the contents of a local file and put it into the DataCube.
+        The user must have permission to WRITE for this sub-product, and the file
+        *MUST* be in the right format with all necessary metadata.
+        :param product: must be a known product
+        :param subproduct: known sub-product
+        :param tile: known tile
+        :param filepath: fully qualified location of file on the client
+        :return:
+        """
+        # Split out the name of the file
+        pathname, filename = os.path.split(filepath)
+
+        # assemble the request and send
+        put_request = {
+            'command': 'PUT_FILE',
+            'action': 'put_file_contents',
+            'params': {'product': product,
+                       'subproduct': subproduct,
+                       'tile': tile,
+                       'filename': filename},
+            'source': filepath
+        }
+        self.http_client.put(put_request)
+
+    def put_native_files(self):
+        """
+        Send the name(s) of files to be added to the DataCube,
+        optionally also where they are (if not already in the proper place)
+        :return:
+        """
+        pass
+
+    def put_native_folder(self):
+        """
+        Send the name of a folder on the DataCube which need *all* of its files to be added,
+        optionally also where they are (if not already in the proper place)
+        :return:
+        """
+        pass
