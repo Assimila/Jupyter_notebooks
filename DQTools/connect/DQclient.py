@@ -366,9 +366,10 @@ class APIRequest(object):
                                           data=payload)
                     if resp_2.status_code != 200:
                         raise Exception(resp_2.headers)
-                else:
-                    # raise exception if no source provided provided.
-                    raise Exception("Non-existent source file.")
+                # else:
+                    # # raise exception if no source provided provided.
+                    # raise Exception("Non-existent source file.")
+                    # it had everything it needed in the POST request 'cos it's a native file
 
             elif self.service == "PUT_DATA":
                 put_url = self.url + resp_1.text

@@ -303,18 +303,47 @@ class Connect:
         }
         self.http_client.put(put_request)
 
-    def put_native_files(self):
+    def put_native_files(self, product, subproduct, tile, filenames, folder=None):
         """
         Send the name(s) of files to be added to the DataCube,
         optionally also where they are (if not already in the proper place)
+        :param product: must be a known product
+        :param subproduct: known sub-product
+        :param tile: known tile
+        :param filenames: list of file(s) on the server
+        :param location: where the files are, if not in root/product/subproduct/tile
         :return:
         """
-        pass
 
-    def put_native_folder(self):
+        # assemble the request and send
+        put_request = {
+            'command': 'PUT_FILE',
+            'action': 'put_native_files',
+            'params': {'product': product,
+                       'subproduct': subproduct,
+                       'tile': tile,
+                       'filenames': filenames,
+                       'location': folder},
+        }
+        self.http_client.put(put_request)
+
+    def put_native_folder(self, product, subproduct, tile, folder=None):
         """
         Send the name of a folder on the DataCube which need *all* of its files to be added,
-        optionally also where they are (if not already in the proper place)
+        optionally also where it is (if not already in the proper place)
+        :param product: must be a known product
+        :param subproduct: known sub-product
+        :param tile: known tile
+        :param location: where the files are, if not in root/product/subproduct/tile
         :return:
         """
-        pass
+        # assemble the request and send
+        put_request = {
+            'command': 'PUT_FILE',
+            'action': 'put_native_folder',
+            'params': {'product': product,
+                       'subproduct': subproduct,
+                       'tile': tile,
+                       'location': folder},
+        }
+        self.http_client.put(put_request)
