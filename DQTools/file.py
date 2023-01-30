@@ -1,15 +1,6 @@
-import numpy as np
-import re
-import textwrap
-import pandas as pd
 import logging
-import datetime
-import os.path as op
-import sys
-from .check_datetime import Datetime_checker
 
 from .connect.connect import Connect
-from .regions import get_bounds
 from .connect.log.setup_logger import SetUpLogger
 
 
@@ -43,17 +34,19 @@ class File:
         except Exception:
             raise
 
-    def put_contents_of_local_file(self, product, subproduct, tile, path):
+    def put_contents_of_local_file(self, product, subproduct, tile,
+                                   path):
         """
         Transfer the contents of a local geotiff file to the server.
         The user must have permission to WRITE for this sub-product, and the file
         *MUST* be in the right format with all necessary metadata.
         The name of the file will be used; you are currently NOT allowed to over-write
         an existing file.
-        :param product:
-        :param subproduct:
-        :param tile:
-        :param path:
+        :param product: must be a known product
+        :param subproduct: known sub-product
+        :param tile: known tile
+        :param path: fully qualified location of file on the client. The file's name
+                     MUST be in the standard format for the Assimila DataCube.
         :return:
         """
         try:
@@ -67,8 +60,46 @@ class File:
                               "%s" % e)
             print("Failed to write file data to the datacube.")
 
-    def put_native_files(self):
-        pass
+    def put_native_files(self, product, subproduct, tile,
+                         filenames, folder=None):
+        """
+        Send the name(s) of files to be added to the DataCube,
+        optionally also where they are (if not already in the proper place)
+        :param product: must be a known product
+        :param subproduct: known sub-product
+        :param tile: known tile
+        :param filenames: list of file(s) on the server - just their names. The file names
+                          MUST be in the standard format for the Assimila DataCube.
+        :param folder: where the files are, if not already in the correct location
+                         (data_root/product/subproduct/tile)
+        """
+        try:
+            # Instantiate the datacube connector
+            conn = Connect(identfile=self.identfile)
 
-    def put_native_folder(self):
-        pass
+            conn.put_native_files(product, subproduct, tile, filenames, folder=folder)
+
+        except Exception as e:
+            self.logger.error("Failed to write file data to the datacube.\n"
+                              "%s" % e)
+            print("Failed to write file data to the datacube.")
+
+    def put_native_folder(self, product, subproduct, tile, folder=None):
+        """
+        Add *all* the files of a folder to the DataCube.
+        :param product: must be a known product
+        :param subproduct: known sub-product
+        :param tile: known tile
+        :param folder: where the files are, if not already in the correct location
+                         (data_root/product/subproduct/tile)
+        """
+        try:
+            # Instantiate the datacube connector
+            conn = Connect(identfile=self.identfile)
+
+            conn.put_native_folder(product, subproduct, tile, folder=folder)
+
+        except Exception as e:
+            self.logger.error("Failed to write file data to the datacube.\n"
+                              "%s" % e)
+            print("Failed to write file data to the datacube.")

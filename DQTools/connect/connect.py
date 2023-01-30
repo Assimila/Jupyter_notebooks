@@ -285,8 +285,8 @@ class Connect:
         :param product: must be a known product
         :param subproduct: known sub-product
         :param tile: known tile
-        :param filepath: fully qualified location of file on the client
-        :return:
+        :param filepath: fully qualified location of file on the client. The file's name
+                        MUST be in the standard format for the Assimila DataCube.
         """
         # Split out the name of the file
         pathname, filename = os.path.split(filepath)
@@ -311,8 +311,8 @@ class Connect:
         :param subproduct: known sub-product
         :param tile: known tile
         :param filenames: list of file(s) on the server
-        :param location: where the files are, if not in root/product/subproduct/tile
-        :return:
+        :param folder: where the files are, if not already in the correct location
+                         (data_root/product/subproduct/tile)
         """
 
         # assemble the request and send
@@ -329,13 +329,12 @@ class Connect:
 
     def put_native_folder(self, product, subproduct, tile, folder=None):
         """
-        Send the name of a folder on the DataCube which need *all* of its files to be added,
-        optionally also where it is (if not already in the proper place)
+        Add *all* the files of a folder to the DataCube.
         :param product: must be a known product
         :param subproduct: known sub-product
         :param tile: known tile
-        :param location: where the files are, if not in root/product/subproduct/tile
-        :return:
+        :param folder: where the files are, if not already in the correct location
+                         (data_root/product/subproduct/tile)
         """
         # assemble the request and send
         put_request = {
