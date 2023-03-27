@@ -1000,7 +1000,7 @@ Lat/Lon:    {north}/{east}
             plt.show()
             
     def data_to_csv(self, product, subproduct,
-                    projection, y, x, start, end):
+                    y, x, start, end):
 
         with self.out:
             clear_output()
