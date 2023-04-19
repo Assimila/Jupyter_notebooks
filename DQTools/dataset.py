@@ -88,7 +88,7 @@ class Dataset:
         self.fill_value = None
         self.all_subproduct_tiles = None
         self.description = None
-        self.frequency = None
+        self.time_resolution = None
         self.data = None
         self.timesteps = None
 
@@ -171,7 +171,7 @@ Tiles:
 Timesteps available:
     First:          {first}
     Last:           {last}
-    Frequency:      {freq}
+    Resolution:     {tres}
 
 Last Gold:          {last_gold}
 ================================================================================
@@ -185,7 +185,7 @@ Data:
                    tile=self.tile,
                    first=self.first_timestep,
                    last=self.last_timestep,
-                   freq=str(self.frequency),
+                   tres=str(self.time_resolution),
                    last_gold=self.last_gold,
                    data=self.data)
 
@@ -204,7 +204,7 @@ Data:
 # Timesteps available:
 #     First:          {self.first_timestep}
 #     Last:           {self.last_timestep}
-#     Frequency:      {str(self.frequency)}
+#     Resolution:     {str(self.time_resolution)}
 #
 # Last Gold:          {self.last_gold}
 # ================================================================================
@@ -242,7 +242,7 @@ Data:
         :return:
         """
 
-        self.frequency = all_meta['frequency']
+        self.time_resolution = all_meta['time_resolution']
         self.first_timestep = all_meta['first_timestep']
         self.last_timestep = all_meta['last_timestep']
         self.last_gold = all_meta['last_gold']
@@ -427,7 +427,7 @@ Data:
 
     def calculate_timesteps(self):
         """
-        Calculate the time steps available, given the frequency of the
+        Calculate the time steps available, given the time_resolution of the
         dataset (as recorded in the sub-product table) and the first and
         last time steps.
 
@@ -441,17 +441,17 @@ Data:
         try:
             # split the numpy timedelta into its component parts (e.g.
             # ['year', 1])
-            bf_fq_vals = self.frequency.__str__().split(' ')
+            bf_fq_vals = self.time_resolution.__str__().split(' ')
 
             # Create a pandas DataOffset object which represents this
-            # frequency
-            frequency = pd.DateOffset(**{bf_fq_vals[1]: int(bf_fq_vals[0])})
+            # time_resolution
+            time_resolution = pd.DateOffset(**{bf_fq_vals[1]: int(bf_fq_vals[0])})
 
             # Generate an array, using this as the step
             if self.first_timestep:
                 timesteps = pd.date_range(self.first_timestep,
                                           self.last_timestep,
-                                          freq=frequency)
+                                          freq=time_resolution)
 
                 self.timesteps = timesteps.values
 
