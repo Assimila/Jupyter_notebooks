@@ -215,15 +215,15 @@ class APIRequest(object):
         :param req: is just {'command': 'GET_AUTH'}
         :return: True if all OK, false otherwise
         """
-        retval = False
+        retval = True
         try:
             payload = pickle.dumps(req, protocol=-1)
             resp = requests.post(self.url,
                                  auth=(self.login, self.pwd),
                                  data=payload)
 
-            if resp.status_code != 200:
-                retval = True
+            if resp.status_code == 401:  # a 401 is sent by the authentication
+                retval = False
 
             return retval
 
@@ -488,8 +488,7 @@ class AssimilaData(object):
                            self.full_url, self.login, self.pwd,
                            self.sysfile)
 
-            c.check_auth(req)
-            return True
+            return c.check_auth(req)
 
         except ConnectionRefusedError as e:
             # print("User not authorised : %s" % e.args)
