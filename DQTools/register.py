@@ -7,21 +7,20 @@ from .connect.log.setup_logger import SetUpLogger
 
 
 class Register:
-
     """
-    Class for registering data to the DataCube
+    Class for registering data with the DataCube
     """
 
-    def __init__(self, config_file_path, identfile=None):
+    def __init__(self, identfile=None):
         """
-        Register a new product/sub-product or tile from a config.yaml file
-        file.
-
-        :param config_file_path: The full path to the config file
-        :param identfile: optionally provide specific identity file
-        :return:
+        Initialise the Register class
+        :param identfile: Assimila DQ credentials file required to access the
+                         HTTP server. Allows the file to be in a different
+                         location as used by the QGIS Plugin.
         """
         try:
+            self.identfile = identfile
+
             # base, extension = op.splitext('./connect/log/register.log')
             # today = datetime.datetime.today()
             # log_filename = "{}{}{}".format(base,
@@ -38,13 +37,22 @@ class Register:
         except Exception:
             raise
 
+    def register_from_yaml(self, config_file_path):
+        """
+        Register a new product/sub-product or tile from a config.yaml file
+        file.
+
+        :param config_file_path: The full path to the config file
+        :return:
+        """
+
         try:
             # Extract the config information from the yaml file
             with open(config_file_path, 'r') as file:
                 config_dict = yaml.load(file)
 
             # Connect to DQ
-            conn = Connect(identfile)
+            conn = Connect(self.identfile)
 
             # Send to the connector
             conn.register(config_dict)
@@ -61,3 +69,25 @@ class Register:
             self.logger.error("Unable to create Registration object.\n%s" % e)
             print("Unable to create Registration object, "
                   "please see logfile for details.")
+
+    def register_tiles_from_local_file(self, filepath):
+        """
+        Transfer the contents of a local tile definition file to the server and
+        use it to register its contents.
+        The user must have permission to REGISTER, and the file
+        *MUST* be in the right format with all necessary metadata.
+        The name of the file will be used but held in temporary storage.
+        :param path: fully qualified location of file on the client. The file's name
+                     MUST be in the standard format for the Assimila DataCube.
+        :return:
+        """
+        try:
+            # Instantiate the datacube connector
+            conn = Connect(identfile=self.identfile)
+
+            conn.register_tiles_from_file(filepath)
+
+        except Exception as e:
+            self.logger.error("Failed to register tile(s) with the datacube.\n"
+                              "%s" % e)
+            print("Failed to register tile(s) with the datacube.")

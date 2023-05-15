@@ -276,5 +276,96 @@ class Connect:
 
         self.http_client.put(put_request)
 
-    # def register_with_file
-    #     use PUT_FILE
+    def register_tiles_from_file(self, filepath):
+        """
+        Send a tile yaml file to the server for registration. This does the same
+        as register_tile() above but the yaml unpacking is done on the server side.
+        This will be quicker for large tile sets.
+        Note that although the command here is PUT_FILE, in the eventual registration,
+        the user will require PUT_NEW permission which equates to Permission.REGISTER.
+
+        :param filepath: fully qualified name of the tile definition file.
+        :return: N/A
+        """
+
+        # Split out the name of the file
+        pathname, filename = op.split(filepath)
+
+        put_request = {
+            'command': 'PUT_FILE',
+            'action': 'register_tiles_from_file',
+            'params': {'filename': filename},
+            'source': filepath
+        }
+
+        self.http_client.put(put_request)
+
+    def put_file_contents(self, product, subproduct, tile, filepath):
+        """
+        Transfer the contents of a local file and put it into the DataCube.
+        The user must have permission to WRITE for this sub-product, and the file
+        *MUST* be in the right format with all necessary metadata.
+        :param product: must be a known product
+        :param subproduct: known sub-product
+        :param tile: known tile
+        :param filepath: fully qualified location of file on the client. The file's name
+                        MUST be in the standard format for the Assimila DataCube.
+        """
+        # Split out the name of the file
+        pathname, filename = op.split(filepath)
+
+        # assemble the request and send
+        put_request = {
+            'command': 'PUT_FILE',
+            'action': 'put_file_contents',
+            'params': {'product': product,
+                       'subproduct': subproduct,
+                       'tile': tile,
+                       'filename': filename},
+            'source': filepath
+        }
+        self.http_client.put(put_request)
+
+    def put_native_files(self, product, subproduct, tile, filenames, folder=None):
+        """
+        Send the name(s) of files to be added to the DataCube,
+        optionally also where they are (if not already in the proper place)
+        :param product: must be a known product
+        :param subproduct: known sub-product
+        :param tile: known tile
+        :param filenames: list of file(s) on the server
+        :param folder: where the files are, if not already in the correct location
+                         (data_root/product/subproduct/tile)
+        """
+
+        # assemble the request and send
+        put_request = {
+            'command': 'PUT_FILE',
+            'action': 'put_native_files',
+            'params': {'product': product,
+                       'subproduct': subproduct,
+                       'tile': tile,
+                       'filenames': filenames,
+                       'location': folder},
+        }
+        self.http_client.put(put_request)
+
+    def put_native_folder(self, product, subproduct, tile, folder=None):
+        """
+        Add *all* the files of a folder to the DataCube.
+        :param product: must be a known product
+        :param subproduct: known sub-product
+        :param tile: known tile
+        :param folder: where the files are, if not already in the correct location
+                         (data_root/product/subproduct/tile)
+        """
+        # assemble the request and send
+        put_request = {
+            'command': 'PUT_FILE',
+            'action': 'put_native_folder',
+            'params': {'product': product,
+                       'subproduct': subproduct,
+                       'tile': tile,
+                       'location': folder},
+        }
+        self.http_client.put(put_request)
