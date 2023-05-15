@@ -277,6 +277,30 @@ class Connect:
 
         self.http_client.put(put_request)
 
+    def register_tiles_from_file(self, filepath):
+        """
+        Send a tile yaml file to the server for registration. This does the same
+        as register_tile() above but the yaml unpacking is done on the server side.
+        This will be quicker for large tile sets.
+        Note that although the command here is PUT_FILE, in the eventual registration,
+        the user will require PUT_NEW permission which equates to Permission.REGISTER.
+
+        :param filepath: fully qualified name of the tile definition file.
+        :return: N/A
+        """
+
+        # Split out the name of the file
+        pathname, filename = op.split(filepath)
+
+        put_request = {
+            'command': 'PUT_FILE',
+            'action': 'register_tiles_from_file',
+            'params': {'filename': filename},
+            'source': filepath
+        }
+
+        self.http_client.put(put_request)
+
     def put_file_contents(self, product, subproduct, tile, filepath):
         """
         Transfer the contents of a local file and put it into the DataCube.
@@ -289,7 +313,7 @@ class Connect:
                         MUST be in the standard format for the Assimila DataCube.
         """
         # Split out the name of the file
-        pathname, filename = os.path.split(filepath)
+        pathname, filename = op.split(filepath)
 
         # assemble the request and send
         put_request = {
