@@ -189,7 +189,7 @@ Data:
                    last_gold=self.last_gold,
                    data=self.data)
 
-# TODO re-instate this once we ditch support for Python 3.5
+# TODO re-instate this once we ditch support for Python 2.7
 #             return f"""<DQ Dataset: {self.product}-{self.subproduct}>
 # ================================================================================
 # Product:        {self.product}
@@ -348,9 +348,13 @@ Data:
                 print("Failed to retrieve Dataset sub-product DASK pointer, "
                       "please see logfile for details.")
 
-    def put(self):
+    def put(self, tile=None):
         """
-        Prepare self.data and metadata and send to the datacube.
+        Prepare self.data and metadata, then send to the datacube.
+        :param tile: Optionally provide the tile for the data. If not present,
+                     the tile specified in the Dataset creation will be used.
+                     The tile name will be checked against those for which the
+                     Dataset is registered.
         :return:
         """
 
@@ -358,8 +362,17 @@ Data:
             # Add product as an attribute to the data which will be written
             self.data.attrs['product'] = self.product
 
+            # Ensure we specify the tile in the attributes
+            if not tile:
+                self.data.attrs['tile'] = self.tile
+            else:
+                if tile in self.all_subproduct_tiles:
+                    self.data.attrs['tile'] = tile
+                else:
+                    raise NameError("tile name must be valid for this product")
+
             # Process last gold. This value needs to go into the DataArray
-            # attributes. The user could set them here, in the the DataSet
+            # attributes. The user could set them here, in the DataSet
             # attributes or in self.data.attrs. Easiest if we just catch and
             # process all possibilities.
             if 'last_gold' not in self.data[self.subproduct].attrs or \
