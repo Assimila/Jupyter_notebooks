@@ -11,7 +11,7 @@ list available branches
 change to correct branch
     git checkout devel
 add the remote repository
-    git remote add -f <name> <location>
+    git remote add <name> <location>
     <name>=DQTools (but could be anything sensible)
     <location>=git@githubserver:/Assimila/DQTools.git
     this will add the master branch ready to merge
@@ -38,3 +38,9 @@ You can then make a release of the parent repository as normal.
 
 To get rid of the hosted repo:
 git rm -r DQTools
+
+
+References:
+https://www.atlassian.com/git/tutorials/git-subtree
+https://git-scm.com/book/en/v2/Git-Tools-Advanced-Merging   - see Subtree Merging
+https://opensource.com/article/20/5/git-submodules-subtrees
