@@ -4,29 +4,29 @@ DQTools repository itself.
 This has been achieved using the following commands:
 
 Do this ONCE to get the repository into the container:
-change to correct folder
+1 change to correct folder
     cd Jupyter_notebooks
-list available branches
+2 list available branches
     git branch
-change to correct branch
+3 change to correct branch
     git checkout devel
-add the remote repository
+4 add the remote repository
     git remote add <name> <location>
     <name>=DQTools (but could be anything sensible)
     <location>=git@githubserver:/Assimila/DQTools.git
     this will add the master branch ready to merge
     NOTE: githubserver has been set up in ~/.ssh/config to be an alias for
     login and ssh key
-pull the desired branch into git knowledge
+5 pull the desired branch into git knowledge
     git merge -s ours --no-commit --allow-unrelated-histories <name>/<branch>
     <name>=DQTools
     <branch>=release
-magic spell time... create the working copy
+6 magic spell time... create the working copy
     git read-tree --prefix=<subdir> -u <name>/<branch>
     <subdir>=DQTools (but could be anything sensible)
     <name>=DQTools
     <branch>=release
-now commit it all
+7 now commit it all
     git commit -m "sub-tree added"
 
 Do this when updating:
@@ -35,6 +35,7 @@ To get a specific branch or tag of the contained repository
     <subdir>=DQTools
     <branch or tag>=v2.0-beta-V_RC5 for example
 You can then make a release of the parent repository as normal.
+If, when doing the pull, you get a 'not a git repo.' error, then check that DQTools remote is set, and if not, then use 'git remote add' in step 4 above.
 
 To get rid of the hosted repo:
 git rm -r DQTools
