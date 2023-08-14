@@ -138,7 +138,7 @@ class APIRequest(object):
     Note that the class is instantiated afresh on each connection so
     cannot keep any instance variables between connections.
     """
-    def __init__(self, logger, service, url, login=None, pwd=None):
+    def __init__(self, logger, service, url, login=None, pwd=None, sysfile=None):
         """
         Create DQ client http object.
         Ensure user has correct credentials.
@@ -148,6 +148,8 @@ class APIRequest(object):
         :param url: http connection address
         :param login: user login
         :param pwd: user encrypted password
+        :param sysfile: optionally provide the system yaml file (required for
+                DASK use)
         :raise ConnectionRefusedError: for any problem with login details
         :raise ConnectionError: for problems connecting to the server
         :raise Exception: anything else
@@ -164,12 +166,27 @@ class APIRequest(object):
         # environment search path
         syspath.append(op.normpath(os.path.join(wkspace_root, 'datacube')))
         try:
+            from src.datacube.system_settings import SysSettings
+            if sysfile:
+                if not SysSettings.instance:
+                    # instantiate a SysSettings singleton for the DQinterface to pick up
+                    sys_settings = SysSettings(sysfile)
+            else:
+                try:
+                    # pick up the one already in this process scope
+                    sys_settings = SysSettings()
+                except:
+                    raise FileNotFoundError(
+                        "Datacube is available on this machine but the DQTools "
+                        "Dataset class is unable to use DASK without knowing which "
+                        "system we are on: please provide a settings yaml file.")
+
             from src.datacube.dq_interface import DatacubeInterface
-            self.dqif = DatacubeInterface()
+            self.dqif = DatacubeInterface(sys_settings)
+        except (ImportError, ModuleNotFoundError):
+            pass
         except Exception as e:
             print(e)
-        # except (ImportError, ModuleNotFoundError):
-        #     pass
 
         # try:
         #     # check credentials with simple connection. Header could
@@ -191,6 +208,27 @@ class APIRequest(object):
         # except Exception as e:
         #     print("Other error : %s" % e.__repr__())
         #     raise
+
+    def check_auth(self, req):
+        """
+
+        :param req: is just {'command': 'GET_AUTH'}
+        :return: True if all OK, false otherwise
+        """
+        retval = True
+        try:
+            payload = pickle.dumps(req, protocol=-1)
+            resp = requests.post(self.url,
+                                 auth=(self.login, self.pwd),
+                                 data=payload)
+
+            if resp.status_code == 401:  # a 401 is sent by the authentication
+                retval = False
+
+            return retval
+
+        except Exception:
+            raise
 
     def get_from_dq(self, req):
         """
@@ -331,8 +369,9 @@ class APIRequest(object):
                     if resp_2.status_code != 200:
                         raise Exception(resp_2.headers)
                 else:
-                    # raise exception if no source provided provided.
-                    raise Exception("Non-existent source file.")
+                    # it had everything it needed in the POST request 'cos it's
+                    # a native file/folder.
+                    pass
 
             elif self.service == "PUT_DATA":
                 put_url = self.url + resp_1.text
@@ -381,7 +420,7 @@ class AssimilaData(object):
     command sent in the request determines the behaviour.
     """
     def __init__(self, url=None, port=None, pwd=None, login=None,
-                 identfile=None, test=False):
+                 identfile=None, sysfile=None, test=False):
         """
         Create the DQ client API object.
         Connection information may be provided. If none, or some is
@@ -392,8 +431,9 @@ class AssimilaData(object):
         :param port: DQ server port
         :param pwd: User's unique pwd (as provided by Assimila)
         :param login: User's unique login string with date, access and email
-        :param identfile: optional location of user's credentials file
-        :param test: optional, to control creation of on-the-fly log filename
+        :param identfile: optional; location of user's credentials file
+        :param sysfile: optional; location of the deployed system's yaml file for DASK use
+        :param test: optional; to control creation of on-the-fly log filename
         """
         # set up the logging output filename here so that no changes are
         # needed in its configuration file to account for where the code
@@ -426,6 +466,7 @@ class AssimilaData(object):
         self.login = login
         self.port = port
         self.full_url = self.url + ':' + self.port
+        self.sysfile = sysfile
 
         # self.logger.info(f"HTTP Client initialised with identification file: {identfile}")
         self.logger.info("HTTP Client initialised with identification file: %s"
@@ -433,6 +474,32 @@ class AssimilaData(object):
 
     def __del__(self):
         logging.shutdown()
+
+    def check(self, req):
+        """
+        Confirm that the provided credentials are accepted by the server.
+
+        :param req: command to get the authentication
+        :return: True if all OK, false otherwise
+
+        :raise ConnectionRefusedError: if authentication fails
+        """
+        try:
+            c = APIRequest(self.logger, req,
+                           self.full_url, self.login, self.pwd,
+                           self.sysfile)
+
+            return c.check_auth(req)
+
+        except ConnectionRefusedError as e:
+            # print("User not authorised : %s" % e.args)
+            self.logger.warning("User not authorised : %s" % e.args)
+            return False
+        except Exception as e:
+            # print("Error in client get : %s" % e.__repr__())
+            self.logger.warning("Error in client get : %s" % e.__repr__())
+            raise
+
 
     def get(self, req):
         """
@@ -447,7 +514,8 @@ class AssimilaData(object):
         """
         try:
             c = APIRequest(self.logger, req.get('command'),
-                           self.full_url, self.login, self.pwd)
+                           self.full_url, self.login, self.pwd,
+                           self.sysfile)
 
             if req.get('command') == 'GET_FILE':
                 c.get_from_dq(req)
@@ -477,7 +545,8 @@ class AssimilaData(object):
         """
         try:
             c = APIRequest(self.logger, req.get('command'),
-                           self.full_url, self.login, self.pwd)
+                           self.full_url, self.login, self.pwd,
+                           self.sysfile)
 
             if req.get('command') == 'PUT_DATA':
                 c.put_to_dq(req, data=data)
