@@ -4,7 +4,10 @@ description: >
   For testing. Please delete me.
 keywords: delete test deleteme
 link:
-srid:
+time_agg: month
+x_blocksize: 256
+y_blocksize: 256
+
 subproducts:
   - name: temp_diff
     long_name: Surface-Air temperature difference
@@ -14,7 +17,9 @@ subproducts:
     precision: 0.01
     keywords: temperature difference
     fill_value: -999
-    frequency: 3h
     link:
+    time_resolution: 3h
+    xres: 0.05
+    yres: 0.05
     tiles:
       - madagascar

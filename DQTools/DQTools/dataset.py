@@ -19,7 +19,7 @@ class Dataset:
     """
 
     def __init__(self, product, subproduct, region=None, tile=None, res=None,
-                 identfile=None):
+                 identfile=None, sysfile=None):
         """
         Connect to the datacube and extract metadata for this particular
         product/sub-product.
@@ -63,6 +63,9 @@ class Dataset:
         :param identfile: Assimila DQ credentials file required to access the
                          HTTP server. Allows the file to be in a different
                          location as used by the QGIS Plugin.
+
+        :param sysfile: location of the deployed system's yaml file. Required
+                        for DASK use.
         """
 
         # write product & sub-product as attributes
@@ -85,7 +88,7 @@ class Dataset:
         self.fill_value = None
         self.all_subproduct_tiles = None
         self.description = None
-        self.frequency = None
+        self.time_resolution = None
         self.data = None
         self.timesteps = None
 
@@ -125,7 +128,7 @@ class Dataset:
 
         try:
             # Instantiate the datacube connector
-            self.conn = Connect(identfile=identfile)
+            self.conn = Connect(identfile=identfile, sysfile=sysfile)
 
             # Download metadata for this product & sub-product & tile
             result = self.conn.get_subproduct_meta(product=self.product,
@@ -168,7 +171,7 @@ Tiles:
 Timesteps available:
     First:          {first}
     Last:           {last}
-    Frequency:      {freq}
+    Resolution:     {tres}
 
 Last Gold:          {last_gold}
 ================================================================================
@@ -182,11 +185,11 @@ Data:
                    tile=self.tile,
                    first=self.first_timestep,
                    last=self.last_timestep,
-                   freq=str(self.frequency),
+                   tres=str(self.time_resolution),
                    last_gold=self.last_gold,
                    data=self.data)
 
-# TODO re-instate this once we ditch support for Python 3.5
+# TODO re-instate this once we ditch support for Python 2.7
 #             return f"""<DQ Dataset: {self.product}-{self.subproduct}>
 # ================================================================================
 # Product:        {self.product}
@@ -201,7 +204,7 @@ Data:
 # Timesteps available:
 #     First:          {self.first_timestep}
 #     Last:           {self.last_timestep}
-#     Frequency:      {str(self.frequency)}
+#     Resolution:     {str(self.time_resolution)}
 #
 # Last Gold:          {self.last_gold}
 # ================================================================================
@@ -239,7 +242,7 @@ Data:
         :return:
         """
 
-        self.frequency = all_meta['frequency']
+        self.time_resolution = all_meta['time_resolution']
         self.first_timestep = all_meta['first_timestep']
         self.last_timestep = all_meta['last_timestep']
         self.last_gold = all_meta['last_gold']
@@ -345,9 +348,13 @@ Data:
                 print("Failed to retrieve Dataset sub-product DASK pointer, "
                       "please see logfile for details.")
 
-    def put(self):
+    def put(self, tile=None):
         """
-        Prepare self.data and metadata and send to the datacube.
+        Prepare self.data and metadata, then send to the datacube.
+        :param tile: Optionally provide the tile for the data. If not present,
+                     the tile specified in the Dataset creation will be used.
+                     The tile name will be checked against those for which the
+                     Dataset is registered.
         :return:
         """
 
@@ -355,8 +362,17 @@ Data:
             # Add product as an attribute to the data which will be written
             self.data.attrs['product'] = self.product
 
+            # Ensure we specify the tile in the attributes
+            if not tile:
+                self.data.attrs['tile'] = self.tile
+            else:
+                if tile in self.all_subproduct_tiles:
+                    self.data.attrs['tile'] = tile
+                else:
+                    raise NameError("tile name must be valid for this product")
+
             # Process last gold. This value needs to go into the DataArray
-            # attributes. The user could set them here, in the the DataSet
+            # attributes. The user could set them here, in the DataSet
             # attributes or in self.data.attrs. Easiest if we just catch and
             # process all possibilities.
             if 'last_gold' not in self.data[self.subproduct].attrs or \
@@ -424,7 +440,7 @@ Data:
 
     def calculate_timesteps(self):
         """
-        Calculate the time steps available, given the frequency of the
+        Calculate the time steps available, given the time_resolution of the
         dataset (as recorded in the sub-product table) and the first and
         last time steps.
 
@@ -438,17 +454,17 @@ Data:
         try:
             # split the numpy timedelta into its component parts (e.g.
             # ['year', 1])
-            bf_fq_vals = self.frequency.__str__().split(' ')
+            bf_fq_vals = self.time_resolution.__str__().split(' ')
 
             # Create a pandas DataOffset object which represents this
-            # frequency
-            frequency = pd.DateOffset(**{bf_fq_vals[1]: int(bf_fq_vals[0])})
+            # time_resolution
+            time_resolution = pd.DateOffset(**{bf_fq_vals[1]: int(bf_fq_vals[0])})
 
             # Generate an array, using this as the step
             if self.first_timestep:
                 timesteps = pd.date_range(self.first_timestep,
                                           self.last_timestep,
-                                          freq=frequency)
+                                          freq=time_resolution)
 
                 self.timesteps = timesteps.values
 
